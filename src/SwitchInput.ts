@@ -8,10 +8,12 @@ export class SwitchInput extends EventTarget {
   private configManager: ConfigManager;
   private keyMap: Map<string, SwitchAction>;
   private activeTimers: Map<TimerKey, number> = new Map();
+  private targetElement: HTMLElement | Window;
 
-  constructor(configManager: ConfigManager) {
+  constructor(configManager: ConfigManager, targetElement: HTMLElement | Window = window) {
     super();
     this.configManager = configManager;
+    this.targetElement = targetElement;
 
     // Default key mapping
     this.keyMap = new Map([
@@ -28,32 +30,50 @@ export class SwitchInput extends EventTarget {
     this.bindEvents();
   }
 
-  private bindEvents() {
-    window.addEventListener('keydown', this.handleKeyDown.bind(this));
-    window.addEventListener('keyup', this.handleKeyUp.bind(this));
+  private isIgnoredEvent(e: Event): boolean {
+    const path = e.composedPath ? e.composedPath() : [];
+    for (const target of path) {
+      if (target instanceof HTMLElement) {
+        if (target.classList.contains('settings-overlay') || target.id === 'settings-overlay') return true;
+        if (target.classList.contains('settings-btn')) return true;
+        if (target.classList.contains('controls')) return true;
+      }
+    }
+    // Fallback/Safety check using closest if available on target
+    const target = e.target as HTMLElement;
+    if (target && typeof target.closest === 'function') {
+         if (target.closest('.settings-overlay') || target.closest('#settings-overlay')) return true;
+         if (target.closest('.settings-btn')) return true;
+         if (target.closest('.controls')) return true;
+    }
+    return false;
+  }
 
-    // Global click listener for Switch 1 (Primary)
-    // We need to be careful not to trigger this when clicking settings
-    document.addEventListener('mousedown', (e) => {
-      if ((e.target as HTMLElement).closest('#settings-overlay')) return;
-      // Map left click to select
+  private bindEvents() {
+    this.targetElement.addEventListener('keydown', this.handleKeyDown.bind(this) as EventListener);
+    this.targetElement.addEventListener('keyup', this.handleKeyUp.bind(this) as EventListener);
+
+    // Click listener for Switch 1 (Primary)
+    this.targetElement.addEventListener('mousedown', (e) => {
+      if (this.isIgnoredEvent(e)) return;
       this.handleSwitchDown('select');
     });
 
-    document.addEventListener('mouseup', (e) => {
-      if ((e.target as HTMLElement).closest('#settings-overlay')) return;
+    this.targetElement.addEventListener('mouseup', (e) => {
+      if (this.isIgnoredEvent(e)) return;
       this.handleSwitchUp('select');
     });
 
     // Touch support
-    document.addEventListener('touchstart', (e) => {
-      if ((e.target as HTMLElement).closest('#settings-overlay')) return;
-      e.preventDefault(); // Prevent mouse emulation
+    this.targetElement.addEventListener('touchstart', (e) => {
+      if (this.isIgnoredEvent(e)) return;
+      const evt = e as TouchEvent;
+      evt.preventDefault(); // Prevent mouse emulation
       this.handleSwitchDown('select');
     });
 
-    document.addEventListener('touchend', (e) => {
-       if ((e.target as HTMLElement).closest('#settings-overlay')) return;
+    this.targetElement.addEventListener('touchend', (e) => {
+       if (this.isIgnoredEvent(e)) return;
       this.handleSwitchUp('select');
     });
   }
@@ -155,7 +175,7 @@ export class SwitchInput extends EventTarget {
     }
   }
 
-  private triggerAction(action: SwitchAction) {
+  public triggerAction(action: SwitchAction) {
     const event = new CustomEvent('switch', { detail: { action } });
     this.dispatchEvent(event);
     console.log(`Switch Action: ${action}`);

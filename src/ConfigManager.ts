@@ -19,7 +19,7 @@ export class ConfigManager {
   private config: AppConfig;
   private listeners: ((config: AppConfig) => void)[] = [];
 
-  private static readonly DEFAULTS: AppConfig = {
+  public static readonly DEFAULTS: AppConfig = {
     scanRate: 1000,
     acceptanceTime: 0,
     postSelectionDelay: 0,
@@ -34,9 +34,11 @@ export class ConfigManager {
     heatmapMax: 20
   };
 
-  constructor() {
-    this.config = { ...ConfigManager.DEFAULTS };
-    this.loadFromUrl();
+  constructor(overrides?: Partial<AppConfig>, loadFromUrl: boolean = true) {
+    this.config = { ...ConfigManager.DEFAULTS, ...overrides };
+    if (loadFromUrl) {
+      this.loadFromUrl();
+    }
   }
 
   private loadFromUrl() {

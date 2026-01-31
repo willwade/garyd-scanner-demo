@@ -12,10 +12,18 @@ export class GridRenderer {
   private elements: HTMLElement[] = [];
   public columns: number = 8;
 
-  constructor(containerId: string) {
-    const el = document.getElementById(containerId);
-    if (!el) throw new Error(`Container ${containerId} not found`);
-    this.container = el;
+  constructor(container: HTMLElement | string) {
+    if (typeof container === 'string') {
+      const el = document.getElementById(container);
+      if (!el) throw new Error(`Container ${container} not found`);
+      this.container = el;
+    } else {
+      this.container = container;
+    }
+  }
+
+  public getContainer(): HTMLElement {
+    return this.container;
   }
 
   public render(items: GridItem[], columns: number = 8) {
