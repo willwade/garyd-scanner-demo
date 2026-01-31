@@ -33,6 +33,7 @@ export class AlphabetManager {
 
     try {
       const index = await getIndexData();
+      console.log('AlphabetManager: Loaded Index Data', index);
 
       // Filter languages
       // We want to avoid very large character sets (Logographic scripts mostly)
@@ -44,10 +45,10 @@ export class AlphabetManager {
         })
         .map((entry: IndexEntry) => ({
           code: entry.language,
-          name: entry['language-name'],
+          name: entry['language-name'] || entry.language,
           script: entry.scripts?.[0] // Default to first script
         }))
-        .sort((a: LanguageOption, b: LanguageOption) => a.name.localeCompare(b.name));
+        .sort((a: LanguageOption, b: LanguageOption) => (a.name || '').localeCompare(b.name || ''));
 
       this.initialized = true;
     } catch (e) {

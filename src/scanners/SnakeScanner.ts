@@ -87,7 +87,6 @@ export class SnakeScanner extends Scanner {
 
       // Simulate the snake path
       let r = 0, c = 0, dir = 1;
-      let contentIdx = 0;
 
       // We need to fill the grid such that the scanner path (0->1->2 -> 5->4->3)
       // encounters content[0], content[1], content[2], content[3]...

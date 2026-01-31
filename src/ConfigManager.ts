@@ -2,7 +2,7 @@ export interface AppConfig {
   scanRate: number; // ms
   acceptanceTime: number; // ms
   postSelectionDelay: number; // ms
-  scanStrategy: 'row-column' | 'linear' | 'snake' | 'quadrant' | 'group-row-column' | 'elimination' | 'continuous' | 'probability';
+  scanStrategy: 'row-column' | 'column-row' | 'linear' | 'snake' | 'quadrant' | 'group-row-column' | 'elimination' | 'continuous' | 'probability';
   gridContent: 'numbers' | 'keyboard';
   gridSize: number; // Total items (e.g. 64) or specific layout
   showUI: boolean;
@@ -55,7 +55,7 @@ export class ConfigManager {
 
     if (params.has('strategy')) {
       const strategy = params.get('strategy') as AppConfig['scanStrategy'];
-      if (['row-column', 'linear', 'snake', 'quadrant', 'group-row-column', 'elimination', 'continuous', 'probability'].includes(strategy)) {
+      if (['row-column', 'column-row', 'linear', 'snake', 'quadrant', 'group-row-column', 'elimination', 'continuous', 'probability'].includes(strategy)) {
         this.config.scanStrategy = strategy;
       }
     }

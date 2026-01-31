@@ -75,7 +75,7 @@ export abstract class Scanner {
    * Reorders the linear content to match the visual flow of the scanner.
    * Default implementation returns content as-is (Row-Major).
    */
-  public mapContentToGrid(content: GridItem[], rows: number, cols: number): GridItem[] {
+  public mapContentToGrid(content: GridItem[], _rows: number, _cols: number): GridItem[] {
       return content;
   }
 }
