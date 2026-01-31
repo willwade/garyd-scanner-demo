@@ -157,4 +157,35 @@ export class QuadrantScanner extends Scanner {
       if (this.timer) clearTimeout(this.timer);
       this.scheduleNextStep();
   }
+
+  public getCost(itemIndex: number): number {
+    const cols = this.renderer.columns;
+    const totalItems = this.renderer.getItemsCount();
+    const totalRows = Math.ceil(totalItems / cols);
+    const midRow = Math.ceil(totalRows / 2);
+    const midCol = Math.ceil(cols / 2);
+
+    const row = Math.floor(itemIndex / cols);
+    const col = itemIndex % cols;
+
+    let quadIndex = 0;
+    if (row < midRow) {
+      // Top
+      if (col < midCol) quadIndex = 0; // TL
+      else quadIndex = 1; // TR
+    } else {
+      // Bottom
+      if (col < midCol) quadIndex = 2; // BL
+      else quadIndex = 3; // BR
+    }
+
+    let rowInQuad = row;
+    if (row >= midRow) rowInQuad = row - midRow;
+
+    let colInQuad = col;
+    if (col >= midCol) colInQuad = col - midCol;
+
+    // Cost = Quad selection + Row selection + Cell selection
+    return (quadIndex + 1) + (rowInQuad + 1) + (colInQuad + 1);
+  }
 }

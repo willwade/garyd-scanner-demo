@@ -121,3 +121,11 @@ body, html {
   color: #666;
   margin-top: 0.25rem;
 }
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+.form-row .form-group {
+  flex: 1;
+}

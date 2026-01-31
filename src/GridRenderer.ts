@@ -2,7 +2,8 @@ export interface GridItem {
   id: string;
   label: string;
   type?: 'action' | 'char' | 'word';
-  // Additional props like color, icon could go here
+  backgroundColor?: string;
+  textColor?: string;
 }
 
 export class GridRenderer {
@@ -32,6 +33,13 @@ export class GridRenderer {
       cell.textContent = item.label;
       cell.dataset.index = index.toString();
       cell.dataset.id = item.id;
+
+      if (item.backgroundColor) {
+        cell.style.backgroundColor = item.backgroundColor;
+      }
+      if (item.textColor) {
+        cell.style.color = item.textColor;
+      }
 
       this.container.appendChild(cell);
       this.elements.push(cell);

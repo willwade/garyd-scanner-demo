@@ -88,4 +88,51 @@ export class EliminationScanner extends Scanner {
     if (this.timer) clearTimeout(this.timer);
     this.scheduleNextStep();
   }
+
+  public getCost(itemIndex: number): number {
+    let start = 0;
+    let end = this.renderer.getItemsCount();
+    let cost = 0;
+
+    // Simulate the elimination process
+    while (end - start > 1) {
+      const mid = start + Math.ceil((end - start) / 2);
+
+      // Determine if item is in first or second half
+      if (itemIndex < mid) {
+        // In first half [start, mid)
+        // Scanner logic: highlights 2nd half (step 1), then 1st half (step 2)
+        // Wait... step() flips currentHalf.
+        // Initial currentHalf=0. step() -> 1 (Highlight 2nd half).
+        // Next step() -> 0 (Highlight 1st half).
+        // So:
+        // Step 1: 2nd half highlighted. (Item NOT here).
+        // Step 2: 1st half highlighted. (Item IS here). Select!
+        cost += 2;
+        end = mid; // Narrow to first half
+      } else {
+        // In second half [mid, end)
+        // Step 1: 2nd half highlighted. (Item IS here). Select!
+        cost += 1;
+        start = mid; // Narrow to second half
+      }
+    }
+
+    // Final selection of the single item (Cost += 1 for the click?)
+    // The loop handles the drilling down. The last step is selecting the single item?
+    // In handleAction: "if (rangeSize <= 1) ... triggerSelection".
+    // Does it scan the single item?
+    // Usually once isolated, it's selected immediately or requires confirmation.
+    // The code says: `if (rangeSize <= 1) ...` inside handleAction logic.
+    // But `handleAction` is called when user clicks.
+    // If rangeSize is 1, user clicks to confirm?
+    // If rangeSize <= 1, the scanner probably highlights that item?
+    // "reset() sets rangeStart=0".
+    // Actually, after drilling down, if rangeSize <= 1, it stops?
+    // The code doesn't explicitly show scanning the single item.
+    // It assumes the last click on a group of 1 selects it.
+    // So the costs accumulated in the loop are sufficient.
+
+    return cost;
+  }
 }

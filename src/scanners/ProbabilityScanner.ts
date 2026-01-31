@@ -84,4 +84,10 @@ export class ProbabilityScanner extends Scanner {
     this.scanOrder = itemProbs.map(ip => ip.index);
     // console.log('Scan Order:', this.scanOrder.map(i => this.renderer.getItem(i)?.label).join(''));
   }
+
+  public getCost(itemIndex: number): number {
+    const orderIndex = this.scanOrder.indexOf(itemIndex);
+    if (orderIndex === -1) return 0; // Or high cost?
+    return orderIndex + 1;
+  }
 }

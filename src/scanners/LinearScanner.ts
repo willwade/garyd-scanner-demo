@@ -59,4 +59,8 @@ export class LinearScanner extends Scanner {
       this.scheduleNextStep();
     }
   }
+
+  public getCost(itemIndex: number): number {
+    return itemIndex + 1;
+  }
 }

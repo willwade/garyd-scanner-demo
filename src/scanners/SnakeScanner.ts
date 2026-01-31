@@ -92,4 +92,18 @@ export class SnakeScanner extends Scanner {
       this.scheduleNextStep();
     }
   }
+
+  public getCost(itemIndex: number): number {
+    const cols = this.renderer.columns;
+    const row = Math.floor(itemIndex / cols);
+    const col = itemIndex % cols;
+
+    if (row % 2 === 0) {
+      return itemIndex + 1;
+    } else {
+      const rowStart = row * cols;
+      const reversedCol = cols - 1 - col;
+      return (rowStart + reversedCol) + 1;
+    }
+  }
 }
