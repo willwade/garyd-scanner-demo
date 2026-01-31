@@ -136,6 +136,11 @@ export class SettingsUI {
       </div>
 
       <div class="form-group">
+        <label>Dwell Time (ms, 0=Off):</label>
+        <input type="number" class="setting-input" name="dwellTime" value="${config.dwellTime}" min="0" max="5000" step="100">
+      </div>
+
+      <div class="form-group">
         <label>
           <input type="checkbox" class="setting-input" name="soundEnabled" ${config.soundEnabled ? 'checked' : ''}>
           Sound Enabled
@@ -184,6 +189,9 @@ export class SettingsUI {
               break;
           case 'acceptanceTime':
               newConfig.acceptanceTime = parseInt(target.value, 10);
+              break;
+          case 'dwellTime':
+              newConfig.dwellTime = parseInt(target.value, 10);
               break;
           case 'gridSize':
               newConfig.gridSize = parseInt(target.value, 10);

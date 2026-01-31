@@ -1,6 +1,7 @@
 export interface AppConfig {
   scanRate: number; // ms
   acceptanceTime: number; // ms
+  dwellTime: number; // ms (0 = disabled)
   postSelectionDelay: number; // ms
   scanStrategy: 'row-column' | 'column-row' | 'linear' | 'snake' | 'quadrant' | 'group-row-column' | 'elimination' | 'continuous' | 'probability';
   gridContent: 'numbers' | 'keyboard';
@@ -22,6 +23,7 @@ export class ConfigManager {
   public static readonly DEFAULTS: AppConfig = {
     scanRate: 1000,
     acceptanceTime: 0,
+    dwellTime: 0,
     postSelectionDelay: 0,
     scanStrategy: 'row-column',
     gridContent: 'numbers',
@@ -51,6 +53,11 @@ export class ConfigManager {
     if (params.has('rate')) {
       const rate = parseInt(params.get('rate')!, 10);
       if (!isNaN(rate)) this.config.scanRate = rate;
+    }
+
+    if (params.has('dwell')) {
+      const dwell = parseInt(params.get('dwell')!, 10);
+      if (!isNaN(dwell)) this.config.dwellTime = dwell;
     }
 
     if (params.has('strategy')) {
