@@ -37,17 +37,38 @@ export class AlphabetManager {
 
       // Filter languages
       // We want to avoid very large character sets (Logographic scripts mostly)
+      const displayNames = new Intl.DisplayNames(['en'], { type: 'language' });
+
       this.languages = index
         .filter((entry: IndexEntry) => {
           const scripts = entry.scripts || [];
           const isLarge = scripts.some((s: string) => ['Hant', 'Hans', 'Jpan', 'Kore'].includes(s));
           return !isLarge;
         })
-        .map((entry: IndexEntry) => ({
-          code: entry.language,
-          name: entry['language-name'] || entry.language,
-          script: entry.scripts?.[0] // Default to first script
-        }))
+        .map((entry: IndexEntry) => {
+          let name = entry['language-name'];
+          const code = entry.language;
+
+          if (!name || name === code) {
+             try {
+                // Try to get friendly name from browser Intl API
+                const resolved = displayNames.of(code);
+                if (resolved && resolved !== code) {
+                    name = resolved;
+                } else {
+                    name = code;
+                }
+             } catch (e) {
+                name = code;
+             }
+          }
+
+          return {
+            code: code,
+            name: name,
+            script: entry.scripts?.[0] // Default to first script
+          };
+        })
         .sort((a: LanguageOption, b: LanguageOption) => (a.name || '').localeCompare(b.name || ''));
 
       this.initialized = true;

@@ -49,6 +49,18 @@ The application can be configured via URL parameters, making it easy to embed in
 | `view` | `standard`, `cost-numbers`, `cost-heatmap` | Visual debug modes to analyze scanning cost. |
 | `heatmax` | `number` | Sets the maximum value for the heatmap visualization. |
 
+### Visualizing Scan Cost (Heatmap)
+
+The simulator includes visualization modes to help analyze the efficiency of different scanning strategies and layouts.
+
+1.  Open the **Settings** menu (click the gear icon or press `S`).
+2.  Scroll down to the **Visualization** section.
+3.  Change **View Mode** to:
+    *   **Cost (Numbers):** Displays the "cost" (number of steps) to reach each item.
+    *   **Cost (Heatmap):** Colors items from Green (low cost) to Red (high cost).
+4.  Adjust **Heatmap Max Cost** to change the color scale sensitivity. Default is 20.
+    *   *Tip:* If the grid is large, increase this value to see a smoother gradient.
+
 ## Developer Documentation
 
 ### Prerequisites
