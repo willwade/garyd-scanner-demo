@@ -1,0 +1,73 @@
+export interface GridItem {
+  id: string;
+  label: string;
+  type?: 'action' | 'char' | 'word';
+  // Additional props like color, icon could go here
+}
+
+export class GridRenderer {
+  private container: HTMLElement;
+  private items: GridItem[] = [];
+  private elements: HTMLElement[] = [];
+  public columns: number = 8;
+
+  constructor(containerId: string) {
+    const el = document.getElementById(containerId);
+    if (!el) throw new Error(`Container ${containerId} not found`);
+    this.container = el;
+  }
+
+  public render(items: GridItem[], columns: number = 8) {
+    this.items = items;
+    this.columns = columns;
+    this.container.innerHTML = '';
+    this.elements = [];
+
+    // Update grid layout
+    this.container.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+
+    items.forEach((item, index) => {
+      const cell = document.createElement('div');
+      cell.className = 'grid-cell';
+      cell.textContent = item.label;
+      cell.dataset.index = index.toString();
+      cell.dataset.id = item.id;
+
+      this.container.appendChild(cell);
+      this.elements.push(cell);
+    });
+  }
+
+  public setFocus(indices: number[]) {
+    // Clear all focus
+    this.elements.forEach(el => el.classList.remove('scan-focus'));
+
+    // Add focus to specified indices
+    indices.forEach(idx => {
+      if (this.elements[idx]) {
+        this.elements[idx].classList.add('scan-focus');
+      }
+    });
+  }
+
+  public setSelected(index: number) {
+    if (this.elements[index]) {
+      const el = this.elements[index];
+      el.classList.add('selected');
+      // Remove class after animation
+      setTimeout(() => el.classList.remove('selected'), 500);
+    }
+  }
+
+  public getElement(index: number): HTMLElement | undefined {
+    return this.elements[index];
+  }
+
+  public getItem(index: number): GridItem | undefined {
+    return this.items[index];
+  }
+
+  public getItemsCount(): number {
+    return this.items.length;
+  }
+}

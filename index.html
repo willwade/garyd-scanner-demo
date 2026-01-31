@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scanning Simulator</title>
+  </head>
+  <body>
+    <div id="app">
+      <div id="status-bar">
+        <span id="output-text"></span>
+      </div>
+      <div id="grid-container"></div>
+
+      <div id="settings-overlay" class="hidden">
+        <div class="settings-content">
+          <h2>Scanner Settings</h2>
+          <div id="settings-form"></div>
+          <button id="close-settings">Close</button>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
