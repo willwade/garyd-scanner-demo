@@ -42,10 +42,13 @@ export class ProbabilityScanner extends Scanner {
           this.triggerSelection(item);
 
           // Update predictor
-          this.predictor.addToContext(item.label.toLowerCase()); // assuming label is char
+          this.predictor.addToContext(item.label.toLowerCase());
 
           // Recalculate probabilities and order
           this.updateProbabilities();
+
+          // Request visualization update (for heatmap/numbers)
+          this.triggerRedraw();
 
           this.reset();
           if (this.timer) clearTimeout(this.timer);
@@ -53,9 +56,6 @@ export class ProbabilityScanner extends Scanner {
         }
       }
     } else if (action === 'cancel') {
-        // Maybe clear context?
-        // this.predictor.resetContext();
-        // this.updateProbabilities();
         this.reset();
     }
   }
@@ -82,12 +82,11 @@ export class ProbabilityScanner extends Scanner {
     itemProbs.sort((a, b) => b.prob - a.prob);
 
     this.scanOrder = itemProbs.map(ip => ip.index);
-    // console.log('Scan Order:', this.scanOrder.map(i => this.renderer.getItem(i)?.label).join(''));
   }
 
   public getCost(itemIndex: number): number {
     const orderIndex = this.scanOrder.indexOf(itemIndex);
-    if (orderIndex === -1) return 0; // Or high cost?
+    if (orderIndex === -1) return 999;
     return orderIndex + 1;
   }
 }

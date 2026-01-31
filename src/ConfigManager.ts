@@ -2,7 +2,7 @@ export interface AppConfig {
   scanRate: number; // ms
   acceptanceTime: number; // ms
   postSelectionDelay: number; // ms
-  scanStrategy: 'row-column' | 'linear' | 'snake' | 'quadrant' | 'group-row-column' | 'elimination' | 'continuous' | 'probability';
+  scanStrategy: 'row-column' | 'column-row' | 'linear' | 'snake' | 'quadrant' | 'group-row-column' | 'elimination' | 'continuous' | 'probability';
   gridContent: 'numbers' | 'keyboard';
   gridSize: number; // Total items (e.g. 64) or specific layout
   showUI: boolean;
@@ -19,7 +19,7 @@ export class ConfigManager {
   private config: AppConfig;
   private listeners: ((config: AppConfig) => void)[] = [];
 
-  private static readonly DEFAULTS: AppConfig = {
+  public static readonly DEFAULTS: AppConfig = {
     scanRate: 1000,
     acceptanceTime: 0,
     postSelectionDelay: 0,
@@ -27,16 +27,18 @@ export class ConfigManager {
     gridContent: 'numbers',
     gridSize: 64, // 8x8
     showUI: true,
-    soundEnabled: true,
+    soundEnabled: false,
     language: 'en',
     layoutMode: 'alphabetical',
     viewMode: 'standard',
     heatmapMax: 20
   };
 
-  constructor() {
-    this.config = { ...ConfigManager.DEFAULTS };
-    this.loadFromUrl();
+  constructor(overrides?: Partial<AppConfig>, loadFromUrl: boolean = true) {
+    this.config = { ...ConfigManager.DEFAULTS, ...overrides };
+    if (loadFromUrl) {
+      this.loadFromUrl();
+    }
   }
 
   private loadFromUrl() {
@@ -53,7 +55,7 @@ export class ConfigManager {
 
     if (params.has('strategy')) {
       const strategy = params.get('strategy') as AppConfig['scanStrategy'];
-      if (['row-column', 'linear', 'snake', 'quadrant', 'group-row-column', 'elimination', 'continuous', 'probability'].includes(strategy)) {
+      if (['row-column', 'column-row', 'linear', 'snake', 'quadrant', 'group-row-column', 'elimination', 'continuous', 'probability'].includes(strategy)) {
         this.config.scanStrategy = strategy;
       }
     }

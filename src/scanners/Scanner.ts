@@ -51,11 +51,31 @@ export abstract class Scanner {
 
   protected triggerSelection(item: GridItem) {
     // Flash selection
-    // Dispatch event or callback
-    const event = new CustomEvent('scanner:selection', { detail: { item } });
-    window.dispatchEvent(event);
+    // Dispatch event on the container so it can be scoped
+    const event = new CustomEvent('scanner:selection', {
+      detail: { item },
+      bubbles: true,
+      composed: true // Allows crossing shadow boundary if needed (though we listen inside shadow)
+    });
+    this.renderer.getContainer().dispatchEvent(event);
     this.audio.playSelectSound();
   }
 
+  protected triggerRedraw() {
+    const event = new CustomEvent('scanner:redraw', {
+        bubbles: true,
+        composed: true
+    });
+    this.renderer.getContainer().dispatchEvent(event);
+  }
+
   public abstract getCost(itemIndex: number): number;
+
+  /**
+   * Reorders the linear content to match the visual flow of the scanner.
+   * Default implementation returns content as-is (Row-Major).
+   */
+  public mapContentToGrid(content: GridItem[], _rows: number, _cols: number): GridItem[] {
+      return content;
+  }
 }

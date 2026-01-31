@@ -3,23 +3,71 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Scanning Simulator</title>
+    <title>Scanning Simulator Demo</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+        background: #f5f5f5;
+      }
+      .scanner-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+      }
+      .scanner-demo {
+        background: white;
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        height: 600px; /* Fixed height for demo consistency */
+        display: flex;
+        flex-direction: column;
+      }
+      .scanner-demo h2 {
+        margin-top: 0;
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+      }
+      switch-scanner {
+        flex: 1;
+        border: 1px solid #eee;
+        /* Ensure it doesn't overflow container */
+        min-width: 0;
+      }
+
+      @media (max-width: 600px) {
+        body { margin: 10px; }
+        .scanner-demo { height: 500px; }
+      }
+    </style>
   </head>
   <body>
-    <div id="app">
-      <div id="status-bar">
-        <span id="output-text"></span>
-      </div>
-      <div id="grid-container"></div>
+    <h1>Switch Scanning Simulator</h1>
+    <p>
+      This page demonstrates multiple switch scanning configurations side-by-side.
+      Tap on a scanner or use the on-screen buttons to interact with it.
+      Keyboard shortcuts (Space/Enter) work on the focused scanner (tap to focus).
+    </p>
 
-      <div id="settings-overlay" class="hidden">
-        <div class="settings-content">
-          <h2>Scanner Settings</h2>
-          <div id="settings-form"></div>
-          <button id="close-settings">Close</button>
-        </div>
+    <div class="scanner-grid">
+      <div class="scanner-demo">
+        <h2>Row-Column (Standard)</h2>
+        <switch-scanner scan-strategy="row-column" grid-content="numbers" grid-size="64"></switch-scanner>
+      </div>
+
+      <div class="scanner-demo">
+        <h2>Linear (Slow)</h2>
+        <switch-scanner scan-strategy="linear" scan-rate="1500" grid-size="16"></switch-scanner>
+      </div>
+
+      <div class="scanner-demo">
+        <h2>Keyboard (Row-Group-Column)</h2>
+        <switch-scanner scan-strategy="group-row-column" grid-content="keyboard"></switch-scanner>
       </div>
     </div>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
