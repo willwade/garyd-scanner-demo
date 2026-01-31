@@ -26,6 +26,9 @@ export class SwitchScannerElement extends HTMLElement {
   private currentScanner: Scanner | null = null;
   private baseItems: GridItem[] = [];
 
+  private dwellTimer: number | null = null;
+  private currentDwellTarget: HTMLElement | null = null;
+
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
@@ -79,7 +82,7 @@ export class SwitchScannerElement extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['scan-strategy', 'grid-content', 'grid-size', 'language', 'scan-rate', 'acceptance-time'];
+    return ['scan-strategy', 'grid-content', 'grid-size', 'language', 'scan-rate', 'acceptance-time', 'dwell-time'];
   }
 
   attributeChangedCallback(name: string, oldValue: string, newValue: string) {
@@ -106,6 +109,9 @@ export class SwitchScannerElement extends HTMLElement {
         case 'acceptance-time':
             updates.acceptanceTime = parseInt(newValue, 10);
             break;
+        case 'dwell-time':
+            updates.dwellTime = parseInt(newValue, 10);
+            break;
     }
     this.configManager.update(updates);
   }
@@ -129,6 +135,9 @@ export class SwitchScannerElement extends HTMLElement {
 
     const acceptance = this.getAttribute('acceptance-time');
     if (acceptance) overrides.acceptanceTime = parseInt(acceptance, 10);
+
+    const dwell = this.getAttribute('dwell-time');
+    if (dwell) overrides.dwellTime = parseInt(dwell, 10);
 
     return overrides;
   }
@@ -206,6 +215,7 @@ export class SwitchScannerElement extends HTMLElement {
         display: grid;
         grid-gap: 5px;
         overflow: auto;
+        position: relative; /* For absolute overlays */
       }
 
       .grid-cell {
@@ -226,6 +236,12 @@ export class SwitchScannerElement extends HTMLElement {
         outline: 4px solid yellow;
         outline-offset: -4px;
         z-index: 10;
+      }
+
+      .dwell-active {
+         background-image: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1));
+         outline: 2px dashed #ff9800;
+         outline-offset: -2px;
       }
 
       .selected {
@@ -342,7 +358,7 @@ export class SwitchScannerElement extends HTMLElement {
     });
 
     // Scanner Events (Selection & Redraw)
-    const gridContainer = this.shadowRoot!.querySelector('.grid-container')!;
+    const gridContainer = this.shadowRoot!.querySelector('.grid-container') as HTMLElement;
 
     gridContainer.addEventListener('scanner:selection', (e: Event) => {
         const detail = (e as CustomEvent).detail;
@@ -371,6 +387,63 @@ export class SwitchScannerElement extends HTMLElement {
         const config = this.configManager.get();
         this.updateGrid(config, false);
     });
+
+    // Dwell Activation Logic
+    gridContainer.addEventListener('mousemove', (e: MouseEvent) => {
+        const target = (e.target as HTMLElement).closest('.grid-cell') as HTMLElement;
+        this.handleDwell(target);
+    });
+    gridContainer.addEventListener('mouseleave', () => {
+        this.handleDwell(null);
+    });
+  }
+
+  private handleDwell(target: HTMLElement | null) {
+      if (this.currentDwellTarget === target) return;
+
+      // Clear previous
+      if (this.dwellTimer) {
+          window.clearTimeout(this.dwellTimer);
+          this.dwellTimer = null;
+      }
+      if (this.currentDwellTarget) {
+          this.currentDwellTarget.classList.remove('dwell-active');
+      }
+
+      this.currentDwellTarget = target;
+
+      const config = this.configManager.get();
+      if (target && config.dwellTime > 0) {
+          target.classList.add('dwell-active');
+
+          this.dwellTimer = window.setTimeout(() => {
+              if (this.currentDwellTarget === target) {
+                  this.triggerItemSelection(target);
+                  // Reset
+                  target.classList.remove('dwell-active');
+                  this.currentDwellTarget = null;
+              }
+          }, config.dwellTime);
+      }
+  }
+
+  private triggerItemSelection(target: HTMLElement) {
+      const index = parseInt(target.dataset.index || '-1', 10);
+      if (index >= 0) {
+          this.gridRenderer.setSelected(index);
+
+          const item = this.gridRenderer.getItem(index);
+          if (item) {
+               const event = new CustomEvent('scanner:selection', {
+                    bubbles: true,
+                    composed: true,
+                    detail: { item }
+               });
+               this.gridRenderer.getContainer().dispatchEvent(event);
+
+               if (this.audioManager) this.audioManager.playSelectSound();
+          }
+      }
   }
 
   private generateNumbers(size: number): GridItem[] {

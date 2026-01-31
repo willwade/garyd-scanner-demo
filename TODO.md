@@ -1,7 +1,8 @@
 # TODO
 - [ ] Inverse Scanning Mode (Move on Hold, Select on Release).
 - [ ] Post-Selection Delay (Refractory period).
-- [ ] Dwell Activation (Zero-switch mode).
+- [x] Dwell Activation (Zero-switch mode).
+- [x] Gliding Cursor / Crosshair (iOS Style) for Continuous Scanner.
 - [ ] Full integration of Continuous Scanner with Mouse Events (currently selects Grid Items).
 - [ ] Visual polish for Continuous Scanner (colors, smooth animation).
 - [ ] "Back up one level" fully consistent across all scanners.

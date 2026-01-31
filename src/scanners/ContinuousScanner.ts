@@ -3,20 +3,23 @@ import { SwitchAction } from '../SwitchInput';
 
 export class ContinuousScanner extends Scanner {
   private overlay: HTMLElement | null = null;
-  private hBar: HTMLElement | null = null;
-  private cursor: HTMLElement | null = null;
+  private hBar: HTMLElement | null = null; // Moves Vertically (y-scan)
+  private vBar: HTMLElement | null = null; // Moves Horizontally (x-scan)
 
-  private state: 'y-scan' | 'x-scan' | 'processing' = 'y-scan';
-  private yPos: number = 0; // percentage 0-100
+  // Phase 1: x-scan (Vertical Bar moves L->R)
+  // Phase 2: y-scan (Horizontal Bar moves T->B)
+  private state: 'x-scan' | 'y-scan' | 'processing' = 'x-scan';
+
   private xPos: number = 0; // percentage 0-100
+  private yPos: number = 0; // percentage 0-100
 
   private stepSize: number = 1; // % per step
 
   public start() {
     this.createOverlay();
-    this.state = 'y-scan';
-    this.yPos = 0;
+    this.state = 'x-scan';
     this.xPos = 0;
+    this.yPos = 0;
     super.start();
   }
 
@@ -26,19 +29,19 @@ export class ContinuousScanner extends Scanner {
   }
 
   protected reset() {
-    this.state = 'y-scan';
-    this.yPos = 0;
+    this.state = 'x-scan';
     this.xPos = 0;
+    this.yPos = 0;
     this.updateOverlay();
   }
 
   protected step() {
-    if (this.state === 'y-scan') {
-      this.yPos += this.stepSize;
-      if (this.yPos > 100) this.yPos = 0;
-    } else if (this.state === 'x-scan') {
+    if (this.state === 'x-scan') {
       this.xPos += this.stepSize;
       if (this.xPos > 100) this.xPos = 0;
+    } else if (this.state === 'y-scan') {
+      this.yPos += this.stepSize;
+      if (this.yPos > 100) this.yPos = 0;
     }
     this.updateOverlay();
   }
@@ -48,7 +51,6 @@ export class ContinuousScanner extends Scanner {
     if (!this.isRunning) return;
     // Continuous needs faster refresh than grid scan rate.
     // Use requestAnimationFrame or fast interval.
-    // Let's use 20ms.
     if (this.timer) clearTimeout(this.timer);
     this.timer = window.setTimeout(() => {
         this.step();
@@ -67,27 +69,31 @@ export class ContinuousScanner extends Scanner {
     this.overlay.style.pointerEvents = 'none'; // click through
     this.overlay.style.zIndex = '50';
 
-    // H-Bar (Moving vertically)
+    // Vertical Bar (Moves Horizontally during x-scan)
+    this.vBar = document.createElement('div');
+    this.vBar.style.position = 'absolute';
+    this.vBar.style.top = '0';
+    this.vBar.style.width = '4px';
+    this.vBar.style.height = '100%';
+    this.vBar.style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
+    this.vBar.style.borderLeft = '1px solid red';
+    this.vBar.style.borderRight = '1px solid red';
+    this.overlay.appendChild(this.vBar);
+
+    // Horizontal Bar (Moves Vertically during y-scan)
     this.hBar = document.createElement('div');
     this.hBar.style.position = 'absolute';
     this.hBar.style.left = '0';
     this.hBar.style.width = '100%';
-    this.hBar.style.height = '2px';
-    this.hBar.style.backgroundColor = 'red';
+    this.hBar.style.height = '4px';
+    this.hBar.style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
+    this.hBar.style.borderTop = '1px solid red';
+    this.hBar.style.borderBottom = '1px solid red';
+    this.hBar.style.display = 'none'; // Hidden initially
     this.overlay.appendChild(this.hBar);
 
-    // Cursor (Moving horizontally on the bar)
-    this.cursor = document.createElement('div');
-    this.cursor.style.position = 'absolute';
-    this.cursor.style.width = '10px';
-    this.cursor.style.height = '10px';
-    this.cursor.style.backgroundColor = 'blue';
-    this.cursor.style.borderRadius = '50%';
-    this.cursor.style.transform = 'translate(-50%, -50%)';
-    this.cursor.style.display = 'none';
-    this.overlay.appendChild(this.cursor);
-
-    document.getElementById('grid-container')?.appendChild(this.overlay);
+    // Append to the renderer's container (inside Shadow DOM)
+    this.renderer.getContainer().appendChild(this.overlay);
   }
 
   private removeOverlay() {
@@ -95,28 +101,35 @@ export class ContinuousScanner extends Scanner {
       this.overlay.parentNode.removeChild(this.overlay);
     }
     this.overlay = null;
+    this.hBar = null;
+    this.vBar = null;
   }
 
   private updateOverlay() {
-    if (!this.hBar || !this.cursor) return;
-
-    this.hBar.style.top = `${this.yPos}%`;
+    if (!this.hBar || !this.vBar) return;
 
     if (this.state === 'x-scan') {
-        this.cursor.style.display = 'block';
-        this.cursor.style.top = `${this.yPos}%`;
-        this.cursor.style.left = `${this.xPos}%`;
-    } else {
-        this.cursor.style.display = 'none';
+        this.vBar.style.display = 'block';
+        this.vBar.style.left = `${this.xPos}%`;
+        this.hBar.style.display = 'none';
+    } else if (this.state === 'y-scan') {
+        this.vBar.style.display = 'block';
+        // vBar stays at selected xPos
+        this.vBar.style.left = `${this.xPos}%`;
+
+        this.hBar.style.display = 'block';
+        this.hBar.style.top = `${this.yPos}%`;
     }
   }
 
   public handleAction(action: SwitchAction) {
     if (action === 'select') {
-       if (this.state === 'y-scan') {
-           this.state = 'x-scan';
-           this.xPos = 0;
-       } else if (this.state === 'x-scan') {
+       if (this.state === 'x-scan') {
+           this.state = 'y-scan';
+           this.yPos = 0;
+           // Provide minimal audio feedback for the intermediate step?
+           // The base class handles triggers, but this is a state transition.
+       } else if (this.state === 'y-scan') {
            this.state = 'processing';
            this.selectAtPoint();
        }
@@ -133,9 +146,12 @@ export class ContinuousScanner extends Scanner {
       const clientX = rect.left + (this.xPos / 100) * rect.width;
       const clientY = rect.top + (this.yPos / 100) * rect.height;
 
-      // Temporarily hide overlay to elementFromPoint works
+      // Temporarily hide overlay so elementFromPoint works
       this.overlay.style.display = 'none';
-      const element = document.elementFromPoint(clientX, clientY);
+
+      const root = this.renderer.getContainer().getRootNode() as Document | ShadowRoot;
+      const element = root.elementFromPoint ? root.elementFromPoint(clientX, clientY) : document.elementFromPoint(clientX, clientY);
+
       this.overlay.style.display = 'block';
 
       if (element) {
@@ -162,13 +178,10 @@ export class ContinuousScanner extends Scanner {
     const col = itemIndex % cols;
 
     // Approximate cost based on position (0-100 range for Y and X)
-    // Assuming uniform grid distribution
-    // Y cost: row center percentage
     const yCost = ((row + 0.5) / totalRows) * 100;
-    // X cost: col center percentage
     const xCost = ((col + 0.5) / cols) * 100;
 
     // Total steps (1 per %)
-    return Math.round(yCost + xCost);
+    return Math.round(xCost + yCost);
   }
 }
