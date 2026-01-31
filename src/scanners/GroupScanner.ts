@@ -147,4 +147,19 @@ export class GroupScanner extends Scanner {
       if (this.timer) clearTimeout(this.timer);
       this.scheduleNextStep();
   }
+
+  public getCost(itemIndex: number): number {
+    const cols = this.renderer.columns;
+    const totalItems = this.renderer.getItemsCount();
+    const totalRows = Math.ceil(totalItems / cols);
+    const groupSize = Math.ceil(totalRows / 3);
+
+    const row = Math.floor(itemIndex / cols);
+    const col = itemIndex % cols;
+
+    const groupIndex = Math.floor(row / groupSize);
+    const rowIndexInGroup = row % groupSize;
+
+    return (groupIndex + 1) + (rowIndexInGroup + 1) + (col + 1);
+  }
 }

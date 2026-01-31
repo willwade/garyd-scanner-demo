@@ -7,7 +7,12 @@ export interface AppConfig {
   gridSize: number; // Total items (e.g. 64) or specific layout
   showUI: boolean;
   soundEnabled: boolean;
-  // Colors could be added here or handled via CSS variables
+
+  // New settings
+  language: string;
+  layoutMode: 'alphabetical' | 'frequency';
+  viewMode: 'standard' | 'cost-numbers' | 'cost-heatmap';
+  heatmapMax: number;
 }
 
 export class ConfigManager {
@@ -22,7 +27,11 @@ export class ConfigManager {
     gridContent: 'numbers',
     gridSize: 64, // 8x8
     showUI: true,
-    soundEnabled: true
+    soundEnabled: true,
+    language: 'en',
+    layoutMode: 'alphabetical',
+    viewMode: 'standard',
+    heatmapMax: 20
   };
 
   constructor() {
@@ -53,7 +62,28 @@ export class ConfigManager {
        if (params.get('content') === 'keyboard') this.config.gridContent = 'keyboard';
     }
 
-    // TODO: Add more params parsing as needed
+    if (params.has('lang')) {
+      this.config.language = params.get('lang')!;
+    }
+
+    if (params.has('layout')) {
+      const layout = params.get('layout');
+      if (layout === 'alphabetical' || layout === 'frequency') {
+        this.config.layoutMode = layout;
+      }
+    }
+
+    if (params.has('view')) {
+      const view = params.get('view');
+      if (view === 'standard' || view === 'cost-numbers' || view === 'cost-heatmap') {
+        this.config.viewMode = view as AppConfig['viewMode'];
+      }
+    }
+
+    if (params.has('heatmax')) {
+      const val = parseInt(params.get('heatmax')!, 10);
+      if (!isNaN(val)) this.config.heatmapMax = val;
+    }
   }
 
   public get(): AppConfig {

@@ -13,6 +13,7 @@
     "vite": "^5.0.0"
   },
   "dependencies": {
-    "@willwade/ppmpredictor": "^0.0.12"
+    "@willwade/ppmpredictor": "^0.0.12",
+    "worldalphabets": "^0.0.33"
   }
 }

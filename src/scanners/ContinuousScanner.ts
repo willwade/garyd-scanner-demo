@@ -152,4 +152,23 @@ export class ContinuousScanner extends Scanner {
 
       this.reset();
   }
+
+  public getCost(itemIndex: number): number {
+    const cols = this.renderer.columns;
+    const totalItems = this.renderer.getItemsCount();
+    const totalRows = Math.ceil(totalItems / cols);
+
+    const row = Math.floor(itemIndex / cols);
+    const col = itemIndex % cols;
+
+    // Approximate cost based on position (0-100 range for Y and X)
+    // Assuming uniform grid distribution
+    // Y cost: row center percentage
+    const yCost = ((row + 0.5) / totalRows) * 100;
+    // X cost: col center percentage
+    const xCost = ((col + 0.5) / cols) * 100;
+
+    // Total steps (1 per %)
+    return Math.round(yCost + xCost);
+  }
 }

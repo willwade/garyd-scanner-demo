@@ -56,4 +56,6 @@ export abstract class Scanner {
     window.dispatchEvent(event);
     this.audio.playSelectSound();
   }
+
+  public abstract getCost(itemIndex: number): number;
 }

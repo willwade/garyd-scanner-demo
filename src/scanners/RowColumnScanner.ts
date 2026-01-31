@@ -103,4 +103,11 @@ export class RowColumnScanner extends Scanner {
       }
     }
   }
+
+  public getCost(itemIndex: number): number {
+    const cols = this.renderer.columns;
+    const row = Math.floor(itemIndex / cols);
+    const col = itemIndex % cols;
+    return (row + 1) + (col + 1);
+  }
 }
