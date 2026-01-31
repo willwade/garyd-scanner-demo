@@ -58,8 +58,13 @@ export class SwitchScannerElement extends HTMLElement {
 
     // Initial Grid & Scanner Setup
     const initialConfig = this.configManager.get();
+
+    // Create scanner first so we can use it for mapping content during grid update
+    this.currentScanner = this.createScanner(initialConfig.scanStrategy);
+
     await this.updateGrid(initialConfig, true);
-    this.setScanner(initialConfig.scanStrategy);
+
+    this.currentScanner.start();
 
     if (initialConfig.viewMode !== 'standard') {
         this.updateGrid(initialConfig, false);
@@ -296,13 +301,12 @@ export class SwitchScannerElement extends HTMLElement {
         const viewChanged = cfg.viewMode !== lastConfig.viewMode || cfg.heatmapMax !== lastConfig.heatmapMax;
 
         if (contentChanged) {
+            // Need to update content.
             await this.updateGrid(cfg, true);
-            this.setScanner(cfg.scanStrategy);
         } else if (strategyChanged) {
             this.setScanner(cfg.scanStrategy);
-            if (cfg.viewMode !== 'standard') {
-                 await this.updateGrid(cfg, false);
-            }
+            // Strategy change requires re-mapping content (e.g. Snake)
+            await this.updateGrid(cfg, true);
         } else if (viewChanged) {
             await this.updateGrid(cfg, false);
         }
@@ -337,16 +341,16 @@ export class SwitchScannerElement extends HTMLElement {
         btn.addEventListener('mousedown', (e) => e.preventDefault());
     });
 
-    // Scanner Selection
+    // Scanner Events (Selection & Redraw)
     const gridContainer = this.shadowRoot!.querySelector('.grid-container')!;
+
     gridContainer.addEventListener('scanner:selection', (e: Event) => {
         const detail = (e as CustomEvent).detail;
         const item = detail.item;
 
         const output = this.shadowRoot!.querySelector('.output-text');
         if (output) {
-             const originalItem = this.baseItems.find(i => i.id === item.id);
-             const label = originalItem ? originalItem.label : item.label;
+             const label = item.label;
 
              if (label === 'Backspace') {
                   output.textContent = output.textContent?.slice(0, -1) || '';
@@ -360,6 +364,12 @@ export class SwitchScannerElement extends HTMLElement {
                   output.textContent += label;
              }
         }
+    });
+
+    gridContainer.addEventListener('scanner:redraw', () => {
+        // Trigger visual update (heatmap/cost)
+        const config = this.configManager.get();
+        this.updateGrid(config, false);
     });
   }
 
@@ -407,6 +417,9 @@ export class SwitchScannerElement extends HTMLElement {
       if (config.viewMode === 'standard') return items;
 
       return items.map((item, index) => {
+          // If item is empty/undefined (grid gap), skip?
+          if (!item) return item;
+
           const cost = this.currentScanner!.getCost(index);
           const newItem = { ...item };
 
@@ -421,6 +434,7 @@ export class SwitchScannerElement extends HTMLElement {
   }
 
   private async updateGrid(config: AppConfig, forceRegen: boolean = false) {
+      // 1. Generate Base Content (Linear)
       if (forceRegen) {
           if (config.gridContent === 'keyboard') {
               this.baseItems = await this.generateKeyboard(config);
@@ -429,13 +443,31 @@ export class SwitchScannerElement extends HTMLElement {
           }
       }
 
+      // 2. Determine Dimensions
       const total = this.baseItems.length;
       const cols = Math.ceil(Math.sqrt(total));
+      const rows = Math.ceil(total / cols);
 
-      this.gridRenderer.render(this.baseItems, cols);
+      // 3. Map Content to Grid based on Strategy
+      // We need the current scanner to do this mapping.
+      // If we are changing strategy, we should have set the new scanner before calling updateGrid(..., true).
+      // But in bindEvents, we call setScanner AFTER updateGrid for strategy changes?
+      // Wait, if strategy changes, we want new layout. So we need the new scanner first.
 
+      // I'll ensure setScanner is called before updateGrid if strategy changes.
+      // Or simply assume currentScanner is correct.
+
+      let displayItems = this.baseItems;
+      if (this.currentScanner) {
+          displayItems = this.currentScanner.mapContentToGrid(this.baseItems, rows, cols);
+      }
+
+      // 4. Render
+      this.gridRenderer.render(displayItems, cols);
+
+      // 5. Apply Visualization (if needed)
       if (config.viewMode !== 'standard' && this.currentScanner) {
-          const visualItems = this.applyVisualization(this.baseItems, config);
+          const visualItems = this.applyVisualization(displayItems, config);
           this.gridRenderer.render(visualItems, cols);
       }
   }
@@ -460,6 +492,9 @@ export class SwitchScannerElement extends HTMLElement {
       this.currentScanner.stop();
     }
     this.currentScanner = this.createScanner(type);
+    // Don't start immediately? Or yes?
+    // In connectedCallback we start().
+    // Here we might be mid-operation.
     this.currentScanner.start();
   }
 }

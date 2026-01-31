@@ -1,109 +1,126 @@
 import { Scanner } from './Scanner';
 import { SwitchAction } from '../SwitchInput';
+import { GridItem } from '../GridRenderer';
 
 export class SnakeScanner extends Scanner {
-  private currentIndex: number = -1;
-  private totalItems: number = 0;
-  private currentFocusIndex: number = -1;
+  private currentRow: number = 0;
+  private currentCol: number = 0;
+  private direction: number = 1; // 1 = Right, -1 = Left
+  private maxRow: number = 0;
+  private maxCol: number = 0;
 
   public start() {
-    this.totalItems = this.renderer.getItemsCount();
+    // Determine grid dimensions
+    this.updateDimensions();
     super.start();
   }
 
+  private updateDimensions() {
+    const total = this.renderer.getItemsCount();
+    this.maxCol = this.renderer.columns;
+    this.maxRow = Math.ceil(total / this.maxCol);
+  }
+
   protected reset() {
-    this.currentIndex = -1;
-    this.currentFocusIndex = -1;
-    this.renderer.setFocus([]);
+    this.currentRow = 0;
+    this.currentCol = 0;
+    this.direction = 1;
+    this.renderer.setFocus([0]);
   }
 
   protected step() {
-    this.currentIndex++;
-    if (this.currentIndex >= this.totalItems) {
-      this.currentIndex = 0;
+    // Calculate next position based on snake pattern
+    this.currentCol += this.direction;
+
+    // Check boundaries
+    if (this.currentCol >= this.maxCol) {
+      this.currentCol = this.maxCol - 1;
+      this.currentRow++;
+      this.direction = -1;
+    } else if (this.currentCol < 0) {
+      this.currentCol = 0;
+      this.currentRow++;
+      this.direction = 1;
     }
 
-    const cols = this.renderer.columns;
-    const row = Math.floor(this.currentIndex / cols);
-    const col = this.currentIndex % cols;
-
-    let actualIndex = this.currentIndex;
-
-    if (row % 2 === 1) {
-      // Odd row: Reverse column order
-      // We need to map `col` (0..cols-1) to (cols-1..0)
-      // But we must respect the actual items in this row if it's the last row?
-      // Snake usually fills the grid visually.
-      // If we have 10 items, 4 cols.
-      // 0 1 2 3
-      // 7 6 5 4
-      // 8 9
-      // The "Linear Snake" logic traverses 0->1->2->3->4->5->6->7->8->9.
-      // My `currentIndex` logic above naturally does 0..Total-1.
-      // So I just need to map `currentIndex` to `gridCoordinate`.
-      // Wait. Linear Snake means the *path* is snake-like.
-      // 0,1,2,3 are top row. 4,5,6,7 are next row (visually).
-      // If I want to SCAN 0,1,2,3 then 7,6,5,4...
-      // That means at step 4 (index 4), I should be highlighting item 7?
-      // Yes.
-
-      const rowStart = row * cols;
-      // For odd rows, we want to iterate R->L.
-      // Visual index at this row/col is: rowStart + (cols - 1 - col).
-      actualIndex = rowStart + (cols - 1 - col);
+    if (this.currentRow >= this.maxRow) {
+      this.currentRow = 0;
+      this.currentCol = 0;
+      this.direction = 1;
     }
 
-    // Check if valid
-    const item = this.renderer.getItem(actualIndex);
-    if (!item) {
-        // If we hit an empty cell (e.g. end of last row reversed, or incomplete row),
-        // we should skip it.
-        // Since we are inside a timer loop, we can just call step() again immediately?
-        // Or better, find the next valid one in a loop here.
-        // But `step` is called by timer.
+    // Convert row/col to index
+    const index = this.currentRow * this.maxCol + this.currentCol;
 
-        // Let's just try next one immediately.
-        // return this.step(); // Recursion risk if all empty?
-        // We'll trust totalItems > 0.
-        this.step();
+    // Check if index is valid (last row might be incomplete)
+    // If invalid, skip to start
+    if (index >= this.renderer.getItemsCount()) {
+        this.reset();
         return;
     }
 
-    this.currentFocusIndex = actualIndex;
-    this.renderer.setFocus([actualIndex]);
+    this.renderer.setFocus([index]);
   }
 
   public handleAction(action: SwitchAction) {
     if (action === 'select') {
-      if (this.currentFocusIndex >= 0) {
-        const item = this.renderer.getItem(this.currentFocusIndex);
-        if (item) {
-          this.renderer.setSelected(this.currentFocusIndex);
-          this.triggerSelection(item);
-          this.reset();
-          if (this.timer) clearTimeout(this.timer);
-          this.scheduleNextStep();
-        }
+      const index = this.currentRow * this.maxCol + this.currentCol;
+      const item = this.renderer.getItem(index);
+      if (item) {
+        this.renderer.setSelected(index);
+        this.triggerSelection(item);
+        this.reset();
+        if (this.timer) clearTimeout(this.timer);
+        this.scheduleNextStep();
       }
-    } else if (action === 'step') {
-      if (this.timer) clearTimeout(this.timer);
-      this.step();
-      this.audio.playScanSound();
-      this.scheduleNextStep();
     }
   }
 
   public getCost(itemIndex: number): number {
-    const cols = this.renderer.columns;
-    const row = Math.floor(itemIndex / cols);
-    const col = itemIndex % cols;
+    // TODO: Calculate snake distance
+    return itemIndex; // approx
+  }
 
-    if (row % 2 === 0) {
-      return itemIndex + 1;
-    } else {
-      const rowStart = row * cols;
-      const reversedCol = cols - 1 - col;
-      return (rowStart + reversedCol) + 1;
-    }
+  public mapContentToGrid(content: GridItem[], rows: number, cols: number): GridItem[] {
+      // Create a new array of same length
+      const newContent = new Array(content.length);
+
+      // Simulate the snake path
+      let r = 0, c = 0, dir = 1;
+      let contentIdx = 0;
+
+      // We need to fill the grid such that the scanner path (0->1->2 -> 5->4->3)
+      // encounters content[0], content[1], content[2], content[3]...
+
+      // The grid is stored in Row-Major order (0,1,2, 3,4,5).
+      // We want grid[path[i]] = content[i].
+
+      for (let i = 0; i < content.length; i++) {
+           // Calculate current grid index (row-major)
+           const gridIndex = r * cols + c;
+
+           if (gridIndex < newContent.length) {
+                // Place current content item at this grid position
+                newContent[gridIndex] = content[i];
+           }
+
+           // Advance snake
+           c += dir;
+           if (c >= cols) {
+               c = cols - 1;
+               r++;
+               dir = -1;
+           } else if (c < 0) {
+               c = 0;
+               r++;
+               dir = 1;
+           }
+           if (r >= rows) break;
+      }
+
+      // Fill any holes (if content length != grid size, though normally we generate exact or have empties)
+      // If content was shorter than grid, some slots are undefined.
+      // Copy over any remaining if needed or leave undefined/empty.
+      return newContent;
   }
 }

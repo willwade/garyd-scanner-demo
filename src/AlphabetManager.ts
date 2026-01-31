@@ -85,7 +85,6 @@ export class AlphabetManager {
 
     if (mode === 'frequency') {
         const freqMap = this.currentAlphabet.frequency || {};
-        // Removed unused 'lower' variable
 
         // Create a map of char -> frequency
         // Note: frequency keys are lowercase.

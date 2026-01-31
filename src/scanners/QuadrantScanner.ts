@@ -1,5 +1,6 @@
 import { Scanner } from './Scanner';
 import { SwitchAction } from '../SwitchInput';
+import { GridItem } from '../GridRenderer';
 
 export class QuadrantScanner extends Scanner {
   private level: 'quadrant' | 'row' | 'cell' = 'quadrant';
@@ -187,5 +188,56 @@ export class QuadrantScanner extends Scanner {
 
     // Cost = Quad selection + Row selection + Cell selection
     return (quadIndex + 1) + (rowInQuad + 1) + (colInQuad + 1);
+  }
+
+  public mapContentToGrid(content: GridItem[], rows: number, cols: number): GridItem[] {
+      // Quadrant scanning typically works on a standard grid (A-Z).
+      // However, if we want "A" to be the first item selected...
+      // Quad 0 scans first. It contains (0,0) to (midRow, midCol).
+      // If we use standard Row-Major layout, A is at (0,0), B at (0,1)...
+      // Quad 0 will contain A, B, C, D...
+      // So Quadrant scanning naturally "follows" the content if the content is placed top-left to bottom-right.
+      //
+      // Example 4x4 grid. Mid=2,2.
+      // Quad 0: (0,0) (0,1) (1,0) (1,1). Indices: 0, 1, 4, 5.
+      // If content is A..P.
+      // A(0), B(1), E(4), F(5) are in Quad 0.
+      // C(2), D(3), G(6), H(7) are in Quad 1.
+      //
+      // Scan order: Quad 0 -> Quad 1 -> Quad 2 -> Quad 3.
+      // If user wants "Alphabetical order to follow it", they probably want:
+      // Quad 0 contains A, B, C, D.
+      // Quad 1 contains E, F, G, H.
+      //
+      // So we need to fill Quad 0 completely, then Quad 1...
+
+      const newContent = new Array(content.length);
+      let contentIdx = 0;
+
+      const midRow = Math.ceil(rows / 2);
+      const midCol = Math.ceil(cols / 2);
+
+      const quads = [
+          { rS: 0, rE: midRow, cS: 0, cE: midCol }, // TL
+          { rS: 0, rE: midRow, cS: midCol, cE: cols }, // TR
+          { rS: midRow, rE: rows, cS: 0, cE: midCol }, // BL
+          { rS: midRow, rE: rows, cS: midCol, cE: cols } // BR
+      ];
+
+      for (const q of quads) {
+          for (let r = q.rS; r < q.rE; r++) {
+              for (let c = q.cS; c < q.cE; c++) {
+                  if (contentIdx >= content.length) break;
+
+                  // Fill row-major WITHIN the quadrant
+                  const gridIndex = r * cols + c;
+                  if (gridIndex < newContent.length) {
+                      newContent[gridIndex] = content[contentIdx++];
+                  }
+              }
+          }
+      }
+
+      return newContent;
   }
 }

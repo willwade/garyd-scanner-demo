@@ -27,7 +27,7 @@ export class ConfigManager {
     gridContent: 'numbers',
     gridSize: 64, // 8x8
     showUI: true,
-    soundEnabled: true,
+    soundEnabled: false,
     language: 'en',
     layoutMode: 'alphabetical',
     viewMode: 'standard',

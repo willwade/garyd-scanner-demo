@@ -61,5 +61,21 @@ export abstract class Scanner {
     this.audio.playSelectSound();
   }
 
+  protected triggerRedraw() {
+    const event = new CustomEvent('scanner:redraw', {
+        bubbles: true,
+        composed: true
+    });
+    this.renderer.getContainer().dispatchEvent(event);
+  }
+
   public abstract getCost(itemIndex: number): number;
+
+  /**
+   * Reorders the linear content to match the visual flow of the scanner.
+   * Default implementation returns content as-is (Row-Major).
+   */
+  public mapContentToGrid(content: GridItem[], rows: number, cols: number): GridItem[] {
+      return content;
+  }
 }
