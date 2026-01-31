@@ -1,0 +1,11 @@
+# TODO
+- [ ] Inverse Scanning Mode (Move on Hold, Select on Release).
+- [ ] Post-Selection Delay (Refractory period).
+- [ ] Dwell Activation (Zero-switch mode).
+- [ ] Full integration of Continuous Scanner with Mouse Events (currently selects Grid Items).
+- [ ] Visual polish for Continuous Scanner (colors, smooth animation).
+- [ ] "Back up one level" fully consistent across all scanners.
+- [ ] Keyboard Layout adjacency mapping for PPMPredictor (KeyboardAware mode).
+- [ ] Save/Load User Configurations.
+- [ ] Audio: Use better sound assets instead of Oscillator.
+- [ ] Error Correction Logic: "Back/Undo" insertion in scan path.
