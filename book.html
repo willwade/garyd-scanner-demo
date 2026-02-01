@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Switch Scanning Interactive Book</title>
+    <link rel="stylesheet" href="./src/style.css">
+    <style>
+        body {
+            font-family: 'Patrick Hand', sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fffdf9;
+            color: #333;
+        }
+        h1, h2 {
+            font-weight: normal;
+        }
+        section {
+            margin-bottom: 60px;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 5px 5px 0px rgba(0,0,0,0.05);
+        }
+        .scanner-container {
+            height: 400px;
+            margin: 20px 0;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        p.note {
+            background: #eef;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>The Art of Switch Scanning</h1>
+    <p>An interactive exploration of switch access technology.</p>
+
+    <section>
+        <h2>1. Cause & Effect</h2>
+        <p>Before scanning, we start with understanding that a switch press causes something to happen. This is "Cause and Effect".</p>
+        <p>Try pressing <strong>Space</strong> or clicking "Select" below to trigger the effect!</p>
+
+        <div class="scanner-container">
+            <switch-scanner
+                theme="sketch"
+                scan-mode="cause-effect"
+                grid-cols="1"
+                custom-items='[{"label":"Play Music!", "image":"https://api.iconify.design/twemoji:musical-note.svg", "id":"play"}]'>
+            </switch-scanner>
+        </div>
+        <div id="feedback-1" style="height: 20px; color: green; font-weight: bold; text-align: center;"></div>
+    </section>
+
+    <section>
+        <h2>2. Two-Switch Selection</h2>
+        <p>With two items, we can introduce a simple choice. Or, if we have two switches, we can use "Step Scanning" manually.</p>
+        <p>Use <strong>Switch 2 (Key '2')</strong> to Move, and <strong>Switch 1 (Space)</strong> to Select.</p>
+
+        <div class="scanner-container">
+            <switch-scanner
+                theme="sketch"
+                scan-pattern="linear"
+                scan-technique="point"
+                grid-cols="2"
+                custom-items='[{"label":"Yes", "id":"yes", "backgroundColor":"#e6f4ea"}, {"label":"No", "id":"no", "backgroundColor":"#fce8e6"}]'>
+            </switch-scanner>
+        </div>
+        <div id="feedback-2" style="height: 20px; color: blue; font-weight: bold; text-align: center;"></div>
+    </section>
+
+    <section>
+        <h2>3. Row-Column Scanning</h2>
+        <p>For many items, scanning every single one takes too long. Grouping them into Rows and Columns is much faster.</p>
+
+        <div class="scanner-container">
+            <switch-scanner
+                theme="sketch"
+                scan-pattern="row-column"
+                scan-technique="block"
+                grid-size="16">
+            </switch-scanner>
+        </div>
+    </section>
+
+    <section>
+        <h2>4. Continuous Scanning</h2>
+        <p>For more freedom, continuous scanning mimics a mouse. It requires precise timing.</p>
+
+        <div class="scanner-container">
+            <switch-scanner
+                theme="sketch"
+                scan-mode="continuous"
+                continuous-technique="crosshair">
+            </switch-scanner>
+        </div>
+    </section>
+
+    <script type="module" src="/src/main.ts"></script>
+    <script>
+        // Feedback Logic
+        document.body.addEventListener('scanner:selection', (e) => {
+            const item = e.detail.item;
+            const scanner = e.target;
+
+            // Find which section this scanner belongs to
+            const section = scanner.closest('section');
+            if (section) {
+                const feedback = section.querySelector('div[id^="feedback-"]');
+                if (feedback) {
+                    feedback.textContent = `Selected: ${item.label}`;
+                    feedback.style.opacity = '1';
+
+                    // Clear previous timeout if any
+                    if (feedback.dataset.timeout) {
+                        clearTimeout(parseInt(feedback.dataset.timeout));
+                    }
+
+                    const t = setTimeout(() => {
+                        feedback.textContent = '';
+                    }, 2000);
+                    feedback.dataset.timeout = t;
+                }
+            }
+
+            if (item.id === 'play') {
+                console.log("Cause and Effect Triggered!");
+                // Visual bounce
+                const el = scanner.shadowRoot.querySelector(`.grid-cell[data-id="${item.id}"]`);
+                if (el) {
+                    el.style.transform = 'scale(1.2) rotate(10deg)';
+                    setTimeout(() => el.style.transform = '', 200);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

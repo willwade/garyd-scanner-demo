@@ -26,7 +26,7 @@ export interface AppConfig {
   scanTechnique: 'block' | 'point';
 
   // SPECIAL MODES (patterns with built-in techniques)
-  scanMode: 'group-row-column' | 'continuous' | 'probability' | null;
+  scanMode: 'group-row-column' | 'continuous' | 'probability' | 'cause-effect' | null;
 
   // CONTINUOUS MODE TECHNIQUE (for scanMode='continuous')
   continuousTechnique: 'gliding' | 'crosshair' | 'eight-direction';
@@ -143,7 +143,7 @@ export class ConfigManager {
 
     if (params.has('mode')) {
       const mode = params.get('mode');
-      if (mode === 'group-row-column' || mode === 'continuous' || mode === 'probability') {
+      if (mode === 'group-row-column' || mode === 'continuous' || mode === 'probability' || mode === 'cause-effect') {
         this.config.scanMode = mode as AppConfig['scanMode'];
       } else if (mode === 'null' || mode === 'none' || mode === '') {
         this.config.scanMode = null;
