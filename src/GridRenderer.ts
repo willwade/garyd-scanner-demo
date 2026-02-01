@@ -1,6 +1,7 @@
 export interface GridItem {
   id: string;
   label: string;
+  image?: string;
   type?: 'action' | 'char' | 'word';
   backgroundColor?: string;
   textColor?: string;
@@ -38,7 +39,27 @@ export class GridRenderer {
     items.forEach((item, index) => {
       const cell = document.createElement('div');
       cell.className = 'grid-cell';
-      cell.textContent = item.label;
+
+      if (item.image) {
+        const img = document.createElement('img');
+        img.src = item.image;
+        img.alt = item.label;
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '100%';
+        img.style.objectFit = 'contain';
+        cell.appendChild(img);
+
+        if (item.label) {
+          const span = document.createElement('span');
+          span.textContent = item.label;
+          span.style.marginTop = '5px';
+          cell.appendChild(span);
+          cell.style.flexDirection = 'column';
+        }
+      } else {
+        cell.textContent = item.label;
+      }
+
       cell.dataset.index = index.toString();
       cell.dataset.id = item.id;
 

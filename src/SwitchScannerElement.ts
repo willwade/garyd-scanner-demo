@@ -14,6 +14,7 @@ import { GroupScanner } from './scanners/GroupScanner';
 import { EliminationScanner } from './scanners/EliminationScanner';
 import { ContinuousScanner } from './scanners/ContinuousScanner';
 import { ProbabilityScanner } from './scanners/ProbabilityScanner';
+import { CauseEffectScanner } from './scanners/CauseEffectScanner';
 
 export class SwitchScannerElement extends HTMLElement {
   private configManager!: ConfigManager;
@@ -25,6 +26,8 @@ export class SwitchScannerElement extends HTMLElement {
 
   private currentScanner: Scanner | null = null;
   private baseItems: GridItem[] = [];
+  private customItems: GridItem[] | null = null;
+  private forcedGridCols: number | null = null;
 
   private dwellTimer: number | null = null;
   private currentDwellTarget: HTMLElement | null = null;
@@ -79,13 +82,38 @@ export class SwitchScannerElement extends HTMLElement {
     if (!this.hasAttribute('tabindex')) {
         this.setAttribute('tabindex', '0');
     }
+
+    // Apply theme if present
+    const theme = this.getAttribute('theme');
+    if (theme) {
+        this.updateTheme(theme);
+    }
   }
 
   static get observedAttributes() {
-    return ['scan-strategy', 'scan-pattern', 'scan-technique', 'scan-mode', 'continuous-technique', 'compass-mode', 'grid-content', 'grid-size', 'language', 'scan-rate', 'acceptance-time', 'dwell-time'];
+    return ['scan-strategy', 'scan-pattern', 'scan-technique', 'scan-mode', 'continuous-technique', 'compass-mode', 'grid-content', 'grid-size', 'language', 'scan-rate', 'acceptance-time', 'dwell-time', 'custom-items', 'grid-cols', 'theme'];
   }
 
   attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+    if (name === 'custom-items') {
+        this.parseCustomItems(newValue);
+        if (this.configManager) { // Only update if initialized
+             this.updateGrid(this.configManager.get(), true);
+        }
+        return;
+    }
+    if (name === 'grid-cols') {
+        this.forcedGridCols = parseInt(newValue, 10);
+        if (this.configManager) {
+             this.updateGrid(this.configManager.get(), true);
+        }
+        return;
+    }
+    if (name === 'theme') {
+        this.updateTheme(newValue);
+        return;
+    }
+
     if (!this.configManager) return;
     if (oldValue === newValue) return;
 
@@ -198,7 +226,33 @@ export class SwitchScannerElement extends HTMLElement {
     const compassMode = this.getAttribute('compass-mode');
     if (compassMode) overrides.compassMode = compassMode as AppConfig['compassMode'];
 
+    // Custom items and columns are handled separately, not in AppConfig directly
+    const customItems = this.getAttribute('custom-items');
+    if (customItems) this.parseCustomItems(customItems);
+
+    const gridCols = this.getAttribute('grid-cols');
+    if (gridCols) this.forcedGridCols = parseInt(gridCols, 10);
+
     return overrides;
+  }
+
+  private parseCustomItems(json: string) {
+    try {
+        this.customItems = JSON.parse(json);
+    } catch (e) {
+        console.error('Failed to parse custom-items:', e);
+        this.customItems = null;
+    }
+  }
+
+  private updateTheme(theme: string) {
+      const wrapper = this.shadowRoot!.querySelector('.scanner-wrapper');
+      if (wrapper) {
+          wrapper.className = 'scanner-wrapper'; // reset
+          if (theme) {
+              wrapper.classList.add(theme);
+          }
+      }
   }
 
   private renderTemplate() {
@@ -560,6 +614,45 @@ export class SwitchScannerElement extends HTMLElement {
           font-size: 0.85rem;
         }
       }
+
+      /* Sketch Theme */
+      .scanner-wrapper.sketch {
+          background-color: #fdfdfd;
+          font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+      }
+      .scanner-wrapper.sketch .grid-cell {
+          background: white;
+          border: 2px solid #333;
+          border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+          box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+      }
+      .scanner-wrapper.sketch .scan-focus {
+          outline: none;
+          box-shadow: 0 0 0 4px #ff4081;
+          border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+          transform: scale(1.02);
+          transition: transform 0.1s;
+      }
+      .scanner-wrapper.sketch .controls {
+          background: transparent;
+          border-top: 2px dashed #ccc;
+      }
+      .scanner-wrapper.sketch .controls button {
+          border: 2px solid #333;
+          border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+          background: white;
+          font-family: inherit;
+          font-size: 1.1rem;
+      }
+      .scanner-wrapper.sketch .status-bar {
+          background: #333;
+          border-bottom: 2px solid #000;
+          font-family: inherit;
+      }
+      /* Ensure images in cells fit well */
+      .grid-cell img {
+          display: block;
+      }
     `;
     this.shadowRoot!.appendChild(style);
   }
@@ -781,7 +874,9 @@ export class SwitchScannerElement extends HTMLElement {
   private async updateGrid(config: AppConfig, forceRegen: boolean = false) {
       // 1. Generate Base Content (Linear)
       if (forceRegen) {
-          if (config.gridContent === 'keyboard') {
+          if (this.customItems && this.customItems.length > 0) {
+              this.baseItems = this.customItems;
+          } else if (config.gridContent === 'keyboard') {
               this.baseItems = await this.generateKeyboard(config);
           } else {
               this.baseItems = this.generateNumbers(config.gridSize);
@@ -790,18 +885,13 @@ export class SwitchScannerElement extends HTMLElement {
 
       // 2. Determine Dimensions
       const total = this.baseItems.length;
-      const cols = Math.ceil(Math.sqrt(total));
+      let cols = Math.ceil(Math.sqrt(total));
+      if (this.forcedGridCols && this.forcedGridCols > 0) {
+          cols = this.forcedGridCols;
+      }
       const rows = Math.ceil(total / cols);
 
       // 3. Map Content to Grid based on Strategy
-      // We need the current scanner to do this mapping.
-      // If we are changing strategy, we should have set the new scanner before calling updateGrid(..., true).
-      // But in bindEvents, we call setScanner AFTER updateGrid for strategy changes?
-      // Wait, if strategy changes, we want new layout. So we need the new scanner first.
-
-      // I'll ensure setScanner is called before updateGrid if strategy changes.
-      // Or simply assume currentScanner is correct.
-
       let displayItems = this.baseItems;
       if (this.currentScanner) {
           displayItems = this.currentScanner.mapContentToGrid(this.baseItems, rows, cols);
@@ -826,7 +916,9 @@ export class SwitchScannerElement extends HTMLElement {
     });
 
     // Special modes take precedence
-    if (config.scanMode === 'group-row-column') {
+    if (config.scanMode === 'cause-effect') {
+      return new CauseEffectScanner(this.gridRenderer, this.configManager, this.audioManager);
+    } else if (config.scanMode === 'group-row-column') {
       return new GroupScanner(this.gridRenderer, this.configManager, this.audioManager);
     } else if (config.scanMode === 'continuous') {
       console.log('[SwitchScannerElement] Creating ContinuousScanner');
