@@ -133,78 +133,81 @@ export class SwitchInput extends EventTarget {
   private handleSwitchDown(action: SwitchAction) {
     const config = this.configManager.get();
     const acceptanceTime = config.acceptanceTime;
+    const longHoldTime = config.longHoldTime;
+    const cancelMethod = config.cancelMethod;
 
-    // Special case for Switch 1 (Select) -> Long Hold Reset
-    if (action === 'select') {
-        const resetTimer = window.setTimeout(() => {
-            // Trigger Reset
-            this.triggerAction('reset');
-            // Cancel any pending select action
-            if (this.activeTimers.has('select')) {
-                clearTimeout(this.activeTimers.get('select'));
-                this.activeTimers.delete('select');
-            }
-            // Mark as handled to prevent select on up
-            this.activeTimers.set('select_handled', -1);
-        }, 1000); // 1000ms for reset
-        // Store reset timer separately or use a different key?
-        // Using a prefixed key
-        this.activeTimers.set('reset_timer', resetTimer);
+    // Long-Hold Cancel functionality
+    if (cancelMethod === 'long-hold' && longHoldTime > 0) {
+      // Start long-hold timer for this action
+      const longHoldTimer = window.setTimeout(() => {
+        // Trigger cancel action on long hold
+        this.triggerAction('cancel');
+
+        // Cancel any pending action
+        if (this.activeTimers.has(action)) {
+          clearTimeout(this.activeTimers.get(action));
+          this.activeTimers.delete(action);
+        }
+
+        // Mark as handled to prevent action on up
+        this.activeTimers.set(`${action}_handled` as TimerKey, -1);
+      }, longHoldTime);
+
+      this.activeTimers.set(`${action}_longhold` as TimerKey, longHoldTimer);
     }
 
     if (acceptanceTime > 0) {
       // Start timer
       const timer = window.setTimeout(() => {
-        // If we haven't already reset...
-        if (!this.activeTimers.has('select_handled')) {
-            this.triggerAction(action);
-            this.activeTimers.delete(action);
-             // Also clear reset timer if select fired?
-             // Usually select fires immediately after acceptance.
-             // If Acceptance < 1000, Select fires first.
-             // If Select fires, do we cancel reset?
-             // Spec says "Long-Hold Reset". Usually implies exclusive.
-             // If Select fired, we consumed the input.
-             if (this.activeTimers.has('reset_timer')) {
-                 clearTimeout(this.activeTimers.get('reset_timer'));
-                 this.activeTimers.delete('reset_timer');
-             }
+        // If we haven't already handled via long-hold...
+        if (!this.activeTimers.has(`${action}_handled` as TimerKey)) {
+          this.triggerAction(action);
+          this.activeTimers.delete(action);
+
+          // Clear long-hold timer if action fired
+          if (this.activeTimers.has(`${action}_longhold` as TimerKey)) {
+            clearTimeout(this.activeTimers.get(`${action}_longhold` as TimerKey));
+            this.activeTimers.delete(`${action}_longhold` as TimerKey);
+          }
         }
       }, acceptanceTime);
       this.activeTimers.set(action, timer);
     } else {
-      // Immediate trigger (if not waiting for long hold?)
-      // If immediate, we can't really distinguish long hold unless we delay 'select'.
-      // But typically "Immediate" means fire on down.
-      // If we fire Select immediately, we can't do Long Hold Reset easily without double firing.
-      // Unless Reset is a separate event that overrides.
-      // For now, if acceptanceTime == 0, we fire select immediately.
-      // To support Reset, user might need to release?
-      // "Holding Switch 1... forces...".
-      // If I hold, Select fires. Then Reset fires later?
-      // That triggers 2 actions.
-
-      this.triggerAction(action);
+      // Immediate trigger
+      // If using long-hold, we need to wait to see if it becomes a long-hold
+      if (cancelMethod === 'long-hold' && longHoldTime > 0) {
+        // Wait longer than long-hold time to ensure long-hold fires first if needed
+        const immediateTimer = window.setTimeout(() => {
+          if (!this.activeTimers.has(`${action}_handled` as TimerKey)) {
+            this.triggerAction(action);
+            this.activeTimers.delete(action);
+          }
+        }, longHoldTime + 50); // Wait past long-hold time
+        this.activeTimers.set(action, immediateTimer);
+      } else {
+        this.triggerAction(action);
+      }
     }
   }
 
   private handleSwitchUp(action: SwitchAction) {
-    // Clear Reset Timer
-    if (action === 'select' && this.activeTimers.has('reset_timer')) {
-        clearTimeout(this.activeTimers.get('reset_timer'));
-        this.activeTimers.delete('reset_timer');
+    // Clear long-hold timer
+    if (this.activeTimers.has(`${action}_longhold` as TimerKey)) {
+      clearTimeout(this.activeTimers.get(`${action}_longhold` as TimerKey));
+      this.activeTimers.delete(`${action}_longhold` as TimerKey);
     }
 
     // Clear Handled flag
-    if (action === 'select' && this.activeTimers.has('select_handled')) {
-        this.activeTimers.delete('select_handled');
-        return; // Don't process further
+    if (this.activeTimers.has(`${action}_handled` as TimerKey)) {
+      this.activeTimers.delete(`${action}_handled` as TimerKey);
+      return; // Don't process further
     }
 
-    // If we have a pending timer, clear it (acceptance time requirement not met)
+    // If we have a pending timer, fire the action immediately and clear the timer
     if (this.activeTimers.has(action)) {
       clearTimeout(this.activeTimers.get(action));
       this.activeTimers.delete(action);
+      this.triggerAction(action);
     }
   }
 

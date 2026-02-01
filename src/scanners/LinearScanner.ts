@@ -52,14 +52,13 @@ export class LinearScanner extends Scanner {
 
       case 'oscillating':
         // Oscillating: 0,1,2,...,n-1,n-2,...,1,0,1,2,...
-        this.currentIndex += this.direction;
-
-        // Change direction if we hit an endpoint
-        if (this.currentIndex >= this.totalItems - 1) {
+        // Change direction if we're about to hit an endpoint
+        if (this.currentIndex >= this.totalItems - 1 && this.direction === 1) {
           this.direction = -1; // Reached end, next step will go backward
-        } else if (this.currentIndex <= 0) {
+        } else if (this.currentIndex <= 0 && this.direction === -1) {
           this.direction = 1; // Reached start, next step will go forward
         }
+        this.currentIndex += this.direction;
         break;
     }
 
@@ -87,6 +86,10 @@ export class LinearScanner extends Scanner {
       this.audio.playScanSound();
       // Resume auto-scan? Or stay paused? Depends on mode.
       // For now, resume.
+      this.scheduleNextStep();
+    } else if (action === 'reset') {
+      this.reset();
+      if (this.timer) clearTimeout(this.timer);
       this.scheduleNextStep();
     }
   }

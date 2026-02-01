@@ -173,13 +173,13 @@ describe('Scan Direction Feature', () => {
     });
 
     it('should change direction at endpoints', () => {
-      // Scan to the end (9 steps from -1 to get to 9)
-      for (let i = 0; i < 9; i++) {
+      // Scan to the end (10 steps from -1 to get to 9)
+      for (let i = 0; i < 10; i++) {
         scanner['step']();
       }
       expect(scanner['currentIndex']).toBe(9);
 
-      scanner['step'](); // 10th step - should change direction here
+      scanner['step'](); // 11th step - should change direction here
       expect(scanner['currentIndex']).toBe(8); // Now going backward
 
       // Scan back to start
@@ -237,8 +237,8 @@ describe('Scan Direction Feature', () => {
       scanner = new LinearScanner(renderer, configManager, audioManager);
       scanner.start();
 
-      // Scan to middle
-      for (let i = 0; i < 5; i++) {
+      // Scan to middle (6 steps from -1 to get to 5)
+      for (let i = 0; i < 6; i++) {
         scanner['step']();
       }
       expect(scanner['currentIndex']).toBe(5);
@@ -285,6 +285,7 @@ describe('Scan Direction Feature', () => {
     it('should calculate cost correctly for reverse mode', () => {
       configManager.update({ scanDirection: 'reverse' });
       scanner = new LinearScanner(renderer, configManager, audioManager);
+      scanner.start(); // Initialize totalItems
 
       // In reverse mode, cost to reach item i from start is (n - i)
       // For 10 items (0-9):

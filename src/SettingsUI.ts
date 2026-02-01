@@ -271,6 +271,22 @@ export class SettingsUI {
           </label>
           <small>Enable items that skip selection and reset scan (for error recovery)</small>
         </div>
+
+        <div class="form-group">
+          <label for="cancelMethod">Cancel Method</label>
+          <select id="cancelMethod" class="setting-input" name="cancelMethod">
+            <option value="button">Button Press</option>
+            <option value="long-hold">Long Hold</option>
+          </select>
+          <small>How to cancel scanning (button press or hold switch)</small>
+        </div>
+
+        <div class="form-group" id="longHoldOptions" style="display: ${config.cancelMethod === 'long-hold' ? 'block' : 'none'}">
+          <label for="longHoldTime">Long Hold Time <span class="value-display">${config.longHoldTime}ms</span></label>
+          <input type="range" id="longHoldTime" class="setting-input range-input" name="longHoldTime"
+                 value="${config.longHoldTime}" min="500" max="3000" step="100">
+          <small>Hold duration to trigger cancel (500-3000ms)</small>
+        </div>
       </div>
 
       <div class="settings-section">
@@ -316,6 +332,8 @@ export class SettingsUI {
     setVal('scanPattern', config.scanPattern);
     setVal('scanTechnique', config.scanTechnique);
     setVal('scanDirection', config.scanDirection);
+    setVal('cancelMethod', config.cancelMethod);
+    setVal('longHoldTime', config.longHoldTime.toString());
     setVal('scanMode', config.scanMode || 'null');
     setVal('continuousTechnique', config.continuousTechnique);
     setVal('compassMode', config.compassMode);
@@ -450,6 +468,13 @@ export class SettingsUI {
           case 'allowEmptyItems':
               newConfig.allowEmptyItems = (target as HTMLInputElement).checked;
               break;
+          case 'cancelMethod':
+              newConfig.cancelMethod = target.value as AppConfig['cancelMethod'];
+              break;
+          case 'longHoldTime':
+              newConfig.longHoldTime = parseInt(target.value, 10);
+              this.updateValueDisplay('longHoldTime', target.value + 'ms');
+              break;
           case 'gridSize':
               newConfig.gridSize = parseInt(target.value, 10);
               this.updateValueDisplay('gridSize', target.value);
@@ -500,8 +525,16 @@ export class SettingsUI {
       this.configManager.update(newConfig);
 
       // Update UI state after config change
-      if (name === 'scanPattern' || name === 'scanMode' || name === 'continuousTechnique') {
+      if (name === 'scanPattern' || name === 'scanMode' || name === 'continuousTechnique' || name === 'cancelMethod') {
         this.updateUIState({ ...this.configManager.get(), ...newConfig });
+      }
+
+      // Show/hide long hold options based on cancel method
+      if (name === 'cancelMethod') {
+        const longHoldOptions = this.formContainer.querySelector('#longHoldOptions') as HTMLElement;
+        if (longHoldOptions) {
+          longHoldOptions.style.display = target.value === 'long-hold' ? 'block' : 'none';
+        }
       }
 
       // Show/hide repeat options based on autoRepeat

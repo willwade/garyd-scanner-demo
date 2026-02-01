@@ -43,6 +43,8 @@ export interface AppConfig {
 
   // ERROR HANDLING
   allowEmptyItems: boolean; // Allow items that don't trigger output (for scan reset)
+  cancelMethod: 'button' | 'long-hold'; // How to cancel scan
+  longHoldTime: number; // ms (hold time for long-hold cancel)
 
   // Display settings
   gridContent: 'numbers' | 'keyboard';
@@ -86,6 +88,8 @@ export class ConfigManager {
     compassMode: 'continuous',
     eliminationSwitchCount: 4,
     allowEmptyItems: false, // Disabled by default
+    cancelMethod: 'button', // Button press cancel
+    longHoldTime: 1000, // 1 second hold
     gridContent: 'numbers',
     gridSize: 64, // 8x8
     showUI: true,
