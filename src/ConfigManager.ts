@@ -16,7 +16,10 @@ export interface AppConfig {
   scanMode: 'group-row-column' | 'continuous' | 'probability' | null;
 
   // CONTINUOUS MODE TECHNIQUE (for scanMode='continuous')
-  continuousTechnique: 'gliding' | 'crosshair';
+  continuousTechnique: 'gliding' | 'crosshair' | 'eight-direction';
+
+  // COMPASS MODE (for continuousTechnique='eight-direction')
+  compassMode: 'continuous' | 'fixed-8';
 
   // Display settings
   gridContent: 'numbers' | 'keyboard';
@@ -44,6 +47,7 @@ export class ConfigManager {
     scanTechnique: 'block',
     scanMode: null,
     continuousTechnique: 'crosshair',
+    compassMode: 'continuous',
     gridContent: 'numbers',
     gridSize: 64, // 8x8
     showUI: true,

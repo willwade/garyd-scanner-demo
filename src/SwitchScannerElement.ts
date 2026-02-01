@@ -82,7 +82,7 @@ export class SwitchScannerElement extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['scan-strategy', 'scan-pattern', 'scan-technique', 'scan-mode', 'continuous-technique', 'grid-content', 'grid-size', 'language', 'scan-rate', 'acceptance-time', 'dwell-time'];
+    return ['scan-strategy', 'scan-pattern', 'scan-technique', 'scan-mode', 'continuous-technique', 'compass-mode', 'grid-content', 'grid-size', 'language', 'scan-rate', 'acceptance-time', 'dwell-time'];
   }
 
   attributeChangedCallback(name: string, oldValue: string, newValue: string) {
@@ -125,6 +125,9 @@ export class SwitchScannerElement extends HTMLElement {
             break;
         case 'continuous-technique':
             updates.continuousTechnique = newValue as AppConfig['continuousTechnique'];
+            break;
+        case 'compass-mode':
+            updates.compassMode = newValue as AppConfig['compassMode'];
             break;
     }
     this.configManager.update(updates);
@@ -191,6 +194,9 @@ export class SwitchScannerElement extends HTMLElement {
 
     const contTechnique = this.getAttribute('continuous-technique');
     if (contTechnique) overrides.continuousTechnique = contTechnique as AppConfig['continuousTechnique'];
+
+    const compassMode = this.getAttribute('compass-mode');
+    if (compassMode) overrides.compassMode = compassMode as AppConfig['compassMode'];
 
     return overrides;
   }

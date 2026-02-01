@@ -78,8 +78,18 @@ export class SettingsUI {
             <select id="continuousTechnique" class="setting-input" name="continuousTechnique">
               <option value="gliding">Gliding Cursor</option>
               <option value="crosshair">Crosshair</option>
+              <option value="eight-direction">Eight-Direction (Compass)</option>
             </select>
-            <small>Gliding: Auto-scan with buffer zone | Crosshair: Tap X then Y</small>
+            <small>Gliding: Buffer zone | Crosshair: X-Y lines | Compass: 8-directional movement</small>
+          </div>
+
+          <div class="form-group" id="compass-mode-option" style="display: ${config.continuousTechnique === 'eight-direction' ? 'block' : 'none'}">
+            <label for="compassMode">Compass Mode</label>
+            <select id="compassMode" class="setting-input" name="compassMode">
+              <option value="continuous">Continuous (Fluid)</option>
+              <option value="fixed-8">Fixed 8 Directions</option>
+            </select>
+            <small>Continuous: Smooth clock rotation | Fixed-8: 8 discrete directions</small>
           </div>
         </div>
 
@@ -231,10 +241,16 @@ export class SettingsUI {
     const patternSelect = this.formContainer.querySelector('[name="scanPattern"]') as HTMLSelectElement;
     const continuousOptions = this.formContainer.querySelector('#continuous-options') as HTMLElement;
     const patternOptions = this.formContainer.querySelector('#pattern-options') as HTMLElement;
+    const compassModeOption = this.formContainer.querySelector('#compass-mode-option') as HTMLElement;
 
     // Show/hide continuous technique options
     if (continuousOptions) {
       continuousOptions.style.display = config.scanMode === 'continuous' ? 'flex' : 'none';
+    }
+
+    // Show/hide compass mode option (only for eight-direction)
+    if (compassModeOption) {
+      compassModeOption.style.display = config.continuousTechnique === 'eight-direction' ? 'block' : 'none';
     }
 
     // Show/hide pattern options (hidden when special mode is active)
@@ -302,6 +318,9 @@ export class SettingsUI {
           case 'continuousTechnique':
               newConfig.continuousTechnique = target.value as AppConfig['continuousTechnique'];
               break;
+          case 'compassMode':
+              newConfig.compassMode = target.value as AppConfig['compassMode'];
+              break;
           case 'gridContent':
               newConfig.gridContent = target.value as AppConfig['gridContent'];
               break;
@@ -341,7 +360,7 @@ export class SettingsUI {
       this.configManager.update(newConfig);
 
       // Update UI state after config change
-      if (name === 'scanPattern' || name === 'scanMode') {
+      if (name === 'scanPattern' || name === 'scanMode' || name === 'continuousTechnique') {
         this.updateUIState({ ...this.configManager.get(), ...newConfig });
       }
     });

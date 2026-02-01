@@ -7,22 +7,24 @@ export class ContinuousScanner extends Scanner {
   private vBar: HTMLElement | null = null; // Vertical bar (crosshair)
   private bufferZone: HTMLElement | null = null; // Moving buffer (gliding)
   private lockedXBar: HTMLElement | null = null; // Green line showing locked X position
+  private directionIndicator: HTMLElement | null = null; // Arrow/compass for eight-direction mode
+  private directionLine: HTMLElement | null = null; // Line showing path for eight-direction mode
 
   // States differ by technique:
   // Crosshair: 'x-scan' → 'y-scan' → 'processing' (waits for switch)
   // Gliding: 'x-scanning' → 'x-capturing' → 'y-scanning' → 'y-capturing' → 'processing' (continuous movement)
-  private state: 'x-scan' | 'y-scan' | 'x-scanning' | 'x-capturing' | 'y-scanning' | 'y-capturing' | 'processing' = 'x-scan';
+  // Eight-Direction: 'direction-scan' → 'moving' → 'processing' (compass direction selection)
+  private state: 'x-scan' | 'y-scan' | 'x-scanning' | 'x-capturing' | 'y-scanning' | 'y-capturing' | 'direction-scan' | 'moving' | 'processing' = 'x-scan';
 
   private xPos: number = 0; // percentage 0-100
   private yPos: number = 0; // percentage 0-100
 
-  private technique: 'gliding' | 'crosshair' = 'crosshair';
+  private technique: 'gliding' | 'crosshair' | 'eight-direction' = 'crosshair';
   private numCols: number = 0;
   private numRows: number = 0;
 
   // For gliding cursor
   private bufferWidth: number = 15; // % of screen width for buffer zone
-  private itemsInBuffer: number[] = []; // Track items in buffer for selection
   private direction: 1 | -1 = 1; // 1 = right/down, -1 = left/up
   private pauseTimer: number | null = null; // For pause before reversing
   private bufferLeft: number = 0; // Left edge of buffer zone (%)
@@ -32,6 +34,23 @@ export class ContinuousScanner extends Scanner {
   private fineXPos: number = 0; // Fine line position within buffer zone (%)
   private fineYPos: number = 0; // Fine line position within buffer zone (%)
   private lockedXPosition: number = 0; // Actual X position when locked (%)
+
+  // Eight-direction mode
+  private currentDirection: number = 0; // 0-7 for 8 directions (N, NE, E, SE, S, SW, W, NW)
+  private compassAngle: number = 0; // Continuous angle 0-359 for fluid rotation
+  private compassMode: 'continuous' | 'fixed-8' = 'continuous'; // Fluid vs discrete
+  private directionStepCounter: number = 0; // Counter for slowing direction cycling
+  private directionStepsPerChange: number = 10; // How many steps before changing direction (fixed-8 mode)
+  private directions = [
+    { name: 'N', angle: 0, dx: 0, dy: -1 },      // North
+    { name: 'NE', angle: 45, dx: 1, dy: -1 },    // Northeast
+    { name: 'E', angle: 90, dx: 1, dy: 0 },      // East
+    { name: 'SE', angle: 135, dx: 1, dy: 1 },    // Southeast
+    { name: 'S', angle: 180, dx: 0, dy: 1 },     // South
+    { name: 'SW', angle: 225, dx: -1, dy: 1 },   // Southwest
+    { name: 'W', angle: 270, dx: -1, dy: 0 },    // West
+    { name: 'NW', angle: 315, dx: -1, dy: -1 }   // Northwest
+  ];
 
   public start() {
     try {
@@ -53,17 +72,21 @@ export class ContinuousScanner extends Scanner {
       this.createOverlay();
 
       // Set initial state based on technique
-      this.state = this.technique === 'gliding' ? 'x-scanning' : 'x-scan';
-      this.xPos = 0;
-      this.yPos = 0;
-      this.direction = 1; // Start moving right
-      this.fineXPos = 0;
-      this.fineYPos = 0;
-      this.bufferLeft = 0;
-      this.bufferRight = this.bufferWidth;
-      this.bufferTop = 0;
-      this.bufferBottom = this.bufferWidth;
-      this.lockedXPosition = 0;
+      if (this.technique === 'gliding') {
+        this.state = 'x-scanning';
+        this.xPos = 0;
+        this.yPos = 0;
+      } else if (this.technique === 'eight-direction') {
+        this.state = 'direction-scan';
+        this.xPos = 50; // Start in center for eight-direction mode
+        this.yPos = 50;
+        this.compassMode = config.compassMode || 'continuous';
+        this.compassAngle = 0;
+      } else {
+        this.state = 'x-scan';
+        this.xPos = 0;
+        this.yPos = 0;
+      }
 
       console.log('[ContinuousScanner] Initial state:', this.state);
 
@@ -84,9 +107,20 @@ export class ContinuousScanner extends Scanner {
   }
 
   protected reset() {
-    this.state = this.technique === 'gliding' ? 'x-scanning' : 'x-scan';
-    this.xPos = 0;
-    this.yPos = 0;
+    if (this.technique === 'gliding') {
+      this.state = 'x-scanning';
+      this.xPos = 0;
+      this.yPos = 0;
+    } else if (this.technique === 'eight-direction') {
+      this.state = 'direction-scan';
+      this.xPos = 50; // Start in center for eight-direction mode
+      this.yPos = 50;
+    } else {
+      this.state = 'x-scan';
+      this.xPos = 0;
+      this.yPos = 0;
+    }
+
     this.direction = 1;
     this.fineXPos = 0;
     this.fineYPos = 0;
@@ -95,17 +129,50 @@ export class ContinuousScanner extends Scanner {
     this.bufferTop = 0;
     this.bufferBottom = this.bufferWidth;
     this.lockedXPosition = 0;
-    this.itemsInBuffer = [];
+    this.currentDirection = 0;
+    this.compassAngle = 0;
+    this.directionStepCounter = 0;
     this.renderer.setFocus([]);
 
     // Hide all overlays
     if (this.lockedXBar) this.lockedXBar.style.display = 'none';
+    if (this.directionIndicator) this.directionIndicator.style.display = 'none';
+    if (this.directionLine) this.directionLine.style.display = 'none';
 
     this.updateOverlay();
   }
 
   protected step() {
-    if (this.technique === 'gliding') {
+    if (this.technique === 'eight-direction') {
+      if (this.state === 'direction-scan') {
+        if (this.compassMode === 'continuous') {
+          // Fluid clock-like rotation
+          this.compassAngle = (this.compassAngle + 2) % 360; // 2 degrees per step
+        } else {
+          // Fixed 8 directions
+          this.directionStepCounter++;
+          if (this.directionStepCounter >= this.directionStepsPerChange) {
+            this.currentDirection = (this.currentDirection + 1) % 8;
+            this.directionStepCounter = 0;
+          }
+          this.compassAngle = this.directions[this.currentDirection].angle;
+        }
+      } else if (this.state === 'moving') {
+        // Move in the selected direction
+        const dir = this.compassMode === 'continuous'
+          ? this.getDirectionFromAngle(this.compassAngle)
+          : this.directions[this.currentDirection];
+
+        const speed = 0.5; // Movement speed
+
+        this.xPos += dir.dx * speed;
+        this.yPos += dir.dy * speed;
+
+        // Keep within bounds
+        this.xPos = Math.max(0, Math.min(100, this.xPos));
+        this.yPos = Math.max(0, Math.min(100, this.yPos));
+      }
+    } else if (this.technique === 'gliding') {
       if (this.state === 'x-scanning') {
         // Stage 1: Move X buffer zone across full screen (faster)
         this.xPos += 0.8 * this.direction;
@@ -209,32 +276,60 @@ export class ContinuousScanner extends Scanner {
         bufferLeft: this.bufferLeft,
         bufferRight: this.bufferRight,
         technique: this.technique,
-        direction: this.direction
+        direction: this.direction,
+        currentDirection: this.currentDirection
       });
     }
 
     this.updateOverlay();
   }
 
-  private updateItemsInBuffer() {
-    // Find all items whose horizontal center is within the buffer
-    const bufferLeft = Math.max(0, this.xPos - this.bufferWidth / 2);
-    const bufferRight = Math.min(100, this.xPos + this.bufferWidth / 2);
-    const totalItems = this.renderer.getItemsCount();
-    const cols = this.numCols;
-    const indices: number[] = [];
+  private calculateLineLength(x: number, y: number, dx: number, dy: number): number {
+    // Calculate the distance from current position to the edge of the screen
+    // in the given direction (dx, dy), as a percentage
 
-    for (let i = 0; i < totalItems; i++) {
-      const col = i % cols;
-      const itemCenter = ((col + 0.5) / cols) * 100;
-
-      if (itemCenter >= bufferLeft && itemCenter <= bufferRight) {
-        indices.push(i);
-      }
+    if (dx === 0 && dy === -1) {
+      // North - distance to top edge
+      return y;
+    } else if (dx === 1 && dy === -1) {
+      // Northeast - distance to top or right edge, whichever is closer
+      return Math.min(100 - x, y) * Math.SQRT2;
+    } else if (dx === 1 && dy === 0) {
+      // East - distance to right edge
+      return 100 - x;
+    } else if (dx === 1 && dy === 1) {
+      // Southeast - distance to bottom or right edge, whichever is closer
+      return Math.min(100 - x, 100 - y) * Math.SQRT2;
+    } else if (dx === 0 && dy === 1) {
+      // South - distance to bottom edge
+      return 100 - y;
+    } else if (dx === -1 && dy === 1) {
+      // Southwest - distance to bottom or left edge, whichever is closer
+      return Math.min(x, 100 - y) * Math.SQRT2;
+    } else if (dx === -1 && dy === 0) {
+      // West - distance to left edge
+      return x;
+    } else if (dx === -1 && dy === -1) {
+      // Northwest - distance to top or left edge, whichever is closer
+      return Math.min(x, y) * Math.SQRT2;
     }
 
-    this.itemsInBuffer = indices;
-    // Don't visually highlight - just track for selection
+    return 50; // Default fallback
+  }
+
+  private getDirectionFromAngle(angle: number): { dx: number; dy: number; name: string } {
+    // Convert angle to direction vector
+    const radians = (angle * Math.PI) / 180;
+    const dx = Math.cos(radians);
+    const dy = Math.sin(radians);
+
+    // Find closest cardinal direction for naming
+    const normalizedAngle = (angle + 22.5) % 360; // Offset by 22.5 degrees for proper rounding
+    const directionIndex = Math.floor(normalizedAngle / 45);
+    const names = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
+    const name = names[directionIndex] || 'N';
+
+    return { dx, dy, name };
   }
 
   // Override scheduleNextStep for different refresh rates
@@ -316,6 +411,31 @@ export class ContinuousScanner extends Scanner {
     this.lockedXBar.style.display = 'none'; // Hidden initially
     this.overlay.appendChild(this.lockedXBar);
 
+    // Direction Indicator (for eight-direction mode) - shows an arrow pointing in current direction
+    this.directionIndicator = document.createElement('div');
+    this.directionIndicator.style.position = 'absolute';
+    this.directionIndicator.style.top = '10px';
+    this.directionIndicator.style.right = '10px';
+    this.directionIndicator.style.width = '80px';
+    this.directionIndicator.style.height = '80px';
+    this.directionIndicator.style.borderRadius = '50%';
+    this.directionIndicator.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+    this.directionIndicator.style.border = '3px solid #333';
+    this.directionIndicator.style.display = 'none'; // Hidden initially
+    this.directionIndicator.style.pointerEvents = 'none';
+    this.overlay.appendChild(this.directionIndicator);
+
+    // Direction Line (for eight-direction mode) - shows the path the cursor will take
+    this.directionLine = document.createElement('div');
+    this.directionLine.style.position = 'absolute';
+    this.directionLine.style.height = '2px';
+    this.directionLine.style.backgroundColor = 'rgba(33, 150, 243, 0.6)';
+    this.directionLine.style.transformOrigin = '0 50%';
+    this.directionLine.style.display = 'none'; // Hidden initially
+    this.directionLine.style.pointerEvents = 'none';
+    this.directionLine.style.zIndex = '5';
+    this.overlay.appendChild(this.directionLine);
+
     // Append to the renderer's container (inside Shadow DOM)
     container.appendChild(this.overlay);
 
@@ -331,6 +451,8 @@ export class ContinuousScanner extends Scanner {
     this.vBar = null;
     this.bufferZone = null;
     this.lockedXBar = null;
+    this.directionIndicator = null;
+    this.directionLine = null;
   }
 
   public handleAction(action: SwitchAction) {
@@ -341,7 +463,20 @@ export class ContinuousScanner extends Scanner {
     });
 
     if (action === 'select') {
-      if (this.technique === 'gliding') {
+      if (this.technique === 'eight-direction') {
+        // Eight-direction: direction selection → movement → selection
+        if (this.state === 'direction-scan') {
+          // First select: start moving in selected direction
+          const dirInfo = this.getDirectionFromAngle(this.compassAngle);
+          console.log('[ContinuousScanner] Transition: direction-scan -> moving, direction:', dirInfo.name, 'angle:', this.compassAngle);
+          this.state = 'moving';
+        } else if (this.state === 'moving') {
+          // Second select: stop and select item at current position
+          console.log('[ContinuousScanner] Transition: moving -> processing');
+          this.state = 'processing';
+          this.selectFocusedItem();
+        }
+      } else if (this.technique === 'gliding') {
         // Gliding cursor: four-stage selection (X coarse, X fine, Y coarse, Y fine)
         if (this.state === 'x-scanning') {
           // First select: lock X buffer zone, start fine X scanning
@@ -389,14 +524,22 @@ export class ContinuousScanner extends Scanner {
   }
 
   private selectFocusedItem() {
-    // For gliding cursor: select item at intersection of fine X and Y lines
+    // For eight-direction and gliding cursor: select item at current position
     if (!this.overlay) return;
 
     const rect = this.overlay.getBoundingClientRect();
-    // Use locked X position and fine Y position
-    const actualYPos = this.bufferTop + (this.fineYPos / 100) * (this.bufferBottom - this.bufferTop);
-    const clientX = rect.left + (this.lockedXPosition / 100) * rect.width;
-    const clientY = rect.top + (actualYPos / 100) * rect.height;
+    let clientX, clientY;
+
+    if (this.technique === 'eight-direction') {
+      // Use current cursor position
+      clientX = rect.left + (this.xPos / 100) * rect.width;
+      clientY = rect.top + (this.yPos / 100) * rect.height;
+    } else {
+      // Gliding cursor: Use locked X position and fine Y position
+      const actualYPos = this.bufferTop + (this.fineYPos / 100) * (this.bufferBottom - this.bufferTop);
+      clientX = rect.left + (this.lockedXPosition / 100) * rect.width;
+      clientY = rect.top + (actualYPos / 100) * rect.height;
+    }
 
     // Temporarily hide overlay so elementFromPoint works
     this.overlay.style.display = 'none';
@@ -422,12 +565,14 @@ export class ContinuousScanner extends Scanner {
   }
 
   private updateOverlay() {
-    if (!this.hBar || !this.vBar || !this.bufferZone || !this.lockedXBar) {
+    if (!this.hBar || !this.vBar || !this.bufferZone || !this.lockedXBar || !this.directionIndicator || !this.directionLine) {
       console.error('[ContinuousScanner] updateOverlay: Missing elements!', {
         hBar: !!this.hBar,
         vBar: !!this.vBar,
         bufferZone: !!this.bufferZone,
         lockedXBar: !!this.lockedXBar,
+        directionIndicator: !!this.directionIndicator,
+        directionLine: !!this.directionLine,
         overlay: !!this.overlay
       });
       return;
@@ -437,16 +582,108 @@ export class ContinuousScanner extends Scanner {
       technique: this.technique,
       state: this.state,
       xPos: this.xPos,
-      yPos: this.yPos
+      yPos: this.yPos,
+      currentDirection: this.currentDirection
     });
 
-    if (this.technique === 'gliding') {
+    if (this.technique === 'eight-direction') {
+      // Eight-direction mode: Show compass/arrow indicator + directional line
+      this.vBar.style.display = 'none';
+      this.hBar.style.display = 'none';
+      this.bufferZone.style.display = 'none';
+      this.lockedXBar.style.display = 'none';
+
+      this.directionIndicator.style.display = 'block';
+      this.directionLine.style.display = 'block';
+
+      // Get current direction info
+      const angle = this.compassAngle;
+      const dirInfo = this.getDirectionFromAngle(angle);
+
+      // Update the compass display
+      this.directionIndicator.innerHTML = `
+        <div style="
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(${angle}deg);
+          font-size: 24px;
+          font-weight: bold;
+          color: #2196F3;
+        ">↑</div>
+        <div style="
+          position: absolute;
+          top: 5px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 12px;
+          font-weight: bold;
+        ">N</div>
+        <div style="
+          position: absolute;
+          bottom: 5px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 12px;
+          font-weight: bold;
+        ">S</div>
+        <div style="
+          position: absolute;
+          left: 5px;
+          top: 50%;
+          transform: translateY(-50%);
+          font-size: 12px;
+          font-weight: bold;
+        ">W</div>
+        <div style="
+          position: absolute;
+          right: 5px;
+          top: 50%;
+          transform: translateY(-50%);
+          font-size: 12px;
+          font-weight: bold;
+        ">E</div>
+        <div style="
+          position: absolute;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 10px;
+          color: #666;
+        ">${dirInfo.name} (${Math.round(angle)}°)</div>
+      `;
+
+      // Draw directional line from current position to screen edge
+      // Position at cursor center
+      this.directionLine.style.left = `${this.xPos}%`;
+      this.directionLine.style.top = `${this.yPos}%`;
+
+      // Calculate line length and angle
+      const lineLength = this.calculateLineLength(this.xPos, this.yPos, dirInfo.dx, dirInfo.dy);
+      this.directionLine.style.width = `${lineLength}%`;
+      // Fix: The line should rotate around its starting point (left center)
+      this.directionLine.style.transformOrigin = '0 50%';
+      this.directionLine.style.transform = `rotate(${angle}deg)`;
+
+      // Add a cursor dot at current position
+      this.vBar.style.display = 'block';
+      this.vBar.style.width = '12px';
+      this.vBar.style.height = '12px';
+      this.vBar.style.borderRadius = '50%';
+      this.vBar.style.backgroundColor = this.state === 'moving' ? '#FF5722' : '#2196F3';
+      this.vBar.style.border = '2px solid white';
+      this.vBar.style.zIndex = '10';
+      this.vBar.style.left = `calc(${this.xPos}% - 6px)`;
+      this.vBar.style.top = `calc(${this.yPos}% - 6px)`;
+    } else if (this.technique === 'gliding') {
       // Gliding: Four-stage selection
       if (this.state === 'x-scanning') {
         // Stage 1: X coarse positioning - show vertical buffer zone
         this.vBar.style.display = 'none';
         this.hBar.style.display = 'none';
         if (this.lockedXBar) this.lockedXBar.style.display = 'none';
+        if (this.directionIndicator) this.directionIndicator.style.display = 'none';
+        if (this.directionLine) this.directionLine.style.display = 'none';
 
         const bufferLeft = Math.max(0, this.xPos - this.bufferWidth / 2);
         const bufferRight = Math.min(100, this.xPos + this.bufferWidth / 2);
@@ -461,6 +698,8 @@ export class ContinuousScanner extends Scanner {
         // Stage 2: X fine positioning - keep buffer zone, add fine vertical line
         this.hBar.style.display = 'none';
         if (this.lockedXBar) this.lockedXBar.style.display = 'none';
+        if (this.directionIndicator) this.directionIndicator.style.display = 'none';
+        if (this.directionLine) this.directionLine.style.display = 'none';
 
         const actualWidth = this.bufferRight - this.bufferLeft;
         this.bufferZone.style.left = `${this.bufferLeft}%`;
@@ -476,6 +715,8 @@ export class ContinuousScanner extends Scanner {
         // Stage 3: Y coarse positioning - show horizontal buffer zone + locked X line
         this.vBar.style.display = 'none';
         this.hBar.style.display = 'none';
+        if (this.directionIndicator) this.directionIndicator.style.display = 'none';
+        if (this.directionLine) this.directionLine.style.display = 'none';
 
         // Show green locked X line
         this.lockedXBar.style.display = 'block';
@@ -493,6 +734,8 @@ export class ContinuousScanner extends Scanner {
       } else if (this.state === 'y-capturing') {
         // Stage 4: Y fine positioning - keep buffer zone, add fine horizontal line + locked X line
         this.vBar.style.display = 'none';
+        if (this.directionIndicator) this.directionIndicator.style.display = 'none';
+        if (this.directionLine) this.directionLine.style.display = 'none';
 
         // Show green locked X line
         this.lockedXBar.style.display = 'block';
@@ -513,6 +756,8 @@ export class ContinuousScanner extends Scanner {
       // Crosshair: Show X-Y bars only (no cell highlighting)
       this.bufferZone.style.display = 'none';
       if (this.lockedXBar) this.lockedXBar.style.display = 'none';
+      if (this.directionIndicator) this.directionIndicator.style.display = 'none';
+      if (this.directionLine) this.directionLine.style.display = 'none';
 
       // xPos and yPos are now 0-100%, direct percentage values
       if (this.state === 'x-scan') {
@@ -565,7 +810,14 @@ export class ContinuousScanner extends Scanner {
     const row = Math.floor(itemIndex / cols);
     const col = itemIndex % cols;
 
-    if (this.technique === 'gliding') {
+    if (this.technique === 'eight-direction') {
+      // Eight-direction: Wait for direction to align, then move to item, then select
+      // Approximate: wait for correct direction (avg 4 steps) + distance + 1 click
+      const itemCenterX = ((col + 0.5) / cols) * 100;
+      const itemCenterY = ((row + 0.5) / Math.ceil(this.renderer.getItemsCount() / cols)) * 100;
+      const distance = Math.sqrt(Math.pow(itemCenterX, 2) + Math.pow(itemCenterY, 2)); // Distance from start
+      return 4 + Math.round(distance / 0.5) + 1; // Direction wait + movement + click
+    } else if (this.technique === 'gliding') {
       // Gliding: Wait for cursor to reach item, then select
       // Cost = time to reach item + 1 click
       const itemCenter = ((col + 0.5) / cols) * 100;
