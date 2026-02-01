@@ -1,86 +1,187 @@
 import { Scanner } from './Scanner';
 import { SwitchAction } from '../SwitchInput';
 
+// Color mapping for switches
+const SWITCH_COLORS: Record<string, string> = {
+  'switch-1': '#2196F3', // Blue
+  'switch-2': '#F44336', // Red
+  'switch-3': '#4CAF50', // Green
+  'switch-4': '#FFEB3B', // Yellow
+  'switch-5': '#9C27B0', // Purple
+  'switch-6': '#FF9800', // Orange
+  'switch-7': '#00BCD4', // Cyan
+  'switch-8': '#E91E63'  // Magenta
+};
+
 export class EliminationScanner extends Scanner {
   private rangeStart: number = 0;
   private rangeEnd: number = 0; // Exclusive
-  private currentHalf: 0 | 1 = 0; // 0 = first half, 1 = second half
+  private currentBlock: number = 0; // Which block is currently highlighted
+  private numSwitches: number = 4; // Default to 4-switch (quadrant)
+  private partitionHistory: Array<{start: number; end: number}> = [];
 
   public start() {
+    const config = this.config.get();
+    this.numSwitches = config.eliminationSwitchCount || 4;
     this.rangeStart = 0;
     this.rangeEnd = this.renderer.getItemsCount();
+    this.partitionHistory = [];
     super.start();
   }
 
   protected reset() {
     this.rangeStart = 0;
     this.rangeEnd = this.renderer.getItemsCount();
-    this.currentHalf = 0;
+    this.currentBlock = 0;
+    this.partitionHistory = [];
+    this.clearHighlights();
+  }
+
+  private clearHighlights() {
     this.renderer.setFocus([]);
+    // Clear any color highlights
+    const container = this.renderer.getContainer();
+    const cells = container.querySelectorAll('.grid-cell');
+    cells.forEach(cell => {
+      (cell as HTMLElement).style.backgroundColor = '';
+      (cell as HTMLElement).style.boxShadow = '';
+    });
   }
 
   protected step() {
-    // Toggle between halves
-    this.currentHalf = this.currentHalf === 0 ? 1 : 0;
-    this.highlightCurrentHalf();
+    // Cycle through blocks
+    this.currentBlock = (this.currentBlock + 1) % this.numSwitches;
+    this.highlightCurrentBlock();
   }
 
-  private highlightCurrentHalf() {
-    const rangeSize = this.rangeEnd - this.rangeStart;
-    const mid = this.rangeStart + Math.ceil(rangeSize / 2);
+  private highlightCurrentBlock() {
+    this.clearHighlights();
 
-    let start, end;
-    if (this.currentHalf === 0) {
-        start = this.rangeStart;
-        end = mid;
-    } else {
-        start = mid;
-        end = this.rangeEnd;
+    const partitions = this.calculatePartitions(this.rangeStart, this.rangeEnd, this.numSwitches);
+    const partition = partitions[this.currentBlock];
+
+    if (!partition) return;
+
+    // Highlight cells with color and border
+    const container = this.renderer.getContainer();
+    for (let i = partition.start; i < partition.end; i++) {
+      const cell = container.querySelector(`[data-index="${i}"]`) as HTMLElement;
+      if (cell) {
+        const switchAction = this.getSwitchAction(this.currentBlock);
+        const color = SWITCH_COLORS[switchAction];
+
+        // Apply colored background
+        cell.style.backgroundColor = color;
+        cell.style.opacity = '0.4';
+
+        // Add colored border
+        cell.style.boxShadow = `inset 0 0 0 3px ${color}`;
+        cell.style.border = `2px solid ${color}`;
+      }
+    }
+  }
+
+  private calculatePartitions(start: number, end: number, n: number): Array<{start: number; end: number}> {
+    const partitions: Array<{start: number; end: number}> = [];
+    const total = end - start;
+    const baseSize = Math.floor(total / n);
+    const remainder = total % n;
+
+    let currentStart = start;
+    for (let i = 0; i < n; i++) {
+      // Add 1 to the first 'remainder' partitions to distribute extras
+      const size = baseSize + (i < remainder ? 1 : 0);
+      partitions.push({ start: currentStart, end: currentStart + size });
+      currentStart += size;
     }
 
-    const indices: number[] = [];
-    for (let i = start; i < end; i++) indices.push(i);
-    this.renderer.setFocus(indices);
+    return partitions;
+  }
+
+  private getSwitchAction(blockIndex: number): SwitchAction {
+    const switchMap: Record<number, SwitchAction> = {
+      0: 'switch-1',
+      1: 'switch-2',
+      2: 'switch-3',
+      3: 'switch-4',
+      4: 'switch-5',
+      5: 'switch-6',
+      6: 'switch-7',
+      7: 'switch-8'
+    };
+    return switchMap[blockIndex] || 'switch-1';
   }
 
   public handleAction(action: SwitchAction) {
-    if (action === 'select') {
-        const rangeSize = this.rangeEnd - this.rangeStart;
-        if (rangeSize <= 1) {
-            // Selected single item
-            const item = this.renderer.getItem(this.rangeStart);
-            if (item) {
-                this.triggerSelection(item);
-                this.reset();
-                this.restartTimer();
+    // Check if it's a switch action (switch-1 through switch-8)
+    if (action.toString().startsWith('switch-')) {
+      const switchNum = parseInt(action.toString().split('-')[1]) - 1;
+
+      if (switchNum >= this.numSwitches) {
+        // Ignore switches beyond our count
+        return;
+      }
+
+      const rangeSize = this.rangeEnd - this.rangeStart;
+
+      if (rangeSize <= 1) {
+        // Already at single item - select it
+        const item = this.renderer.getItem(this.rangeStart);
+        if (item) {
+          this.triggerSelection(item);
+          this.reset();
+          this.restartTimer();
+        }
+        return;
+      }
+
+      // Check if this is the correct block for current round
+      if (switchNum === this.currentBlock) {
+        // Select this block and drill down
+        const partitions = this.calculatePartitions(this.rangeStart, this.rangeEnd, this.numSwitches);
+        const selectedBlock = partitions[switchNum];
+
+        if (selectedBlock) {
+          // Save history for potential undo
+          this.partitionHistory.push({ start: this.rangeStart, end: this.rangeEnd });
+
+          // Narrow to selected block
+          this.rangeStart = selectedBlock.start;
+          this.rangeEnd = selectedBlock.end;
+
+          // Reset to first block for new range
+          this.currentBlock = 0;
+
+          // If only one item left, highlight it immediately
+          if (this.rangeEnd - this.rangeStart === 1) {
+            this.clearHighlights();
+            const cell = this.renderer.getContainer().querySelector(`[data-index="${this.rangeStart}"]`) as HTMLElement;
+            if (cell) {
+              const color = SWITCH_COLORS['switch-1'];
+              cell.style.backgroundColor = color;
+              cell.style.opacity = '0.6';
+              cell.style.boxShadow = `inset 0 0 0 4px ${color}, 0 0 10px ${color}`;
             }
-            return;
+          }
         }
 
-        // Drill down
-        const mid = this.rangeStart + Math.ceil(rangeSize / 2);
-        if (this.currentHalf === 0) {
-            this.rangeEnd = mid;
-        } else {
-            this.rangeStart = mid;
-        }
-
-        // Reset to scan first half of new range
-        this.currentHalf = 1; // Will flip to 0 on step?
-        // Actually we want to start scanning immediatley.
-        // If we just shrank the range, we should probably pause and highlight the new full range?
-        // Or immediately start alternating sub-halves.
-
-        // Let's set currentHalf to 1 so step() flips it to 0.
-        this.currentHalf = 1;
         this.restartTimer();
+      }
+      return;
+    }
 
-    } else if (action === 'cancel') {
-        // Go back up?
-        // Hard to know previous split.
-        // For simplicity, reset.
+    // Handle other actions
+    if (action === 'cancel' || action === 'reset') {
+      // Go back up one level if possible, otherwise reset
+      if (this.partitionHistory.length > 0) {
+        const previous = this.partitionHistory.pop()!;
+        this.rangeStart = previous.start;
+        this.rangeEnd = previous.end;
+        this.currentBlock = 0;
+      } else {
         this.reset();
-        this.restartTimer();
+      }
+      this.restartTimer();
     }
   }
 
@@ -90,49 +191,49 @@ export class EliminationScanner extends Scanner {
   }
 
   public getCost(itemIndex: number): number {
+    const n = this.numSwitches;
     let start = 0;
     let end = this.renderer.getItemsCount();
     let cost = 0;
 
-    // Simulate the elimination process
+    // Simulate n-way elimination
     while (end - start > 1) {
-      const mid = start + Math.ceil((end - start) / 2);
+      const partitions = this.calculatePartitions(start, end, n);
 
-      // Determine if item is in first or second half
-      if (itemIndex < mid) {
-        // In first half [start, mid)
-        // Scanner logic: highlights 2nd half (step 1), then 1st half (step 2)
-        // Wait... step() flips currentHalf.
-        // Initial currentHalf=0. step() -> 1 (Highlight 2nd half).
-        // Next step() -> 0 (Highlight 1st half).
-        // So:
-        // Step 1: 2nd half highlighted. (Item NOT here).
-        // Step 2: 1st half highlighted. (Item IS here). Select!
-        cost += 2;
-        end = mid; // Narrow to first half
-      } else {
-        // In second half [mid, end)
-        // Step 1: 2nd half highlighted. (Item IS here). Select!
-        cost += 1;
-        start = mid; // Narrow to second half
+      // Find which partition contains the item
+      let foundPartition = 0;
+      for (let i = 0; i < partitions.length; i++) {
+        if (itemIndex >= partitions[i].start && itemIndex < partitions[i].end) {
+          foundPartition = i;
+          break;
+        }
       }
+
+      // Need to cycle through all partitions to reach the right one
+      cost += (foundPartition + 1);
+
+      start = partitions[foundPartition].start;
+      end = partitions[foundPartition].end;
     }
 
-    // Final selection of the single item (Cost += 1 for the click?)
-    // The loop handles the drilling down. The last step is selecting the single item?
-    // In handleAction: "if (rangeSize <= 1) ... triggerSelection".
-    // Does it scan the single item?
-    // Usually once isolated, it's selected immediately or requires confirmation.
-    // The code says: `if (rangeSize <= 1) ...` inside handleAction logic.
-    // But `handleAction` is called when user clicks.
-    // If rangeSize is 1, user clicks to confirm?
-    // If rangeSize <= 1, the scanner probably highlights that item?
-    // "reset() sets rangeStart=0".
-    // Actually, after drilling down, if rangeSize <= 1, it stops?
-    // The code doesn't explicitly show scanning the single item.
-    // It assumes the last click on a group of 1 selects it.
-    // So the costs accumulated in the loop are sufficient.
-
     return cost;
+  }
+
+  // Override to disable step scheduling - elimination waits for specific switch input
+  protected scheduleNextStep() {
+    if (!this.isRunning) return;
+
+    // Don't auto-schedule steps in manual mode
+    if (this.config.get().scanInputMode === 'manual') {
+      return;
+    }
+
+    if (this.timer) clearTimeout(this.timer);
+
+    const rate = this.config.get().scanRate;
+    this.timer = window.setTimeout(() => {
+      this.step();
+      this.scheduleNextStep();
+    }, rate);
   }
 }

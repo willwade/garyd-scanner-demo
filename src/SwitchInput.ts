@@ -1,6 +1,31 @@
 import { ConfigManager } from './ConfigManager';
 
-export type SwitchAction = 'select' | 'step' | 'reset' | 'cancel' | 'menu';
+export type SwitchAction =
+  | 'select'
+  | 'step'
+  | 'reset'
+  | 'cancel'
+  | 'menu'
+  | 'switch-1'
+  | 'switch-2'
+  | 'switch-3'
+  | 'switch-4'
+  | 'switch-5'
+  | 'switch-6'
+  | 'switch-7'
+  | 'switch-8';
+
+// Color mapping for switches
+export const SWITCH_COLORS: Record<Exclude<SwitchAction, 'select' | 'step' | 'reset' | 'cancel' | 'menu'>, string> = {
+  'switch-1': '#2196F3', // Blue
+  'switch-2': '#F44336', // Red
+  'switch-3': '#4CAF50', // Green
+  'switch-4': '#FFEB3B', // Yellow
+  'switch-5': '#9C27B0', // Purple
+  'switch-6': '#FF9800', // Orange
+  'switch-7': '#00BCD4', // Cyan
+  'switch-8': '#E91E63'  // Magenta
+};
 
 type TimerKey = SwitchAction | 'reset_timer' | 'select_handled';
 
@@ -19,10 +44,18 @@ export class SwitchInput extends EventTarget {
     this.keyMap = new Map([
       [' ', 'select'],
       ['Enter', 'select'],
-      ['1', 'select'],
-      ['2', 'step'],
-      ['3', 'reset'],
-      ['4', 'cancel'],
+      ['1', 'switch-1'],
+      ['2', 'switch-2'],
+      ['3', 'switch-3'],
+      ['4', 'switch-4'],
+      ['5', 'switch-5'],
+      ['6', 'switch-6'],
+      ['7', 'switch-7'],
+      ['8', 'switch-8'],
+      ['r', 'reset'],
+      ['R', 'reset'],
+      ['c', 'cancel'],
+      ['C', 'cancel'],
       ['s', 'menu'],
       ['S', 'menu']
     ]);

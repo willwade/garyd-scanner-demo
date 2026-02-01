@@ -335,6 +335,12 @@ export class ContinuousScanner extends Scanner {
   // Override scheduleNextStep for different refresh rates
   protected scheduleNextStep() {
     if (!this.isRunning) return;
+
+    // Don't auto-schedule steps in manual mode
+    if (this.config.get().scanInputMode === 'manual') {
+      return;
+    }
+
     if (this.timer) clearTimeout(this.timer);
 
     // Use faster refresh rate for smoother animation

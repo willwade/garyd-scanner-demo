@@ -31,14 +31,37 @@ export abstract class Scanner {
     this.renderer.setFocus([]);
   }
 
-  public abstract handleAction(action: SwitchAction): void;
+  public handleAction(action: SwitchAction): void {
+    if (action === 'step') {
+      // Manual step - only works in manual mode
+      if (this.config.get().scanInputMode === 'manual') {
+        this.step();
+        this.audio.playScanSound();
+      }
+    } else if (action === 'reset') {
+      this.reset();
+      // Restart timer if in auto mode
+      if (this.config.get().scanInputMode === 'auto') {
+        if (this.timer) clearTimeout(this.timer);
+        this.scheduleNextStep();
+      }
+    }
+  }
 
   protected abstract step(): void;
   protected abstract reset(): void;
 
   protected scheduleNextStep() {
     if (!this.isRunning) return;
-    const rate = this.config.get().scanRate;
+
+    const config = this.config.get();
+
+    // Don't auto-schedule steps in manual mode
+    if (config.scanInputMode === 'manual') {
+      return;
+    }
+
+    const rate = config.scanRate;
 
     if (this.timer) clearTimeout(this.timer);
 

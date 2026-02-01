@@ -185,55 +185,6 @@ export class SettingsUI {
         <h3>Timing & Access</h3>
 
         <div class="form-group">
-          <label for="scanInputMode">Scan Input Mode</label>
-          <select id="scanInputMode" class="setting-input" name="scanInputMode">
-            <option value="auto">Auto-Scan</option>
-            <option value="manual">Manual Step</option>
-          </select>
-          <small>Auto: Automatic advancement | Manual: User triggers each step</small>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="initialScanDelay">Initial Scan Delay <span class="value-display">${config.initialScanDelay}ms</span></label>
-            <input type="range" id="initialScanDelay" class="setting-input range-input" name="initialScanDelay"
-                   value="${config.initialScanDelay}" min="0" max="2000" step="100">
-            <small>Delay before first scan starts</small>
-          </div>
-
-          <div class="form-group">
-            <label for="scanPauseDelay">Scan Pause Delay <span class="value-display">${config.scanPauseDelay}ms</span></label>
-            <input type="range" id="scanPauseDelay" class="setting-input range-input" name="scanPauseDelay"
-                   value="${config.scanPauseDelay}" min="0" max="1000" step="50">
-            <small>Pause between hierarchical stages</small>
-          </div>
-        </div>
-
-        <div class="form-group checkbox-group">
-          <label>
-            <input type="checkbox" class="setting-input" name="autoRepeat" ${config.autoRepeat ? 'checked' : ''}>
-            <span>Auto-Repeat Selections</span>
-          </label>
-          <small>Automatically repeat selections when holding</small>
-        </div>
-
-        <div class="form-row" id="repeat-options" style="display: ${config.autoRepeat ? 'flex' : 'none'}">
-          <div class="form-group">
-            <label for="repeatDelay">Repeat Delay <span class="value-display">${config.repeatDelay}ms</span></label>
-            <input type="range" id="repeatDelay" class="setting-input range-input" name="repeatDelay"
-                   value="${config.repeatDelay}" min="100" max="2000" step="100">
-            <small>Hold time before repeat starts</small>
-          </div>
-
-          <div class="form-group">
-            <label for="repeatTime">Repeat Time <span class="value-display">${config.repeatTime}ms</span></label>
-            <input type="range" id="repeatTime" class="setting-input range-input" name="repeatTime"
-                   value="${config.repeatTime}" min="50" max="1000" step="50">
-            <small>Time between successive repeats</small>
-          </div>
-        </div>
-
-        <div class="form-group">
           <label for="acceptanceTime">Acceptance Time <span class="value-display">${config.acceptanceTime}ms</span></label>
           <input type="range" id="acceptanceTime" class="setting-input range-input" name="acceptanceTime"
                  value="${config.acceptanceTime}" min="0" max="2000" step="50">
@@ -292,8 +243,6 @@ export class SettingsUI {
     setVal('scanTechnique', config.scanTechnique);
     setVal('scanMode', config.scanMode || 'null');
     setVal('continuousTechnique', config.continuousTechnique);
-    setVal('compassMode', config.compassMode);
-    setVal('scanInputMode', config.scanInputMode);
     setVal('gridContent', config.gridContent);
     setVal('language', config.language);
     setVal('layoutMode', config.layoutMode);
@@ -301,12 +250,6 @@ export class SettingsUI {
 
     // Update UI state based on current config
     this.updateUIState(config);
-
-    // Set initial visibility of repeat options
-    const repeatOptions = this.formContainer.querySelector('#repeat-options') as HTMLElement;
-    if (repeatOptions) {
-      repeatOptions.style.display = config.autoRepeat ? 'flex' : 'none';
-    }
   }
 
   private updateUIState(config: AppConfig) {
@@ -437,28 +380,6 @@ export class SettingsUI {
           case 'heatmapMax':
               newConfig.heatmapMax = parseInt(target.value, 10);
               break;
-          case 'scanInputMode':
-              newConfig.scanInputMode = target.value as 'auto' | 'manual';
-              break;
-          case 'initialScanDelay':
-              newConfig.initialScanDelay = parseInt(target.value, 10);
-              this.updateValueDisplay('initialScanDelay', target.value + 'ms');
-              break;
-          case 'scanPauseDelay':
-              newConfig.scanPauseDelay = parseInt(target.value, 10);
-              this.updateValueDisplay('scanPauseDelay', target.value + 'ms');
-              break;
-          case 'autoRepeat':
-              newConfig.autoRepeat = (target as HTMLInputElement).checked;
-              break;
-          case 'repeatDelay':
-              newConfig.repeatDelay = parseInt(target.value, 10);
-              this.updateValueDisplay('repeatDelay', target.value + 'ms');
-              break;
-          case 'repeatTime':
-              newConfig.repeatTime = parseInt(target.value, 10);
-              this.updateValueDisplay('repeatTime', target.value + 'ms');
-              break;
       }
 
       this.configManager.update(newConfig);
@@ -467,15 +388,10 @@ export class SettingsUI {
       if (name === 'scanPattern' || name === 'scanMode' || name === 'continuousTechnique') {
         this.updateUIState({ ...this.configManager.get(), ...newConfig });
       }
-
-      // Show/hide repeat options based on autoRepeat
-      if (name === 'autoRepeat') {
-        const repeatOptions = this.formContainer.querySelector('#repeat-options') as HTMLElement;
-        if (repeatOptions) {
-          repeatOptions.style.display = (target as HTMLInputElement).checked ? 'flex' : 'none';
-        }
-      }
     });
+
+    // Real-time value display for range inputs
+    this.formContainer.addEventListener('input', (e) => {
 
     // Real-time value display for range inputs
     this.formContainer.addEventListener('input', (e) => {

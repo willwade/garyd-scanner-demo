@@ -1,8 +1,21 @@
 export interface AppConfig {
   // Timing settings
-  scanRate: number; // ms
-  acceptanceTime: number; // ms
+  scanRate: number; // ms (time between items in auto-scan)
+  acceptanceTime: number; // ms (time to confirm selection)
   dwellTime: number; // ms (0 = disabled)
+
+  // Scan timing
+  initialScanDelay: number; // ms (delay before first item)
+  scanPauseDelay: number; // ms (delay between stages in hierarchical scans)
+
+  // Scan mode
+  scanInputMode: 'auto' | 'manual'; // auto-scan vs manual step
+
+  // Repeat functions (for auto-repeating selections)
+  autoRepeat: boolean; // Enable auto-repeat for selections
+  repeatDelay: number; // ms (time to hold before repeat starts)
+  repeatTime: number; // ms (time between successive repeats)
+
   postSelectionDelay: number; // ms
 
   // SCANNING PATTERN (movement strategy)
@@ -20,6 +33,9 @@ export interface AppConfig {
 
   // COMPASS MODE (for continuousTechnique='eight-direction')
   compassMode: 'continuous' | 'fixed-8';
+
+  // ELIMINATION SCANNING
+  eliminationSwitchCount: 2 | 3 | 4 | 5 | 6 | 7 | 8; // Number of switches for elimination (2=binary, 4=quadrant, etc.)
 
   // Display settings
   gridContent: 'numbers' | 'keyboard';
@@ -43,11 +59,23 @@ export class ConfigManager {
     acceptanceTime: 0,
     dwellTime: 0,
     postSelectionDelay: 0,
+
+    // Scan timing
+    initialScanDelay: 500, // 500ms delay before first scan
+    scanPauseDelay: 300, // 300ms pause between stages
+    scanInputMode: 'auto', // auto-scan by default
+
+    // Repeat functions
+    autoRepeat: false,
+    repeatDelay: 500, // 500ms hold before repeat
+    repeatTime: 200, // 200ms between repeats
+
     scanPattern: 'row-column',
     scanTechnique: 'block',
     scanMode: null,
     continuousTechnique: 'crosshair',
     compassMode: 'continuous',
+    eliminationSwitchCount: 4,
     gridContent: 'numbers',
     gridSize: 64, // 8x8
     showUI: true,

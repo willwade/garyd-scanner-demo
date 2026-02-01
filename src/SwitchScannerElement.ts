@@ -82,7 +82,7 @@ export class SwitchScannerElement extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['scan-strategy', 'scan-pattern', 'scan-technique', 'scan-mode', 'continuous-technique', 'compass-mode', 'grid-content', 'grid-size', 'language', 'scan-rate', 'acceptance-time', 'dwell-time'];
+    return ['scan-strategy', 'scan-pattern', 'scan-technique', 'scan-mode', 'continuous-technique', 'compass-mode', 'grid-content', 'grid-size', 'language', 'scan-rate', 'acceptance-time', 'dwell-time', 'elimination-switch-count'];
   }
 
   attributeChangedCallback(name: string, oldValue: string, newValue: string) {
@@ -128,6 +128,9 @@ export class SwitchScannerElement extends HTMLElement {
             break;
         case 'compass-mode':
             updates.compassMode = newValue as AppConfig['compassMode'];
+            break;
+        case 'elimination-switch-count':
+            updates.eliminationSwitchCount = parseInt(newValue, 10) as AppConfig['eliminationSwitchCount'];
             break;
     }
     this.configManager.update(updates);
@@ -197,6 +200,9 @@ export class SwitchScannerElement extends HTMLElement {
 
     const compassMode = this.getAttribute('compass-mode');
     if (compassMode) overrides.compassMode = compassMode as AppConfig['compassMode'];
+
+    const elimSwitchCount = this.getAttribute('elimination-switch-count');
+    if (elimSwitchCount) overrides.eliminationSwitchCount = parseInt(elimSwitchCount, 10) as AppConfig['eliminationSwitchCount'];
 
     return overrides;
   }
@@ -564,6 +570,93 @@ export class SwitchScannerElement extends HTMLElement {
     this.shadowRoot!.appendChild(style);
   }
 
+  private updateControlsVisibility(config: AppConfig) {
+    const controls = this.shadowRoot!.querySelector('.controls') as HTMLElement;
+    if (!controls) return;
+
+    // Check if elimination mode
+    const isElimination = config.scanPattern === 'elimination';
+    const numSwitches = config.eliminationSwitchCount || 4;
+
+    if (isElimination) {
+      // Show switch buttons for elimination mode
+      controls.innerHTML = '';
+
+      for (let i = 1; i <= numSwitches; i++) {
+        const btn = document.createElement('button');
+        const action = `switch-${i}`;
+        btn.setAttribute('data-action', action);
+        btn.textContent = `${i}`;
+        btn.style.cssText = `
+          flex: 1;
+          padding: 10px 20px;
+          font-size: 1rem;
+          cursor: pointer;
+          border: 1px solid #ccc;
+          background: ${this.getSwitchColor(i)};
+          color: white;
+          border-radius: 4px;
+          font-weight: bold;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        `;
+        btn.addEventListener('click', (_e) => {
+          this.switchInput.triggerAction(action as any);
+        });
+        btn.addEventListener('mousedown', (e) => e.preventDefault());
+        controls.appendChild(btn);
+      }
+
+      // Add reset button
+      const resetBtn = document.createElement('button');
+      resetBtn.setAttribute('data-action', 'reset');
+      resetBtn.textContent = '↺';
+      resetBtn.style.cssText = `
+        padding: 10px 15px;
+        font-size: 1rem;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        background: #fff;
+        border-radius: 4px;
+      `;
+      resetBtn.addEventListener('click', (_e) => {
+        this.switchInput.triggerAction('reset');
+      });
+      resetBtn.addEventListener('mousedown', (e) => e.preventDefault());
+      controls.appendChild(resetBtn);
+    } else {
+      // Standard controls for other modes
+      controls.innerHTML = `
+        <button data-action="switch-1" style="flex: 1; padding: 10px 20px; font-size: 1rem; cursor: pointer; border: 1px solid #ccc; background: #fff; border-radius: 4px;">Select (1)</button>
+        <button data-action="switch-2" style="flex: 1; padding: 10px 20px; font-size: 1rem; cursor: pointer; border: 1px solid #ccc; background: #fff; border-radius: 4px;">Step (2)</button>
+        <button data-action="reset" style="flex: 1; padding: 10px 20px; font-size: 1rem; cursor: pointer; border: 1px solid #ccc; background: #fff; border-radius: 4px;">Reset (R)</button>
+      `;
+
+      this.shadowRoot!.querySelectorAll('.controls button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const action = (e.target as HTMLElement).getAttribute('data-action');
+          if (action) {
+            this.switchInput.triggerAction(action as any);
+          }
+        });
+        btn.addEventListener('mousedown', (e) => e.preventDefault());
+      });
+    }
+  }
+
+  private getSwitchColor(num: number): string {
+    const colors: Record<number, string> = {
+      1: '#2196F3', // Blue
+      2: '#F44336', // Red
+      3: '#4CAF50', // Green
+      4: '#FFEB3B', // Yellow
+      5: '#9C27B0', // Purple
+      6: '#FF9800', // Orange
+      7: '#00BCD4', // Cyan
+      8: '#E91E63'  // Magenta
+    };
+    return colors[num] || '#2196F3';
+  }
+
   private bindEvents() {
     // Config Changes
     let lastConfig = this.configManager.get();
@@ -627,6 +720,14 @@ export class SwitchScannerElement extends HTMLElement {
             }
         });
         btn.addEventListener('mousedown', (e) => e.preventDefault());
+    });
+
+    // Update controls visibility based on config
+    this.updateControlsVisibility(this.configManager.get());
+
+    // Subscribe to config changes to update controls
+    this.configManager.subscribe((cfg) => {
+        this.updateControlsVisibility(cfg);
     });
 
     // Scanner Events (Selection & Redraw)
