@@ -1,15 +1,30 @@
 export interface AppConfig {
+  // Timing settings
   scanRate: number; // ms
   acceptanceTime: number; // ms
   dwellTime: number; // ms (0 = disabled)
   postSelectionDelay: number; // ms
-  scanStrategy: 'row-column' | 'column-row' | 'linear' | 'snake' | 'quadrant' | 'group-row-column' | 'elimination' | 'continuous' | 'probability';
+
+  // SCANNING PATTERN (movement strategy)
+  scanPattern: 'row-column' | 'column-row' | 'linear' | 'snake' | 'quadrant' | 'elimination';
+
+  // SCANNING TECHNIQUE (how items are highlighted)
+  // Only applicable for: row-column, column-row, linear, snake
+  scanTechnique: 'block' | 'point';
+
+  // SPECIAL MODES (patterns with built-in techniques)
+  scanMode: 'group-row-column' | 'continuous' | 'probability' | null;
+
+  // CONTINUOUS MODE TECHNIQUE (for scanMode='continuous')
+  continuousTechnique: 'gliding' | 'crosshair';
+
+  // Display settings
   gridContent: 'numbers' | 'keyboard';
   gridSize: number; // Total items (e.g. 64) or specific layout
   showUI: boolean;
   soundEnabled: boolean;
 
-  // New settings
+  // Language & Layout
   language: string;
   layoutMode: 'alphabetical' | 'frequency';
   viewMode: 'standard' | 'cost-numbers' | 'cost-heatmap';
@@ -25,7 +40,10 @@ export class ConfigManager {
     acceptanceTime: 0,
     dwellTime: 0,
     postSelectionDelay: 0,
-    scanStrategy: 'row-column',
+    scanPattern: 'row-column',
+    scanTechnique: 'block',
+    scanMode: null,
+    continuousTechnique: 'crosshair',
     gridContent: 'numbers',
     gridSize: 64, // 8x8
     showUI: true,
@@ -60,10 +78,50 @@ export class ConfigManager {
       if (!isNaN(dwell)) this.config.dwellTime = dwell;
     }
 
+    // Handle both old 'strategy' param and new separate params for backward compatibility
     if (params.has('strategy')) {
-      const strategy = params.get('strategy') as AppConfig['scanStrategy'];
-      if (['row-column', 'column-row', 'linear', 'snake', 'quadrant', 'group-row-column', 'elimination', 'continuous', 'probability'].includes(strategy)) {
-        this.config.scanStrategy = strategy;
+      const strategy = params.get('strategy')!;
+      // Map old strategies to new structure
+      if (strategy === 'group-row-column') {
+        this.config.scanMode = 'group-row-column';
+      } else if (strategy === 'continuous') {
+        this.config.scanMode = 'continuous';
+      } else if (strategy === 'probability') {
+        this.config.scanMode = 'probability';
+      } else if (['row-column', 'column-row', 'linear', 'snake', 'quadrant', 'elimination'].includes(strategy)) {
+        this.config.scanPattern = strategy as AppConfig['scanPattern'];
+      }
+    }
+
+    // New separate parameters (take precedence over 'strategy')
+    if (params.has('pattern')) {
+      const pattern = params.get('pattern') as AppConfig['scanPattern'];
+      if (['row-column', 'column-row', 'linear', 'snake', 'quadrant', 'elimination'].includes(pattern)) {
+        this.config.scanPattern = pattern;
+        this.config.scanMode = null; // Clear mode when pattern is set
+      }
+    }
+
+    if (params.has('technique')) {
+      const technique = params.get('technique') as AppConfig['scanTechnique'];
+      if (technique === 'block' || technique === 'point') {
+        this.config.scanTechnique = technique;
+      }
+    }
+
+    if (params.has('mode')) {
+      const mode = params.get('mode');
+      if (mode === 'group-row-column' || mode === 'continuous' || mode === 'probability') {
+        this.config.scanMode = mode as AppConfig['scanMode'];
+      } else if (mode === 'null' || mode === 'none' || mode === '') {
+        this.config.scanMode = null;
+      }
+    }
+
+    if (params.has('continuous-technique')) {
+      const ct = params.get('continuous-technique');
+      if (ct === 'gliding' || ct === 'crosshair') {
+        this.config.continuousTechnique = ct as AppConfig['continuousTechnique'];
       }
     }
 

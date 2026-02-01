@@ -63,7 +63,7 @@ export class SwitchScannerElement extends HTMLElement {
     const initialConfig = this.configManager.get();
 
     // Create scanner first so we can use it for mapping content during grid update
-    this.currentScanner = this.createScanner(initialConfig.scanStrategy);
+    this.currentScanner = this.createScanner(initialConfig);
 
     await this.updateGrid(initialConfig, true);
 
@@ -82,7 +82,7 @@ export class SwitchScannerElement extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['scan-strategy', 'grid-content', 'grid-size', 'language', 'scan-rate', 'acceptance-time', 'dwell-time'];
+    return ['scan-strategy', 'scan-pattern', 'scan-technique', 'scan-mode', 'continuous-technique', 'grid-content', 'grid-size', 'language', 'scan-rate', 'acceptance-time', 'dwell-time'];
   }
 
   attributeChangedCallback(name: string, oldValue: string, newValue: string) {
@@ -92,7 +92,18 @@ export class SwitchScannerElement extends HTMLElement {
     const updates: Partial<AppConfig> = {};
     switch (name) {
         case 'scan-strategy':
-            updates.scanStrategy = newValue as AppConfig['scanStrategy'];
+            // Legacy support - map to new structure
+            this.mapLegacyStrategy(newValue, updates);
+            break;
+        case 'scan-pattern':
+            updates.scanPattern = newValue as AppConfig['scanPattern'];
+            updates.scanMode = null; // Clear mode when pattern is set
+            break;
+        case 'scan-technique':
+            updates.scanTechnique = newValue as AppConfig['scanTechnique'];
+            break;
+        case 'scan-mode':
+            updates.scanMode = newValue === 'null' ? null : newValue as AppConfig['scanMode'];
             break;
         case 'grid-content':
             updates.gridContent = newValue as AppConfig['gridContent'];
@@ -112,14 +123,53 @@ export class SwitchScannerElement extends HTMLElement {
         case 'dwell-time':
             updates.dwellTime = parseInt(newValue, 10);
             break;
+        case 'continuous-technique':
+            updates.continuousTechnique = newValue as AppConfig['continuousTechnique'];
+            break;
     }
     this.configManager.update(updates);
   }
 
+  private mapLegacyStrategy(strategy: string, updates: Partial<AppConfig>) {
+      // Map old scanStrategy to new pattern/technique/mode structure
+      if (strategy === 'group-row-column') {
+          updates.scanMode = 'group-row-column';
+      } else if (strategy === 'continuous') {
+          updates.scanMode = 'continuous';
+      } else if (strategy === 'probability') {
+          updates.scanMode = 'probability';
+      } else if (['row-column', 'column-row', 'linear', 'snake', 'quadrant', 'elimination'].includes(strategy)) {
+          updates.scanPattern = strategy as AppConfig['scanPattern'];
+          // Row-column and column-row default to block technique
+          if (strategy === 'row-column' || strategy === 'column-row') {
+              updates.scanTechnique = 'block';
+          } else {
+              updates.scanTechnique = 'point';
+          }
+      }
+  }
+
   private parseAttributes(): Partial<AppConfig> {
     const overrides: Partial<AppConfig> = {};
+
+    // Handle legacy scan-strategy attribute
     const strategy = this.getAttribute('scan-strategy');
-    if (strategy) overrides.scanStrategy = strategy as AppConfig['scanStrategy'];
+    if (strategy) {
+      this.mapLegacyStrategy(strategy, overrides);
+    }
+
+    // New separate attributes (take precedence)
+    const pattern = this.getAttribute('scan-pattern');
+    if (pattern) {
+      overrides.scanPattern = pattern as AppConfig['scanPattern'];
+      overrides.scanMode = null;
+    }
+
+    const technique = this.getAttribute('scan-technique');
+    if (technique) overrides.scanTechnique = technique as AppConfig['scanTechnique'];
+
+    const mode = this.getAttribute('scan-mode');
+    if (mode) overrides.scanMode = mode === 'null' ? null : mode as AppConfig['scanMode'];
 
     const content = this.getAttribute('grid-content');
     if (content) overrides.gridContent = content as AppConfig['gridContent'];
@@ -138,6 +188,9 @@ export class SwitchScannerElement extends HTMLElement {
 
     const dwell = this.getAttribute('dwell-time');
     if (dwell) overrides.dwellTime = parseInt(dwell, 10);
+
+    const contTechnique = this.getAttribute('continuous-technique');
+    if (contTechnique) overrides.continuousTechnique = contTechnique as AppConfig['continuousTechnique'];
 
     return overrides;
   }
@@ -281,23 +334,226 @@ export class SwitchScannerElement extends HTMLElement {
         justify-content: center;
         align-items: center;
         z-index: 100;
+        padding: 10px;
+        box-sizing: border-box;
       }
       .settings-overlay.hidden {
         display: none !important;
       }
       .settings-content {
         background: white;
-        padding: 1rem;
-        border-radius: 8px;
-        width: 90%;
-        max-height: 90%;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 600px;
+        max-height: 100%;
         overflow-y: auto;
+        position: relative;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
       }
 
-      .form-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-      .form-group { flex: 1; margin-bottom: 10px; min-width: 150px; }
-      .form-group label { display: block; font-weight: bold; font-size: 0.9rem; }
-      .form-group input, .form-group select { width: 100%; padding: 5px; box-sizing: border-box; }
+      /* Header with close button */
+      .settings-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #e0e0e0;
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 10;
+      }
+      .settings-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #222;
+      }
+      .close-btn {
+        background: #f5f5f5;
+        border: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        font-size: 24px;
+        line-height: 1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        transition: all 0.2s;
+        flex-shrink: 0;
+      }
+      .close-btn:hover {
+        background: #e0e0e0;
+        color: #333;
+      }
+      .close-btn:active {
+        transform: scale(0.95);
+      }
+
+      /* Intro section */
+      .settings-intro {
+        padding: 1rem 1.5rem;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e0e0e0;
+      }
+      .settings-intro p {
+        margin: 0;
+        font-size: 0.9rem;
+        color: #555;
+        line-height: 1.5;
+      }
+
+      /* Form sections */
+      .settings-section {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .settings-section:last-child {
+        border-bottom: none;
+      }
+      .settings-section h3 {
+        margin: 0 0 1rem 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+      }
+
+      /* Form elements */
+      .form-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+      }
+      .form-group {
+        flex: 1;
+        min-width: 200px;
+        margin-bottom: 0.75rem;
+      }
+      .form-group label {
+        display: block;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #444;
+        margin-bottom: 0.35rem;
+      }
+      .form-group label .value-display {
+        color: #2196F3;
+        font-weight: normal;
+      }
+      .form-group small {
+        display: block;
+        color: #888;
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+        line-height: 1.3;
+      }
+      .form-group input[type="number"],
+      .form-group select {
+        width: 100%;
+        padding: 0.6rem;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        box-sizing: border-box;
+        background: white;
+        transition: border-color 0.2s;
+      }
+      .form-group input[type="number"]:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: #2196F3;
+      }
+      .form-group input:disabled,
+      .form-group select:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* Range inputs */
+      .range-input {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 6px;
+        border-radius: 3px;
+        background: #ddd;
+        outline: none;
+        padding: 0;
+        border: none;
+      }
+      .range-input::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #2196F3;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .range-input::-webkit-slider-thumb:hover {
+        background: #1976D2;
+      }
+      .range-input::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #2196F3;
+        cursor: pointer;
+        border: none;
+      }
+
+      /* Checkbox group */
+      .checkbox-group label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        font-weight: 500;
+      }
+      .checkbox-group input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        margin-right: 0.5rem;
+        cursor: pointer;
+      }
+      .checkbox-group span {
+        user-select: none;
+      }
+
+      /* Mobile responsive */
+      @media (max-width: 600px) {
+        .settings-content {
+          max-height: 100vh;
+          border-radius: 0;
+        }
+        .settings-header {
+          padding: 1rem;
+        }
+        .settings-header h2 {
+          font-size: 1.25rem;
+        }
+        .settings-section {
+          padding: 1rem;
+        }
+        .form-group {
+          min-width: 100%;
+        }
+        .form-row {
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+        .close-btn {
+          width: 32px;
+          height: 32px;
+          font-size: 20px;
+        }
+        .settings-intro p {
+          font-size: 0.85rem;
+        }
+      }
     `;
     this.shadowRoot!.appendChild(style);
   }
@@ -313,15 +569,25 @@ export class SwitchScannerElement extends HTMLElement {
                                cfg.language !== lastConfig.language ||
                                cfg.layoutMode !== lastConfig.layoutMode;
 
-        const strategyChanged = cfg.scanStrategy !== lastConfig.scanStrategy;
+        const scannerChanged = cfg.scanPattern !== lastConfig.scanPattern ||
+                              cfg.scanTechnique !== lastConfig.scanTechnique ||
+                              cfg.scanMode !== lastConfig.scanMode;
+
+        if (scannerChanged) {
+          console.log('[SwitchScannerElement] Scanner changed:', {
+            old: { scanMode: lastConfig.scanMode, scanPattern: lastConfig.scanPattern },
+            new: { scanMode: cfg.scanMode, scanPattern: cfg.scanPattern }
+          });
+        }
+
         const viewChanged = cfg.viewMode !== lastConfig.viewMode || cfg.heatmapMax !== lastConfig.heatmapMax;
 
         if (contentChanged) {
             // Need to update content.
             await this.updateGrid(cfg, true);
-        } else if (strategyChanged) {
-            this.setScanner(cfg.scanStrategy);
-            // Strategy change requires re-mapping content (e.g. Snake)
+        } else if (scannerChanged) {
+            this.setScanner(cfg);
+            // Scanner change requires re-mapping content (e.g. Snake)
             await this.updateGrid(cfg, true);
         } else if (viewChanged) {
             await this.updateGrid(cfg, false);
@@ -545,29 +811,53 @@ export class SwitchScannerElement extends HTMLElement {
       }
   }
 
-  private createScanner(type: AppConfig['scanStrategy']): Scanner {
-    switch (type) {
-      case 'linear': return new LinearScanner(this.gridRenderer, this.configManager, this.audioManager);
-      case 'snake': return new SnakeScanner(this.gridRenderer, this.configManager, this.audioManager);
-      case 'quadrant': return new QuadrantScanner(this.gridRenderer, this.configManager, this.audioManager);
-      case 'group-row-column': return new GroupScanner(this.gridRenderer, this.configManager, this.audioManager);
-      case 'elimination': return new EliminationScanner(this.gridRenderer, this.configManager, this.audioManager);
-      case 'continuous': return new ContinuousScanner(this.gridRenderer, this.configManager, this.audioManager);
-      case 'probability': return new ProbabilityScanner(this.gridRenderer, this.configManager, this.audioManager);
+  private createScanner(config: AppConfig): Scanner {
+    console.log('[SwitchScannerElement] Creating scanner with config:', {
+      scanMode: config.scanMode,
+      scanPattern: config.scanPattern,
+      scanTechnique: config.scanTechnique,
+      continuousTechnique: config.continuousTechnique
+    });
+
+    // Special modes take precedence
+    if (config.scanMode === 'group-row-column') {
+      return new GroupScanner(this.gridRenderer, this.configManager, this.audioManager);
+    } else if (config.scanMode === 'continuous') {
+      console.log('[SwitchScannerElement] Creating ContinuousScanner');
+      return new ContinuousScanner(this.gridRenderer, this.configManager, this.audioManager);
+    } else if (config.scanMode === 'probability') {
+      return new ProbabilityScanner(this.gridRenderer, this.configManager, this.audioManager);
+    }
+
+    // Pattern-based scanners
+    switch (config.scanPattern) {
+      case 'linear':
+        return new LinearScanner(this.gridRenderer, this.configManager, this.audioManager);
+      case 'snake':
+        return new SnakeScanner(this.gridRenderer, this.configManager, this.audioManager);
+      case 'quadrant':
+        return new QuadrantScanner(this.gridRenderer, this.configManager, this.audioManager);
+      case 'elimination':
+        return new EliminationScanner(this.gridRenderer, this.configManager, this.audioManager);
+      case 'column-row':
+        return new RowColumnScanner(this.gridRenderer, this.configManager, this.audioManager);
       case 'row-column':
       default:
         return new RowColumnScanner(this.gridRenderer, this.configManager, this.audioManager);
     }
   }
 
-  private setScanner(type: AppConfig['scanStrategy']) {
+  private setScanner(config: AppConfig) {
+    console.log('[SwitchScannerElement] setScanner called');
+
     if (this.currentScanner) {
+      console.log('[SwitchScannerElement] Stopping current scanner');
       this.currentScanner.stop();
     }
-    this.currentScanner = this.createScanner(type);
-    // Don't start immediately? Or yes?
-    // In connectedCallback we start().
-    // Here we might be mid-operation.
+
+    this.currentScanner = this.createScanner(config);
+
+    console.log('[SwitchScannerElement] Starting new scanner:', this.currentScanner.constructor.name);
     this.currentScanner.start();
   }
 }
