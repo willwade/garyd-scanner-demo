@@ -134,6 +134,16 @@ export class SettingsUI {
         </div>
 
         <div class="form-group">
+          <label for="scanDirection">Scan Direction</label>
+          <select id="scanDirection" class="setting-input" name="scanDirection">
+            <option value="circular">Circular (0→1→2...→n→0...)</option>
+            <option value="reverse">Reverse (n→n-1...→0→n...)</option>
+            <option value="oscillating">Oscillating (0→1→...→n→n-1→...→0...)</option>
+          </select>
+          <small>Direction of scan cycling (for linear pattern)</small>
+        </div>
+
+        <div class="form-group">
           <label for="scanRate">Scan Rate <span class="value-display">${config.scanRate}ms</span></label>
           <input type="range" id="scanRate" class="setting-input range-input" name="scanRate"
                  value="${config.scanRate}" min="100" max="5000" step="100">
@@ -209,6 +219,13 @@ export class SettingsUI {
           </div>
         </div>
 
+        <div class="form-group">
+          <label for="initialItemPause">Initial Item Pause <span class="value-display">${config.initialItemPause}ms</span></label>
+          <input type="range" id="initialItemPause" class="setting-input range-input" name="initialItemPause"
+                 value="${config.initialItemPause}" min="0" max="3000" step="100">
+          <small>Extended highlight on first item (0 = normal scan rate)</small>
+        </div>
+
         <div class="form-group checkbox-group">
           <label>
             <input type="checkbox" class="setting-input" name="autoRepeat" ${config.autoRepeat ? 'checked' : ''}>
@@ -245,6 +262,14 @@ export class SettingsUI {
           <input type="range" id="dwellTime" class="setting-input range-input" name="dwellTime"
                  value="${config.dwellTime}" min="0" max="5000" step="100">
           <small>Auto-select on hover (0 = off)</small>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" class="setting-input" name="allowEmptyItems" ${config.allowEmptyItems ? 'checked' : ''}>
+            <span>Allow Empty Items</span>
+          </label>
+          <small>Enable items that skip selection and reset scan (for error recovery)</small>
         </div>
       </div>
 
@@ -290,6 +315,7 @@ export class SettingsUI {
 
     setVal('scanPattern', config.scanPattern);
     setVal('scanTechnique', config.scanTechnique);
+    setVal('scanDirection', config.scanDirection);
     setVal('scanMode', config.scanMode || 'null');
     setVal('continuousTechnique', config.continuousTechnique);
     setVal('compassMode', config.compassMode);
@@ -390,6 +416,9 @@ export class SettingsUI {
           case 'scanTechnique':
               newConfig.scanTechnique = target.value as AppConfig['scanTechnique'];
               break;
+          case 'scanDirection':
+              newConfig.scanDirection = target.value as AppConfig['scanDirection'];
+              break;
           case 'scanMode':
               const modeVal = target.value === 'null' ? null : target.value as AppConfig['scanMode'];
               newConfig.scanMode = modeVal;
@@ -417,6 +446,9 @@ export class SettingsUI {
           case 'dwellTime':
               newConfig.dwellTime = parseInt(target.value, 10);
               this.updateValueDisplay('dwellTime', target.value + 'ms');
+              break;
+          case 'allowEmptyItems':
+              newConfig.allowEmptyItems = (target as HTMLInputElement).checked;
               break;
           case 'gridSize':
               newConfig.gridSize = parseInt(target.value, 10);
@@ -447,6 +479,10 @@ export class SettingsUI {
           case 'scanPauseDelay':
               newConfig.scanPauseDelay = parseInt(target.value, 10);
               this.updateValueDisplay('scanPauseDelay', target.value + 'ms');
+              break;
+          case 'initialItemPause':
+              newConfig.initialItemPause = parseInt(target.value, 10);
+              this.updateValueDisplay('initialItemPause', target.value + 'ms');
               break;
           case 'autoRepeat':
               newConfig.autoRepeat = (target as HTMLInputElement).checked;

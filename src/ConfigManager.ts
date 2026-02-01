@@ -6,6 +6,7 @@ export interface AppConfig {
 
   // Scan timing
   initialScanDelay: number; // ms (delay before first item)
+  initialItemPause: number; // ms (extended highlight on first item of each cycle)
   scanPauseDelay: number; // ms (delay between stages in hierarchical scans)
 
   // Scan mode
@@ -17,6 +18,9 @@ export interface AppConfig {
   repeatTime: number; // ms (time between successive repeats)
 
   postSelectionDelay: number; // ms
+
+  // SCAN DIRECTION CONTROL
+  scanDirection: 'circular' | 'reverse' | 'oscillating'; // How scan cycles through items
 
   // SCANNING PATTERN (movement strategy)
   scanPattern: 'row-column' | 'column-row' | 'linear' | 'snake' | 'quadrant' | 'elimination';
@@ -36,6 +40,9 @@ export interface AppConfig {
 
   // ELIMINATION SCANNING
   eliminationSwitchCount: 2 | 3 | 4 | 5 | 6 | 7 | 8; // Number of switches for elimination (2=binary, 4=quadrant, etc.)
+
+  // ERROR HANDLING
+  allowEmptyItems: boolean; // Allow items that don't trigger output (for scan reset)
 
   // Display settings
   gridContent: 'numbers' | 'keyboard';
@@ -62,6 +69,7 @@ export class ConfigManager {
 
     // Scan timing
     initialScanDelay: 500, // 500ms delay before first scan
+    initialItemPause: 0, // 0 = normal scan rate, >0 = extended first item highlight
     scanPauseDelay: 300, // 300ms pause between stages
     scanInputMode: 'auto', // auto-scan by default
 
@@ -70,12 +78,14 @@ export class ConfigManager {
     repeatDelay: 500, // 500ms hold before repeat
     repeatTime: 200, // 200ms between repeats
 
+    scanDirection: 'circular', // circular by default (0,1,2,...,n-1,0,1,2,...)
     scanPattern: 'row-column',
     scanTechnique: 'block',
     scanMode: null,
     continuousTechnique: 'crosshair',
     compassMode: 'continuous',
     eliminationSwitchCount: 4,
+    allowEmptyItems: false, // Disabled by default
     gridContent: 'numbers',
     gridSize: 64, // 8x8
     showUI: true,

@@ -9,6 +9,7 @@ export abstract class Scanner {
   protected audio: AudioManager;
   protected isRunning: boolean = false;
   protected timer: number | null = null;
+  protected stepCount: number = 0; // Track steps for initial item pause
 
   constructor(renderer: GridRenderer, config: ConfigManager, audio: AudioManager) {
     this.renderer = renderer;
@@ -18,6 +19,7 @@ export abstract class Scanner {
 
   public start() {
     this.isRunning = true;
+    this.stepCount = 0; // Reset step count
     this.reset();
     this.scheduleNextStep();
   }
@@ -36,10 +38,12 @@ export abstract class Scanner {
       // Manual step - only works in manual mode
       if (this.config.get().scanInputMode === 'manual') {
         this.step();
+        this.stepCount++;
         this.audio.playScanSound();
       }
     } else if (action === 'reset') {
       this.reset();
+      this.stepCount = 0; // Reset step count on reset action
       // Restart timer if in auto mode
       if (this.config.get().scanInputMode === 'auto') {
         if (this.timer) clearTimeout(this.timer);
@@ -61,18 +65,32 @@ export abstract class Scanner {
       return;
     }
 
-    const rate = config.scanRate;
+    // Use initialItemPause for first item (stepCount === 0)
+    const isFirstItem = this.stepCount === 0;
+    const rate = isFirstItem && config.initialItemPause > 0
+      ? config.initialItemPause
+      : config.scanRate;
 
     if (this.timer) clearTimeout(this.timer);
 
     this.timer = window.setTimeout(() => {
       this.step();
       this.audio.playScanSound();
+      this.stepCount++; // Increment after stepping
       this.scheduleNextStep();
     }, rate);
   }
 
   protected triggerSelection(item: GridItem) {
+    // Check if this is an empty item (for scan cancellation/reset)
+    if (item.isEmpty) {
+      // Don't trigger output, just reset the scan
+      this.stepCount = 0; // Reset to start
+      if (this.timer) clearTimeout(this.timer);
+      this.scheduleNextStep(); // Restart from beginning
+      return;
+    }
+
     // Flash selection
     // Dispatch event on the container so it can be scoped
     const event = new CustomEvent('scanner:selection', {

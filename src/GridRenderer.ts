@@ -5,6 +5,7 @@ export interface GridItem {
   type?: 'action' | 'char' | 'word';
   backgroundColor?: string;
   textColor?: string;
+  isEmpty?: boolean; // If true, selecting this item won't trigger output
 }
 
 export class GridRenderer {
