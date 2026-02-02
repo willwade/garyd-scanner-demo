@@ -60,6 +60,14 @@ export interface AppConfig {
   showUI: boolean;
   soundEnabled: boolean;
 
+  // BUTTON VISUALIZATION
+  useImageButton: boolean; // Use image buttons instead of text
+  buttonColor: 'blue' | 'green' | 'red' | 'yellow'; // Switch color for images
+  customButtonImages: {
+    normal?: string; // Path to custom normal state image
+    pressed?: string; // Path to custom pressed state image
+  };
+
   // HIGHLIGHT VISUALIZATION
   highlightBorderWidth: number; // px (0-10, thickness of highlight outline)
   highlightBorderColor: string; // CSS color for highlight border/outline
@@ -115,6 +123,15 @@ export class ConfigManager {
     gridSize: 64, // 8x8
     showUI: true,
     soundEnabled: false,
+
+    // Button visualization
+    useImageButton: true, // Image buttons by default
+    buttonColor: 'blue', // Default switch color for images
+    customButtonImages: {
+      normal: undefined,
+      pressed: undefined,
+    },
+
     language: 'en',
     layoutMode: 'alphabetical',
     viewMode: 'standard',

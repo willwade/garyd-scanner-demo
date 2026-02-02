@@ -407,6 +407,16 @@ export class SwitchScannerElement extends HTMLElement {
         background: #ddd;
       }
 
+      /* Image button styling */
+      .controls button img {
+        display: block;
+        width: 100%;
+        height: auto;
+        user-select: none;
+        -webkit-user-select: none;
+        pointer-events: none;
+      }
+
       .settings-overlay {
         position: absolute;
         top: 0;
@@ -704,73 +714,141 @@ export class SwitchScannerElement extends HTMLElement {
     // Check if elimination mode
     const isElimination = config.scanPattern === 'elimination';
     const numSwitches = config.eliminationSwitchCount || 4;
+    const useImageButtons = config.useImageButton;
 
     if (isElimination) {
       // Show switch buttons for elimination mode
       controls.innerHTML = '';
 
       for (let i = 1; i <= numSwitches; i++) {
-        const btn = document.createElement('button');
-        const action = `switch-${i}`;
-        btn.setAttribute('data-action', action);
-        btn.textContent = `${i}`;
-        btn.style.cssText = `
-          flex: 1;
-          padding: 10px 20px;
-          font-size: 1rem;
-          cursor: pointer;
-          border: 1px solid #ccc;
-          background: ${this.getSwitchColor(i)};
-          color: white;
-          border-radius: 4px;
-          font-weight: bold;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        `;
-        btn.addEventListener('click', (_e) => {
-          console.log('[SwitchScannerElement] Elimination button clicked:', action);
-          this.switchInput.triggerAction(action as any);
-        });
-        btn.addEventListener('mousedown', (e) => e.preventDefault());
+        const btn = this.createButton('switch-' + i, `${i}`, config, i);
         controls.appendChild(btn);
       }
 
       // Add reset button
-      const resetBtn = document.createElement('button');
-      resetBtn.setAttribute('data-action', 'reset');
-      resetBtn.textContent = '↺';
-      resetBtn.style.cssText = `
-        padding: 10px 15px;
-        font-size: 1rem;
-        cursor: pointer;
-        border: 1px solid #ccc;
-        background: #fff;
-        border-radius: 4px;
-      `;
-      resetBtn.addEventListener('click', (_e) => {
-        console.log('[SwitchScannerElement] Reset button clicked');
-        this.switchInput.triggerAction('reset');
-      });
-      resetBtn.addEventListener('mousedown', (e) => e.preventDefault());
+      const resetBtn = this.createButton('reset', '↺', config);
       controls.appendChild(resetBtn);
     } else {
       // Standard controls for other modes
-      controls.innerHTML = `
-        <button data-action="select" style="flex: 1; padding: 10px 20px; font-size: 1rem; cursor: pointer; border: 1px solid #ccc; background: #fff; border-radius: 4px;">Select (1)</button>
-        <button data-action="step" style="flex: 1; padding: 10px 20px; font-size: 1rem; cursor: pointer; border: 1px solid #ccc; background: #fff; border-radius: 4px;">Step (2)</button>
-        <button data-action="reset" style="flex: 1; padding: 10px 20px; font-size: 1rem; cursor: pointer; border: 1px solid #ccc; background: #fff; border-radius: 4px;">Reset (R)</button>
-      `;
+      controls.innerHTML = '';
 
-      this.shadowRoot!.querySelectorAll('.controls button').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          console.log('[SwitchScannerElement] Button clicked:', (e.target as HTMLElement).getAttribute('data-action'));
-          const action = (e.target as HTMLElement).getAttribute('data-action');
-          if (action) {
-            this.switchInput.triggerAction(action as any);
-          }
-        });
-        btn.addEventListener('mousedown', (e) => e.preventDefault());
-      });
+      const selectBtn = this.createButton('select', useImageButtons ? '' : 'Select (1)', config);
+      const stepBtn = this.createButton('step', useImageButtons ? '' : 'Step (2)', config);
+      const resetBtn = this.createButton('reset', useImageButtons ? '' : 'Reset (R)', config);
+
+      controls.appendChild(selectBtn);
+      controls.appendChild(stepBtn);
+      controls.appendChild(resetBtn);
     }
+  }
+
+  private createButton(action: string, label: string, config: AppConfig, switchNum?: number): HTMLButtonElement {
+    const btn = document.createElement('button');
+    btn.setAttribute('data-action', action);
+
+    const useImageButtons = config.useImageButton;
+    let buttonColor = config.buttonColor || 'blue';
+
+    // For elimination mode, assign different colors to each switch
+    if (switchNum) {
+      const eliminationColors: Record<number, 'blue' | 'green' | 'red' | 'yellow'> = {
+        1: 'blue',    // Top-left quadrant
+        2: 'red',     // Top-right quadrant
+        3: 'green',   // Bottom-left quadrant
+        4: 'yellow',  // Bottom-right quadrant
+        5: 'blue',    // Additional switches
+        6: 'green',
+        7: 'red',
+        8: 'yellow',
+      };
+      buttonColor = eliminationColors[switchNum] || buttonColor;
+    }
+
+    const customImages = config.customButtonImages;
+
+    if (useImageButtons && (customImages?.normal || customImages?.pressed)) {
+      // Custom images
+      btn.style.cssText = `
+        flex: 1;
+        padding: 0;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        min-width: 80px;
+        min-height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      `;
+      btn.innerHTML = `<img src="${customImages.normal}" alt="${label}" style="width: 100%; max-width: 100px; height: auto; transition: none;">`;
+
+      // Handle depressed state
+      const img = btn.querySelector('img')!;
+      btn.addEventListener('mousedown', () => {
+        if (customImages.pressed) {
+          img.src = customImages.pressed;
+        }
+      });
+      btn.addEventListener('mouseup', () => {
+        img.src = customImages.normal!;
+      });
+      btn.addEventListener('mouseleave', () => {
+        img.src = customImages.normal!;
+      });
+    } else if (useImageButtons) {
+      // Built-in switch images with per-button colors
+      const imagePath = `/switches/switch-${buttonColor}.png`;
+      const depressedPath = `/switches/switch-${buttonColor}-depressed.png`;
+
+      btn.style.cssText = `
+        flex: 1;
+        padding: 0;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        min-width: 80px;
+        min-height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      `;
+      btn.innerHTML = `<img src="${imagePath}" alt="${label}" style="width: 100%; max-width: 100px; height: auto;">`;
+
+      // Handle depressed state
+      const img = btn.querySelector('img')!;
+      btn.addEventListener('mousedown', () => {
+        img.src = depressedPath;
+      });
+      btn.addEventListener('mouseup', () => {
+        img.src = imagePath;
+      });
+      btn.addEventListener('mouseleave', () => {
+        img.src = imagePath;
+      });
+    } else {
+      // Text buttons
+      btn.textContent = label;
+      btn.style.cssText = `
+        flex: 1;
+        padding: 10px 20px;
+        font-size: 1rem;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        background: ${switchNum ? this.getSwitchColor(switchNum) : '#fff'};
+        color: ${switchNum ? 'white' : '#333'};
+        border-radius: 4px;
+        font-weight: ${switchNum ? 'bold' : 'normal'};
+        text-shadow: ${switchNum ? '0 1px 2px rgba(0,0,0,0.3)' : 'none'};
+      `;
+    }
+
+    btn.addEventListener('click', (_e) => {
+      console.log('[SwitchScannerElement] Button clicked:', action);
+      this.switchInput.triggerAction(action as any);
+    });
+    btn.addEventListener('mousedown', (e) => e.preventDefault());
+
+    return btn;
   }
 
   private getSwitchColor(num: number): string {
