@@ -54,19 +54,36 @@
 
     <div class="scanner-grid">
       <div class="scanner-demo">
-        <h2>Alphabet - Row-Column Scanning</h2>
+        <h2>Continuous - Crosshair</h2>
+        <p>Press Select to lock X, then press again to select at intersection</p>
         <switch-scanner
             grid-content="keyboard"
             language="en"
             layout-mode="alphabetical"
             grid-size="36"
-            scan-pattern="row-column"
-            scan-rate="1000">
+            scan-mode="continuous"
+            continuous-technique="crosshair"
+            scan-rate="100">
         </switch-scanner>
       </div>
 
       <div class="scanner-demo">
-        <h2>Alphabet - Frequency Layout</h2>
+        <h2>Continuous - Gliding Cursor</h2>
+        <p>4-stage selection: X coarse → X fine → Y coarse → Y fine</p>
+        <switch-scanner
+            grid-content="keyboard"
+            language="en"
+            layout-mode="alphabetical"
+            grid-size="36"
+            scan-mode="continuous"
+            continuous-technique="gliding"
+            scan-rate="100">
+        </switch-scanner>
+      </div>
+
+      <div class="scanner-demo">
+        <h2>Alphabet - Row-Column</h2>
+        <p>Standard row-column scanning for comparison</p>
         <switch-scanner
             grid-content="keyboard"
             language="en"
