@@ -69,7 +69,9 @@ export class ContinuousScanner extends Scanner {
         totalItems
       });
 
+      console.log('[ContinuousScanner] About to create overlay...');
       this.createOverlay();
+      console.log('[ContinuousScanner] Overlay created successfully');
 
       // Set initial state based on technique
       if (this.technique === 'gliding') {
@@ -359,6 +361,11 @@ export class ContinuousScanner extends Scanner {
 
     const container = this.renderer.getContainer();
     console.log('[ContinuousScanner] Container:', container);
+
+    if (!container) {
+      console.error('[ContinuousScanner] ERROR: Container is null/undefined!');
+      return;
+    }
 
     this.overlay = document.createElement('div');
     this.overlay.style.position = 'absolute';

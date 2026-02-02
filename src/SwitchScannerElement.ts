@@ -786,20 +786,27 @@ export class SwitchScannerElement extends HTMLElement {
     const customImages = config.customButtonImages;
 
     if (useImageButtons && (customImages?.normal || customImages?.pressed)) {
-      // Custom images
+      // Custom images with labels
+      const actionLabel = this.getActionLabel(action);
+
       btn.style.cssText = `
         flex: 1;
-        padding: 0;
+        padding: 10px;
         cursor: pointer;
         border: none;
         background: transparent;
         min-width: 80px;
-        min-height: 80px;
+        min-height: 100px;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
+        gap: 8px;
       `;
-      btn.innerHTML = `<img src="${customImages.normal}" alt="${label}" style="width: 100%; max-width: 100px; height: auto; transition: none;">`;
+      btn.innerHTML = `
+        <img src="${customImages.normal}" alt="${actionLabel}" style="width: 60px; height: 60px; max-width: 60px; transition: none;">
+        <span style="font-size: 12px; font-weight: bold; color: #333; text-transform: uppercase;">${actionLabel}</span>
+      `;
 
       // Handle depressed state
       const img = btn.querySelector('img')!;
@@ -820,17 +827,25 @@ export class SwitchScannerElement extends HTMLElement {
 
       btn.style.cssText = `
         flex: 1;
-        padding: 0;
+        padding: 10px;
         cursor: pointer;
         border: none;
         background: transparent;
         min-width: 80px;
-        min-height: 80px;
+        min-height: 100px;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
+        gap: 8px;
       `;
-      btn.innerHTML = `<img src="${buttonImages.normal}" alt="${label}" style="width: 100%; max-width: 100px; height: auto;">`;
+
+      // Get readable label for the action
+      const actionLabel = this.getActionLabel(action);
+      btn.innerHTML = `
+        <img src="${buttonImages.normal}" alt="${actionLabel}" style="width: 60px; height: 60px; max-width: 60px;">
+        <span style="font-size: 12px; font-weight: bold; color: #333; text-transform: uppercase;">${actionLabel}</span>
+      `;
 
       // Handle depressed state
       const img = btn.querySelector('img')!;
@@ -881,6 +896,23 @@ export class SwitchScannerElement extends HTMLElement {
       8: '#E91E63'  // Magenta
     };
     return colors[num] || '#2196F3';
+  }
+
+  private getActionLabel(action: string): string {
+    const labels: Record<string, string> = {
+      'select': 'Choose',
+      'step': 'Move',
+      'reset': 'Reset',
+      'cancel': 'Cancel'
+    };
+
+    // For numbered switches (elimination mode), use the number
+    if (action.startsWith('switch-')) {
+      const num = action.replace('switch-', '');
+      return `Switch ${num}`;
+    }
+
+    return labels[action] || action;
   }
 
   private bindEvents() {
