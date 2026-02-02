@@ -54,10 +54,28 @@
 
     <div class="scanner-grid">
       <div class="scanner-demo">
-        <h2>Elimination (4-Switch Quadrant)</h2>
-        <switch-scanner scan-pattern="elimination" elimination-switch-count="4" grid-content="numbers" grid-size="64"></switch-scanner>
+        <h2>Alphabet - Row-Column Scanning</h2>
+        <switch-scanner
+            grid-content="keyboard"
+            language="en"
+            layout-mode="alphabetical"
+            grid-size="36"
+            scan-pattern="row-column"
+            scan-rate="1000">
+        </switch-scanner>
       </div>
 
+      <div class="scanner-demo">
+        <h2>Alphabet - Frequency Layout</h2>
+        <switch-scanner
+            grid-content="keyboard"
+            language="en"
+            layout-mode="frequency"
+            grid-size="36"
+            scan-pattern="row-column"
+            scan-rate="1000">
+        </switch-scanner>
+      </div>
     </div>
 
 
