@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && cp book.html dist/book.html",
+    "build": "tsc && vite build && npm run fix-book-paths",
+    "fix-book-paths": "node -e \"const fs=require('fs');const idx=fs.readdirSync('dist/assets').find(f=>f.startsWith('index-')&&f.endsWith('.js'));const css=fs.readdirSync('dist/assets').find(f=>f.startsWith('index-')&&f.endsWith('.css'));let html=fs.readFileSync('book.html','utf8');html=html.replace('/src/main.ts','./assets/'+idx).replace(/<\\/script>/,'</script>\\n    <link rel=\\\"stylesheet\\\" crossorigin href=\\\"./assets/'+css+'\\\">');fs.writeFileSync('dist/book.html',html);\"",
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
