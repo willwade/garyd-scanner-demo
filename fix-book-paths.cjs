@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 
 // Find the built asset files
 const assets = fs.readdirSync('dist/assets');
@@ -12,18 +13,38 @@ if (!jsFile || !cssFile) {
 
 console.log('Found assets:', { js: jsFile, css: cssFile });
 
+// Copy switches folder to dist/
+console.log('\n=== Copying switch images to dist/ ===');
+try {
+  const switchSource = 'public/switches';
+  const switchDest = 'dist/switches';
+
+  if (fs.existsSync(switchSource)) {
+    // Create dist/switches directory
+    fs.mkdirSync(switchDest, { recursive: true });
+
+    // Copy all PNG files
+    const files = fs.readdirSync(switchSource);
+    const pngFiles = files.filter(f => f.endsWith('.png'));
+
+    pngFiles.forEach(file => {
+      fs.copyFileSync(
+        path.join(switchSource, file),
+        path.join(switchDest, file)
+      );
+      console.log(`✓ Copied ${file}`);
+    });
+    console.log(`✅ Copied ${pngFiles.length} switch images to dist/switches/`);
+  } else {
+    console.log('⚠️  Warning: public/switches not found, skipping');
+  }
+} catch (err) {
+  console.error('Error copying switches:', err.message);
+}
+
 // Function to fix a book.html file
 function fixBookHtml(inputPath, outputPath) {
     let html = fs.readFileSync(inputPath, 'utf-8');
-    const originalLength = html.length;
-
-    // Find and log the /src/main.ts reference
-    const mainTsMatch = html.match(/<script[^>]*src="\/src\/main\.ts"[^>]*>/);
-    if (mainTsMatch) {
-        console.log(`✓ Found /src/main.ts in ${inputPath}`);
-    } else {
-        console.log(`✓ No /src/main.ts found in ${inputPath} (already fixed?)`);
-    }
 
     // Replace /src/main.ts with the correct asset path
     html = html.replace(
@@ -39,9 +60,7 @@ function fixBookHtml(inputPath, outputPath) {
         );
     }
 
-    const wasModified = html.length !== originalLength;
     fs.writeFileSync(outputPath, html);
-    return wasModified;
 }
 
 // Fix both the root book.html and dist/book.html
@@ -55,6 +74,7 @@ fixBookHtml('book.html', 'book.html');
 console.log('2. Fixing dist/book.html...');
 fixBookHtml('book.html', 'dist/book.html');
 
-console.log('\n✅ Fixed both book.html files with correct asset paths');
+console.log('\n✅ Build complete!');
 console.log(`   Script: ./assets/${jsFile}`);
 console.log(`   Styles: ./assets/${cssFile}`);
+console.log(`   Switches: dist/switches/*.png (${fs.readdirSync('dist/switches').length} files)`);
