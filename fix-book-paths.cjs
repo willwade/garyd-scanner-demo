@@ -63,15 +63,11 @@ function fixBookHtml(inputPath, outputPath) {
     fs.writeFileSync(outputPath, html);
 }
 
-// Fix both the root book.html and dist/book.html
-console.log('\n=== Processing book.html files ===\n');
+// Fix only dist/book.html for production deployment
+// Root book.html stays with /src/main.ts for development
+console.log('\n=== Processing book.html for deployment ===\n');
 
-// Fix root book.html (for direct access)
-console.log('1. Fixing root book.html...');
-fixBookHtml('book.html', 'book.html');
-
-// Fix dist/book.html (for dist deployment)
-console.log('2. Fixing dist/book.html...');
+console.log('Fixing dist/book.html for production...');
 fixBookHtml('book.html', 'dist/book.html');
 
 console.log('\n✅ Build complete!');
