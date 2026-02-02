@@ -145,47 +145,7 @@ export class RowColumnScanner extends Scanner {
   }
 
   public handleAction(action: SwitchAction) {
-    if (action === 'select') {
-      if (this.useBlockScanning && this.level === 'rows') {
-        if (this.currentRow >= 0) {
-          this.level = 'cells';
-          this.currentCol = -1;
-          this.renderer.setSelected(-1);
-          if (this.timer) clearTimeout(this.timer);
-          this.scheduleNextStep();
-        }
-      } else {
-        // Select Item (either point scanning or second level of block scanning)
-        let index = -1;
-        const cols = this.renderer.columns;
-
-        if (this.useBlockScanning) {
-          if (this.isColumnRow) {
-            index = this.currentCol * cols + this.currentRow;
-          } else {
-            index = this.currentRow * cols + this.currentCol;
-          }
-        } else {
-          // Point scanning
-          if (this.isColumnRow) {
-            const row = Math.floor(this.currentCol / cols);
-            const col = this.currentCol % cols;
-            index = row * cols + col;
-          } else {
-            index = this.currentCol;
-          }
-        }
-
-        const item = this.renderer.getItem(index);
-        if (item) {
-          this.renderer.setSelected(index);
-          this.triggerSelection(item);
-          this.reset();
-          if (this.timer) clearTimeout(this.timer);
-          this.scheduleNextStep();
-        }
-      }
-    } else if (action === 'cancel') {
+    if (action === 'cancel') {
       if (this.useBlockScanning && this.level === 'cells') {
         this.level = 'rows';
         this.currentCol = -1;
@@ -194,6 +154,51 @@ export class RowColumnScanner extends Scanner {
         this.scheduleNextStep();
       } else {
         this.reset();
+      }
+    } else {
+      // Let base class handle select, reset, step, etc.
+      super.handleAction(action);
+    }
+  }
+
+  protected doSelection() {
+    if (this.useBlockScanning && this.level === 'rows') {
+      if (this.currentRow >= 0) {
+        this.level = 'cells';
+        this.currentCol = -1;
+        this.renderer.setSelected(-1);
+        if (this.timer) clearTimeout(this.timer);
+        this.scheduleNextStep();
+      }
+    } else {
+      // Select Item (either point scanning or second level of block scanning)
+      let index = -1;
+      const cols = this.renderer.columns;
+
+      if (this.useBlockScanning) {
+        if (this.isColumnRow) {
+          index = this.currentCol * cols + this.currentRow;
+        } else {
+          index = this.currentRow * cols + this.currentCol;
+        }
+      } else {
+        // Point scanning
+        if (this.isColumnRow) {
+          const row = Math.floor(this.currentCol / cols);
+          const col = this.currentCol % cols;
+          index = row * cols + col;
+        } else {
+          index = this.currentCol;
+        }
+      }
+
+      const item = this.renderer.getItem(index);
+      if (item) {
+        this.renderer.setSelected(index);
+        this.triggerSelection(item);
+        this.reset();
+        if (this.timer) clearTimeout(this.timer);
+        this.scheduleNextStep();
       }
     }
   }

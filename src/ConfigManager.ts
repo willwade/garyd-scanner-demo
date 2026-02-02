@@ -8,6 +8,7 @@ export interface AppConfig {
   initialScanDelay: number; // ms (delay before first item)
   initialItemPause: number; // ms (extended highlight on first item of each cycle)
   scanPauseDelay: number; // ms (delay between stages in hierarchical scans)
+  scanLoops: number; // Number of complete scan cycles (0 = infinite)
 
   // Scan mode
   scanInputMode: 'auto' | 'manual'; // auto-scan vs manual step
@@ -46,11 +47,25 @@ export interface AppConfig {
   cancelMethod: 'button' | 'long-hold'; // How to cancel scan
   longHoldTime: number; // ms (hold time for long-hold cancel)
 
+  // CRITICAL OVERSCAN (two-stage scanning)
+  criticalOverscan: {
+    enabled: boolean; // Enable two-stage scanning
+    fastRate: number; // ms (fast scan rate, e.g., 100ms)
+    slowRate: number; // ms (slow backward scan rate, e.g., 1000ms)
+  };
+
   // Display settings
   gridContent: 'numbers' | 'keyboard';
   gridSize: number; // Total items (e.g. 64) or specific layout
   showUI: boolean;
   soundEnabled: boolean;
+
+  // HIGHLIGHT VISUALIZATION
+  highlightBorderWidth: number; // px (0-10, thickness of highlight outline)
+  highlightBorderColor: string; // CSS color for highlight border/outline
+  highlightScale: number; // number (1.0-1.5, scale factor for highlighted items, 1.0 = no zoom)
+  highlightOpacity: number; // number (0.3-1.0, opacity of highlighted items)
+  highlightAnimation: boolean; // Enable pulse animation on highlighted items
 
   // Language & Layout
   language: string;
@@ -73,6 +88,7 @@ export class ConfigManager {
     initialScanDelay: 500, // 500ms delay before first scan
     initialItemPause: 0, // 0 = normal scan rate, >0 = extended first item highlight
     scanPauseDelay: 300, // 300ms pause between stages
+    scanLoops: 4, // Number of complete scan cycles (0 = infinite)
     scanInputMode: 'auto', // auto-scan by default
 
     // Repeat functions
@@ -90,6 +106,11 @@ export class ConfigManager {
     allowEmptyItems: false, // Disabled by default
     cancelMethod: 'button', // Button press cancel
     longHoldTime: 1000, // 1 second hold
+    criticalOverscan: {
+      enabled: false, // Disabled by default (backward compatible)
+      fastRate: 100, // 100ms fast scan
+      slowRate: 1000, // 1000ms slow backward scan
+    },
     gridContent: 'numbers',
     gridSize: 64, // 8x8
     showUI: true,
@@ -97,7 +118,14 @@ export class ConfigManager {
     language: 'en',
     layoutMode: 'alphabetical',
     viewMode: 'standard',
-    heatmapMax: 20
+    heatmapMax: 20,
+
+    // Highlight visualization
+    highlightBorderWidth: 4, // 4px outline
+    highlightBorderColor: '#FF9800', // Orange (contrast with blue, red, green elimination colors)
+    highlightScale: 1.0, // 1.0 = no zoom, 1.2 = 20% larger
+    highlightOpacity: 1.0, // Full opacity
+    highlightAnimation: false, // No animation by default
   };
 
   constructor(overrides?: Partial<AppConfig>, loadFromUrl: boolean = true) {

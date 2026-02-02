@@ -16,24 +16,29 @@ export class CauseEffectScanner extends Scanner {
     }
   }
 
-  public handleAction(_action: SwitchAction): void {
-    if (!this.isRunning) return;
+  public handleAction(action: SwitchAction): void {
+    if (action === 'select' && this.isRunning) {
+      // Let base class handle select with critical overscan logic
+      super.handleAction(action);
+    }
+  }
 
+  protected doSelection() {
     // For Cause & Effect, ANY switch action typically triggers the effect.
     // We trigger selection on all items (or the first one if singular).
 
     const count = this.renderer.getItemsCount();
     if (count > 0) {
-        // Just select the first one as the "event" source, or all?
-        // Usually visual feedback on the item is desired.
-        // We'll select index 0 by default for simplicity, or we can iterate.
-        // If there's only 1 item, index 0 is correct.
+      // Just select the first one as the "event" source, or all?
+      // Usually visual feedback on the item is desired.
+      // We'll select index 0 by default for simplicity, or we can iterate.
+      // If there's only 1 item, index 0 is correct.
 
-        const item = this.renderer.getItem(0);
-        if (item) {
-             this.triggerSelection(item);
-             this.renderer.setSelected(0);
-        }
+      const item = this.renderer.getItem(0);
+      if (item) {
+        this.triggerSelection(item);
+        this.renderer.setSelected(0);
+      }
     }
   }
 
@@ -45,8 +50,8 @@ export class CauseEffectScanner extends Scanner {
     // Reset focus?
     const count = this.renderer.getItemsCount();
     if (count > 0) {
-        const indices = Array.from({ length: count }, (_, i) => i);
-        this.renderer.setFocus(indices);
+      const indices = Array.from({ length: count }, (_, i) => i);
+      this.renderer.setFocus(indices);
     }
   }
 

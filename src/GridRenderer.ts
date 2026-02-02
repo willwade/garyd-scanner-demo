@@ -28,6 +28,19 @@ export class GridRenderer {
     return this.container;
   }
 
+  /**
+   * Update highlight visualization styles based on config
+   * Sets CSS custom properties for border, scale, opacity, and animation
+   */
+  public updateHighlightStyles(config: { highlightBorderWidth: number; highlightBorderColor: string; highlightScale: number; highlightOpacity: number; highlightAnimation: boolean }) {
+    // Set CSS custom properties on the container
+    this.container.style.setProperty('--focus-border-width', `${config.highlightBorderWidth}px`);
+    this.container.style.setProperty('--focus-color', config.highlightBorderColor);
+    this.container.style.setProperty('--focus-scale', config.highlightScale.toString());
+    this.container.style.setProperty('--focus-opacity', config.highlightOpacity.toString());
+    this.container.style.setProperty('--focus-animation', config.highlightAnimation ? 'pulse' : 'none');
+  }
+
   public render(items: GridItem[], columns: number = 8) {
     this.items = items;
     this.columns = columns;
@@ -76,14 +89,28 @@ export class GridRenderer {
     });
   }
 
-  public setFocus(indices: number[]) {
+  public setFocus(indices: number[], config?: { highlightBorderWidth: number; highlightBorderColor: string; highlightScale: number; highlightOpacity: number; highlightAnimation: boolean }) {
+    // Update styles if config provided
+    if (config) {
+      this.updateHighlightStyles(config);
+    }
+
     // Clear all focus
-    this.elements.forEach(el => el.classList.remove('scan-focus'));
+    this.elements.forEach(el => {
+      el.classList.remove('scan-focus');
+      el.classList.remove('animate-pulse');
+    });
 
     // Add focus to specified indices
     indices.forEach(idx => {
       if (this.elements[idx]) {
-        this.elements[idx].classList.add('scan-focus');
+        const el = this.elements[idx];
+        el.classList.add('scan-focus');
+
+        // Add animation class if enabled
+        if (config?.highlightAnimation) {
+          el.classList.add('animate-pulse');
+        }
       }
     });
   }

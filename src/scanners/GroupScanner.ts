@@ -105,41 +105,46 @@ export class GroupScanner extends Scanner {
   }
 
   public handleAction(action: SwitchAction) {
-    if (action === 'select') {
-       if (this.level === 'group') {
-           if (this.currentGroup >= 0) {
-               this.level = 'row';
-               this.currentRow = -1;
-               this.restartTimer();
-           }
-       } else if (this.level === 'row') {
-           if (this.currentRow >= 0) {
-               this.level = 'cell';
-               this.currentCol = -1;
-               this.restartTimer();
-           }
-       } else {
-           const g = this.groups[this.currentGroup];
-           const idx = (g.rowStart + this.currentRow) * this.renderer.columns + this.currentCol;
-           const item = this.renderer.getItem(idx);
-           if (item) {
-               this.triggerSelection(item);
-               this.reset();
-               this.restartTimer();
-           }
-       }
-    } else if (action === 'cancel') {
-        if (this.level === 'cell') {
-            this.level = 'row';
-            this.currentCol = -1;
-            this.restartTimer();
-        } else if (this.level === 'row') {
-            this.level = 'group';
-            this.currentRow = -1;
-            this.restartTimer();
-        } else {
-            this.reset();
-        }
+    if (action === 'cancel') {
+      if (this.level === 'cell') {
+        this.level = 'row';
+        this.currentCol = -1;
+        this.restartTimer();
+      } else if (this.level === 'row') {
+        this.level = 'group';
+        this.currentRow = -1;
+        this.restartTimer();
+      } else {
+        this.reset();
+      }
+    } else {
+      // Let base class handle select, reset, step, etc.
+      super.handleAction(action);
+    }
+  }
+
+  protected doSelection() {
+    if (this.level === 'group') {
+      if (this.currentGroup >= 0) {
+        this.level = 'row';
+        this.currentRow = -1;
+        this.restartTimer();
+      }
+    } else if (this.level === 'row') {
+      if (this.currentRow >= 0) {
+        this.level = 'cell';
+        this.currentCol = -1;
+        this.restartTimer();
+      }
+    } else {
+      const g = this.groups[this.currentGroup];
+      const idx = (g.rowStart + this.currentRow) * this.renderer.columns + this.currentCol;
+      const item = this.renderer.getItem(idx);
+      if (item) {
+        this.triggerSelection(item);
+        this.reset();
+        this.restartTimer();
+      }
     }
   }
 

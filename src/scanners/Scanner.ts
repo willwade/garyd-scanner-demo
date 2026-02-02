@@ -3,6 +3,12 @@ import { ConfigManager } from '../ConfigManager';
 import { AudioManager } from '../AudioManager';
 import { SwitchAction } from '../SwitchInput';
 
+// Critical Overscan states
+export enum OverscanState {
+  FAST = 'fast',           // Fast forward scanning
+  SLOW_BACKWARD = 'slow_backward',  // Slow backward scanning
+}
+
 export abstract class Scanner {
   protected renderer: GridRenderer;
   protected config: ConfigManager;
@@ -10,6 +16,9 @@ export abstract class Scanner {
   protected isRunning: boolean = false;
   protected timer: number | null = null;
   protected stepCount: number = 0; // Track steps for initial item pause
+  protected overscanState: OverscanState = OverscanState.FAST; // Critical overscan state
+  protected loopCount: number = 0; // Track completed scan cycles
+  protected previousIndex: number = -1; // Track previous index to detect cycle completion
 
   constructor(renderer: GridRenderer, config: ConfigManager, audio: AudioManager) {
     this.renderer = renderer;
@@ -20,6 +29,8 @@ export abstract class Scanner {
   public start() {
     this.isRunning = true;
     this.stepCount = 0; // Reset step count
+    this.loopCount = 0; // Reset loop count
+    this.overscanState = OverscanState.FAST; // Reset overscan state
     this.reset();
     this.scheduleNextStep();
   }
@@ -34,7 +45,9 @@ export abstract class Scanner {
   }
 
   public handleAction(action: SwitchAction): void {
-    if (action === 'step') {
+    if (action === 'select') {
+      this.handleSelectAction();
+    } else if (action === 'step') {
       // Manual step - only works in manual mode
       if (this.config.get().scanInputMode === 'manual') {
         this.step();
@@ -42,18 +55,62 @@ export abstract class Scanner {
         this.audio.playScanSound();
       }
     } else if (action === 'reset') {
+      this.loopCount = 0; // Reset loop count
       this.reset();
       this.stepCount = 0; // Reset step count on reset action
+      this.overscanState = OverscanState.FAST; // Reset overscan state
       // Restart timer if in auto mode
       if (this.config.get().scanInputMode === 'auto') {
+        this.isRunning = true; // Ensure we're running before scheduling
         if (this.timer) clearTimeout(this.timer);
         this.scheduleNextStep();
       }
     }
   }
 
+  protected handleSelectAction() {
+    const config = this.config.get();
+
+    // If critical overscan is enabled, handle state transitions
+    if (config.criticalOverscan.enabled) {
+      if (this.overscanState === OverscanState.FAST) {
+        // First select: transition to slow backward scanning
+        this.overscanState = OverscanState.SLOW_BACKWARD;
+        // Restart timer with slow backward rate
+        if (this.timer) clearTimeout(this.timer);
+        this.scheduleNextStep();
+        return;
+      } else if (this.overscanState === OverscanState.SLOW_BACKWARD) {
+        // Second select: trigger selection and reset to FAST
+        this.overscanState = OverscanState.FAST;
+        // Perform the actual selection
+        this.doSelection();
+        return;
+      }
+    }
+
+    // Critical overscan disabled: perform selection immediately
+    this.doSelection();
+  }
+
   protected abstract step(): void;
   protected abstract reset(): void;
+
+  /**
+   * Called by subclasses to report when a scan cycle has completed.
+   * Subclasses should call this when they detect wrapping from the last item back to the first.
+   */
+  protected reportCycleCompleted() {
+    this.loopCount++;
+    const config = this.config.get();
+
+    // Check if we've reached the loop limit
+    if (config.scanLoops > 0 && this.loopCount >= config.scanLoops) {
+      // Stop scanning
+      this.stop();
+      this.loopCount = 0; // Reset for next start
+    }
+  }
 
   protected scheduleNextStep() {
     if (!this.isRunning) return;
@@ -65,11 +122,19 @@ export abstract class Scanner {
       return;
     }
 
-    // Use initialItemPause for first item (stepCount === 0)
-    const isFirstItem = this.stepCount === 0;
-    const rate = isFirstItem && config.initialItemPause > 0
-      ? config.initialItemPause
-      : config.scanRate;
+    // Determine the scan rate based on critical overscan state
+    let rate: number;
+    if (config.criticalOverscan.enabled && this.overscanState === OverscanState.SLOW_BACKWARD) {
+      // Slow backward scanning
+      rate = config.criticalOverscan.slowRate;
+    } else {
+      // Normal or fast scanning
+      // Use initialItemPause for first item (stepCount === 0)
+      const isFirstItem = this.stepCount === 0;
+      rate = isFirstItem && config.initialItemPause > 0
+        ? config.initialItemPause
+        : (config.criticalOverscan.enabled ? config.criticalOverscan.fastRate : config.scanRate);
+    }
 
     if (this.timer) clearTimeout(this.timer);
 
@@ -111,6 +176,12 @@ export abstract class Scanner {
   }
 
   public abstract getCost(itemIndex: number): number;
+
+  /**
+   * Perform the actual selection action.
+   * Called by handleAction when in appropriate overscan state or when overscan is disabled.
+   */
+  protected abstract doSelection(): void;
 
   /**
    * Reorders the linear content to match the visual flow of the scanner.

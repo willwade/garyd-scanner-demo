@@ -468,64 +468,69 @@ export class ContinuousScanner extends Scanner {
       technique: this.technique
     });
 
-    if (action === 'select') {
-      if (this.technique === 'eight-direction') {
-        // Eight-direction: direction selection → movement → selection
-        if (this.state === 'direction-scan') {
-          // First select: start moving in selected direction
-          const dirInfo = this.getDirectionFromAngle(this.compassAngle);
-          console.log('[ContinuousScanner] Transition: direction-scan -> moving, direction:', dirInfo.name, 'angle:', this.compassAngle);
-          this.state = 'moving';
-        } else if (this.state === 'moving') {
-          // Second select: stop and select item at current position
-          console.log('[ContinuousScanner] Transition: moving -> processing');
-          this.state = 'processing';
-          this.selectFocusedItem();
-        }
-      } else if (this.technique === 'gliding') {
-        // Gliding cursor: four-stage selection (X coarse, X fine, Y coarse, Y fine)
-        if (this.state === 'x-scanning') {
-          // First select: lock X buffer zone, start fine X scanning
-          console.log('[ContinuousScanner] Transition: x-scanning -> x-capturing');
-          this.state = 'x-capturing';
-          this.fineXPos = 0;
-          this.direction = 1;
-        } else if (this.state === 'x-capturing') {
-          // Second select: lock X position, start Y buffer zone scanning
-          console.log('[ContinuousScanner] Transition: x-capturing -> y-scanning');
-          this.state = 'y-scanning';
-          // Store the actual locked X position
-          this.lockedXPosition = this.bufferLeft + (this.fineXPos / 100) * (this.bufferRight - this.bufferLeft);
-          this.yPos = 0;
-          this.fineYPos = 0;
-          this.direction = 1;
-        } else if (this.state === 'y-scanning') {
-          // Third select: lock Y buffer zone, start fine Y scanning
-          console.log('[ContinuousScanner] Transition: y-scanning -> y-capturing');
-          this.state = 'y-capturing';
-          this.fineYPos = 0;
-          this.direction = 1;
-        } else if (this.state === 'y-capturing') {
-          // Fourth select: pick the item at the intersection
-          console.log('[ContinuousScanner] Transition: y-capturing -> processing');
-          this.state = 'processing';
-          this.selectFocusedItem();
-        }
-      } else {
-        // Crosshair: stepping movement
-        if (this.state === 'x-scan') {
-          console.log('[ContinuousScanner] Transition: x-scan -> y-scan');
-          this.state = 'y-scan';
-          this.yPos = 0;
-        } else if (this.state === 'y-scan') {
-          console.log('[ContinuousScanner] Transition: y-scan -> processing');
-          this.state = 'processing';
-          this.selectAtPoint();
-        }
-      }
-    } else if (action === 'cancel') {
+    if (action === 'cancel') {
       console.log('[ContinuousScanner] Cancel - resetting');
       this.reset();
+    } else {
+      // Let base class handle select, reset, step, etc.
+      super.handleAction(action);
+    }
+  }
+
+  protected doSelection() {
+    if (this.technique === 'eight-direction') {
+      // Eight-direction: direction selection → movement → selection
+      if (this.state === 'direction-scan') {
+        // First select: start moving in selected direction
+        const dirInfo = this.getDirectionFromAngle(this.compassAngle);
+        console.log('[ContinuousScanner] Transition: direction-scan -> moving, direction:', dirInfo.name, 'angle:', this.compassAngle);
+        this.state = 'moving';
+      } else if (this.state === 'moving') {
+        // Second select: stop and select item at current position
+        console.log('[ContinuousScanner] Transition: moving -> processing');
+        this.state = 'processing';
+        this.selectFocusedItem();
+      }
+    } else if (this.technique === 'gliding') {
+      // Gliding cursor: four-stage selection (X coarse, X fine, Y coarse, Y fine)
+      if (this.state === 'x-scanning') {
+        // First select: lock X buffer zone, start fine X scanning
+        console.log('[ContinuousScanner] Transition: x-scanning -> x-capturing');
+        this.state = 'x-capturing';
+        this.fineXPos = 0;
+        this.direction = 1;
+      } else if (this.state === 'x-capturing') {
+        // Second select: lock X position, start Y buffer zone scanning
+        console.log('[ContinuousScanner] Transition: x-capturing -> y-scanning');
+        this.state = 'y-scanning';
+        // Store the actual locked X position
+        this.lockedXPosition = this.bufferLeft + (this.fineXPos / 100) * (this.bufferRight - this.bufferLeft);
+        this.yPos = 0;
+        this.fineYPos = 0;
+        this.direction = 1;
+      } else if (this.state === 'y-scanning') {
+        // Third select: lock Y buffer zone, start fine Y scanning
+        console.log('[ContinuousScanner] Transition: y-scanning -> y-capturing');
+        this.state = 'y-capturing';
+        this.fineYPos = 0;
+        this.direction = 1;
+      } else if (this.state === 'y-capturing') {
+        // Fourth select: pick the item at the intersection
+        console.log('[ContinuousScanner] Transition: y-capturing -> processing');
+        this.state = 'processing';
+        this.selectFocusedItem();
+      }
+    } else {
+      // Crosshair: stepping movement
+      if (this.state === 'x-scan') {
+        console.log('[ContinuousScanner] Transition: x-scan -> y-scan');
+        this.state = 'y-scan';
+        this.yPos = 0;
+      } else if (this.state === 'y-scan') {
+        console.log('[ContinuousScanner] Transition: y-scan -> processing');
+        this.state = 'processing';
+        this.selectAtPoint();
+      }
     }
   }
 

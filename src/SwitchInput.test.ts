@@ -17,6 +17,10 @@ class TestScanner extends Scanner {
     this.stepCallCount = 0;
   }
 
+  protected doSelection() {
+    // Test scanner - no-op
+  }
+
   public getCost(itemIndex: number): number {
     return itemIndex + 1;
   }

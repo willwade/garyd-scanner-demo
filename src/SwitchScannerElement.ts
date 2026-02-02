@@ -349,12 +349,30 @@ export class SwitchScannerElement extends HTMLElement {
         cursor: pointer;
         user-select: none;
         min-height: 50px;
+        overflow: hidden;
       }
 
       .scan-focus {
-        outline: 4px solid yellow;
-        outline-offset: -4px;
-        z-index: 10;
+        outline: var(--focus-border-width, 4px) solid var(--focus-color, #FF9800);
+        outline-offset: calc(var(--focus-border-width, 4px) * -1);
+        transform: scale(var(--focus-scale, 1.0));
+        opacity: var(--focus-opacity, 1.0);
+        transition: transform 0.2s ease-out, opacity 0.2s ease;
+      }
+
+      @keyframes pulse {
+        0%, 100% {
+          transform: scale(var(--focus-scale, 1.0));
+          opacity: var(--focus-opacity, 1.0);
+        }
+        50% {
+          transform: scale(calc(var(--focus-scale, 1.0) * 1.05));
+          opacity: calc(var(--focus-opacity, 1.0) * 0.8);
+        }
+      }
+
+      .scan-focus.animate-pulse {
+        animation: pulse 1.5s ease-in-out infinite;
       }
 
       .dwell-active {
@@ -634,10 +652,26 @@ export class SwitchScannerElement extends HTMLElement {
       }
       .scanner-wrapper.sketch .scan-focus {
           outline: none;
-          box-shadow: 0 0 0 4px #ff4081;
+          box-shadow: 0 0 0 var(--focus-border-width, 4px) var(--focus-color, #FF9800);
           border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-          transform: scale(1.02);
-          transition: transform 0.1s;
+          transform: scale(var(--focus-scale, 1.02));
+          opacity: var(--focus-opacity, 1.0);
+          transition: transform 0.1s, opacity 0.1s;
+      }
+
+      .scanner-wrapper.sketch .scan-focus.animate-pulse {
+          animation: sketch-pulse 1.5s ease-in-out infinite;
+      }
+
+      @keyframes sketch-pulse {
+        0%, 100% {
+          transform: scale(var(--focus-scale, 1.02));
+          opacity: var(--focus-opacity, 1.0);
+        }
+        50% {
+          transform: scale(calc(var(--focus-scale, 1.02) * 1.05));
+          opacity: calc(var(--focus-opacity, 1.0) * 0.8);
+        }
       }
       .scanner-wrapper.sketch .controls {
           background: transparent;
@@ -693,6 +727,7 @@ export class SwitchScannerElement extends HTMLElement {
           text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         `;
         btn.addEventListener('click', (_e) => {
+          console.log('[SwitchScannerElement] Elimination button clicked:', action);
           this.switchInput.triggerAction(action as any);
         });
         btn.addEventListener('mousedown', (e) => e.preventDefault());
@@ -712,6 +747,7 @@ export class SwitchScannerElement extends HTMLElement {
         border-radius: 4px;
       `;
       resetBtn.addEventListener('click', (_e) => {
+        console.log('[SwitchScannerElement] Reset button clicked');
         this.switchInput.triggerAction('reset');
       });
       resetBtn.addEventListener('mousedown', (e) => e.preventDefault());
@@ -719,13 +755,14 @@ export class SwitchScannerElement extends HTMLElement {
     } else {
       // Standard controls for other modes
       controls.innerHTML = `
-        <button data-action="switch-1" style="flex: 1; padding: 10px 20px; font-size: 1rem; cursor: pointer; border: 1px solid #ccc; background: #fff; border-radius: 4px;">Select (1)</button>
-        <button data-action="switch-2" style="flex: 1; padding: 10px 20px; font-size: 1rem; cursor: pointer; border: 1px solid #ccc; background: #fff; border-radius: 4px;">Step (2)</button>
+        <button data-action="select" style="flex: 1; padding: 10px 20px; font-size: 1rem; cursor: pointer; border: 1px solid #ccc; background: #fff; border-radius: 4px;">Select (1)</button>
+        <button data-action="step" style="flex: 1; padding: 10px 20px; font-size: 1rem; cursor: pointer; border: 1px solid #ccc; background: #fff; border-radius: 4px;">Step (2)</button>
         <button data-action="reset" style="flex: 1; padding: 10px 20px; font-size: 1rem; cursor: pointer; border: 1px solid #ccc; background: #fff; border-radius: 4px;">Reset (R)</button>
       `;
 
       this.shadowRoot!.querySelectorAll('.controls button').forEach(btn => {
         btn.addEventListener('click', (e) => {
+          console.log('[SwitchScannerElement] Button clicked:', (e.target as HTMLElement).getAttribute('data-action'));
           const action = (e.target as HTMLElement).getAttribute('data-action');
           if (action) {
             this.switchInput.triggerAction(action as any);
@@ -821,6 +858,8 @@ export class SwitchScannerElement extends HTMLElement {
     // Subscribe to config changes to update controls
     this.configManager.subscribe((cfg) => {
         this.updateControlsVisibility(cfg);
+        // Update highlight styles when visualization config changes
+        this.gridRenderer.updateHighlightStyles(cfg);
     });
 
     // Scanner Events (Selection & Redraw)
@@ -1055,6 +1094,9 @@ export class SwitchScannerElement extends HTMLElement {
     }
 
     this.currentScanner = this.createScanner(config);
+
+    // Update highlight styles when config changes
+    this.gridRenderer.updateHighlightStyles(config);
 
     console.log('[SwitchScannerElement] Starting new scanner:', this.currentScanner.constructor.name);
     this.currentScanner.start();

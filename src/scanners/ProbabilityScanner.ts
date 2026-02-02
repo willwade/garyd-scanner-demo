@@ -33,30 +33,35 @@ export class ProbabilityScanner extends Scanner {
   }
 
   public handleAction(action: SwitchAction) {
-    if (action === 'select') {
-      if (this.currentIndex >= 0) {
-        const actualIndex = this.scanOrder[this.currentIndex];
-        const item = this.renderer.getItem(actualIndex);
-        if (item) {
-          this.renderer.setSelected(actualIndex);
-          this.triggerSelection(item);
+    if (action === 'cancel') {
+      this.reset();
+    } else {
+      // Let base class handle select, reset, step, etc.
+      super.handleAction(action);
+    }
+  }
 
-          // Update predictor
-          this.predictor.addToContext(item.label.toLowerCase());
+  protected doSelection() {
+    if (this.currentIndex >= 0) {
+      const actualIndex = this.scanOrder[this.currentIndex];
+      const item = this.renderer.getItem(actualIndex);
+      if (item) {
+        this.renderer.setSelected(actualIndex);
+        this.triggerSelection(item);
 
-          // Recalculate probabilities and order
-          this.updateProbabilities();
+        // Update predictor
+        this.predictor.addToContext(item.label.toLowerCase());
 
-          // Request visualization update (for heatmap/numbers)
-          this.triggerRedraw();
+        // Recalculate probabilities and order
+        this.updateProbabilities();
 
-          this.reset();
-          if (this.timer) clearTimeout(this.timer);
-          this.scheduleNextStep();
-        }
-      }
-    } else if (action === 'cancel') {
+        // Request visualization update (for heatmap/numbers)
+        this.triggerRedraw();
+
         this.reset();
+        if (this.timer) clearTimeout(this.timer);
+        this.scheduleNextStep();
+      }
     }
   }
 

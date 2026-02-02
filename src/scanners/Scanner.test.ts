@@ -10,6 +10,7 @@ class TestScanner extends Scanner {
   public resetCallCount = 0;
   public handleActionCallCount = 0;
   public lastAction: any = null;
+  public doSelectionCallCount = 0;
 
   protected step() {
     this.stepCallCount++;
@@ -17,6 +18,10 @@ class TestScanner extends Scanner {
 
   protected reset() {
     this.resetCallCount++;
+  }
+
+  protected doSelection() {
+    this.doSelectionCallCount++;
   }
 
   public getCost(itemIndex: number): number {

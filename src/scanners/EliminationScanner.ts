@@ -113,6 +113,13 @@ export class EliminationScanner extends Scanner {
   }
 
   public handleAction(action: SwitchAction) {
+    if (action === 'select') {
+      // Handle select action for critical overscan support
+      this.doSelection();
+      return;
+    }
+
+    // Check if it's a switch action (switch-1 through switch-8)
     // Check if it's a switch action (switch-1 through switch-8)
     if (action.toString().startsWith('switch-')) {
       const switchNum = parseInt(action.toString().split('-')[1]) - 1;
@@ -182,6 +189,21 @@ export class EliminationScanner extends Scanner {
         this.reset();
       }
       this.restartTimer();
+    }
+  }
+
+  protected doSelection() {
+    // Elimination scanner uses switch-N actions, not standard select
+    // This is provided for critical overscan compatibility
+    // If we're down to a single item, select it
+    const rangeSize = this.rangeEnd - this.rangeStart;
+    if (rangeSize <= 1) {
+      const item = this.renderer.getItem(this.rangeStart);
+      if (item) {
+        this.triggerSelection(item);
+        this.reset();
+        this.restartTimer();
+      }
     }
   }
 

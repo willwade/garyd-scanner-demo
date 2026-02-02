@@ -63,16 +63,23 @@ export class SnakeScanner extends Scanner {
   }
 
   public handleAction(action: SwitchAction) {
-    if (action === 'select') {
-      const index = this.currentRow * this.maxCol + this.currentCol;
-      const item = this.renderer.getItem(index);
-      if (item) {
-        this.renderer.setSelected(index);
-        this.triggerSelection(item);
-        this.reset();
-        if (this.timer) clearTimeout(this.timer);
-        this.scheduleNextStep();
-      }
+    if (action !== 'select') {
+      super.handleAction(action);
+    } else {
+      // Let base class handle select with critical overscan logic
+      super.handleAction(action);
+    }
+  }
+
+  protected doSelection() {
+    const index = this.currentRow * this.maxCol + this.currentCol;
+    const item = this.renderer.getItem(index);
+    if (item) {
+      this.renderer.setSelected(index);
+      this.triggerSelection(item);
+      this.reset();
+      if (this.timer) clearTimeout(this.timer);
+      this.scheduleNextStep();
     }
   }
 

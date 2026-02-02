@@ -17,6 +17,10 @@ class TestScannerWithPause extends Scanner {
     this.resetCallCount++;
   }
 
+  protected doSelection() {
+    // Test scanner - no-op
+  }
+
   public getCost(itemIndex: number): number {
     return itemIndex + 1;
   }

@@ -167,8 +167,9 @@ export class SettingsUI {
           <div class="form-group">
             <label for="gridSize">Grid Size <span class="value-display">${config.gridSize}</span></label>
             <input type="number" id="gridSize" class="setting-input" name="gridSize"
-                   value="${config.gridSize}" min="4" max="100">
-            <small>Number of items (for numbers mode)</small>
+                   value="${config.gridSize}" min="4" max="100"
+                   ${config.gridContent === 'keyboard' ? 'disabled' : ''}>
+            <small>Number of items (disabled for keyboard mode)</small>
           </div>
         </div>
 
@@ -264,6 +265,13 @@ export class SettingsUI {
           <small>Auto-select on hover (0 = off)</small>
         </div>
 
+        <div class="form-group">
+          <label for="scanLoops">Scan Loops <span class="value-display">${config.scanLoops}</span></label>
+          <input type="range" id="scanLoops" class="setting-input range-input" name="scanLoops"
+                 value="${config.scanLoops}" min="0" max="20" step="1">
+          <small>Number of complete scan cycles (0 = infinite)</small>
+        </div>
+
         <div class="form-group checkbox-group">
           <label>
             <input type="checkbox" class="setting-input" name="allowEmptyItems" ${config.allowEmptyItems ? 'checked' : ''}>
@@ -286,6 +294,30 @@ export class SettingsUI {
           <input type="range" id="longHoldTime" class="setting-input range-input" name="longHoldTime"
                  value="${config.longHoldTime}" min="500" max="3000" step="100">
           <small>Hold duration to trigger cancel (500-3000ms)</small>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" class="setting-input" name="criticalOverscanEnabled" ${config.criticalOverscan.enabled ? 'checked' : ''}>
+            <span>Enable Critical Overscan</span>
+          </label>
+          <small>Two-stage scanning: fast scan → slow backward scan → select</small>
+        </div>
+
+        <div id="criticalOverscanOptions" style="display: ${config.criticalOverscan.enabled ? 'block' : 'none'}">
+          <div class="form-group">
+            <label for="criticalOverscanFastRate">Fast Scan Rate <span class="value-display">${config.criticalOverscan.fastRate}ms</span></label>
+            <input type="range" id="criticalOverscanFastRate" class="setting-input range-input" name="criticalOverscanFastRate"
+                   value="${config.criticalOverscan.fastRate}" min="50" max="500" step="10">
+            <small>Speed of initial fast scan (50-500ms)</small>
+          </div>
+
+          <div class="form-group">
+            <label for="criticalOverscanSlowRate">Slow Scan Rate <span class="value-display">${config.criticalOverscan.slowRate}ms</span></label>
+            <input type="range" id="criticalOverscanSlowRate" class="setting-input range-input" name="criticalOverscanSlowRate"
+                   value="${config.criticalOverscan.slowRate}" min="500" max="3000" step="100">
+            <small>Speed of slow backward scan (500-3000ms)</small>
+          </div>
         </div>
       </div>
 
@@ -317,6 +349,42 @@ export class SettingsUI {
             <span>Sound Enabled</span>
           </label>
           <small>Play sounds when scanning and selecting</small>
+        </div>
+
+        <div class="form-group">
+          <label for="highlightBorderWidth">Highlight Border Width <span class="value-display">${config.highlightBorderWidth}px</span></label>
+          <input type="range" id="highlightBorderWidth" class="setting-input range-input" name="highlightBorderWidth"
+                 value="${config.highlightBorderWidth}" min="0" max="10" step="1">
+          <small>Thickness of highlight outline (0-10px)</small>
+        </div>
+
+        <div class="form-group">
+          <label for="highlightBorderColor">Highlight Border Color</label>
+          <input type="color" id="highlightBorderColor" class="setting-input" name="highlightBorderColor"
+                 value="${config.highlightBorderColor}">
+          <small>Color of highlight outline (orange by default)</small>
+        </div>
+
+        <div class="form-group">
+          <label for="highlightScale">Highlight Scale <span class="value-display">${config.highlightScale}x</span></label>
+          <input type="range" id="highlightScale" class="setting-input range-input" name="highlightScale"
+                 value="${config.highlightScale}" min="1.0" max="1.5" step="0.05">
+          <small>Size multiplier for highlighted items (1.0-1.5, 1.0 = no zoom)</small>
+        </div>
+
+        <div class="form-group">
+          <label for="highlightOpacity">Highlight Opacity <span class="value-display">${config.highlightOpacity}</span></label>
+          <input type="range" id="highlightOpacity" class="setting-input range-input" name="highlightOpacity"
+                 value="${config.highlightOpacity}" min="0.3" max="1.0" step="0.05">
+          <small>Opacity of highlighted items (0.3-1.0, 1.0 = fully opaque)</small>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" class="setting-input" name="highlightAnimation" ${config.highlightAnimation ? 'checked' : ''}>
+            <span>Highlight Animation</span>
+          </label>
+          <small>Enable pulse animation on highlighted items</small>
         </div>
       </div>
     `;
@@ -452,6 +520,11 @@ export class SettingsUI {
               break;
           case 'gridContent':
               newConfig.gridContent = target.value as AppConfig['gridContent'];
+              // Enable/disable grid size based on content type
+              const gridSizeInput = this.formContainer.querySelector('[name="gridSize"]') as HTMLInputElement;
+              if (gridSizeInput) {
+                gridSizeInput.disabled = target.value === 'keyboard';
+              }
               break;
           case 'scanRate':
               newConfig.scanRate = parseInt(target.value, 10);
@@ -509,6 +582,10 @@ export class SettingsUI {
               newConfig.initialItemPause = parseInt(target.value, 10);
               this.updateValueDisplay('initialItemPause', target.value + 'ms');
               break;
+          case 'scanLoops':
+              newConfig.scanLoops = parseInt(target.value, 10);
+              this.updateValueDisplay('scanLoops', target.value === '0' ? 'Infinite' : target.value);
+              break;
           case 'autoRepeat':
               newConfig.autoRepeat = (target as HTMLInputElement).checked;
               break;
@@ -519,6 +596,44 @@ export class SettingsUI {
           case 'repeatTime':
               newConfig.repeatTime = parseInt(target.value, 10);
               this.updateValueDisplay('repeatTime', target.value + 'ms');
+              break;
+          case 'criticalOverscanEnabled':
+              newConfig.criticalOverscan = {
+                  ...this.configManager.get().criticalOverscan,
+                  enabled: (target as HTMLInputElement).checked
+              };
+              break;
+          case 'criticalOverscanFastRate':
+              newConfig.criticalOverscan = {
+                  ...this.configManager.get().criticalOverscan,
+                  fastRate: parseInt(target.value, 10)
+              };
+              this.updateValueDisplay('criticalOverscanFastRate', target.value + 'ms');
+              break;
+          case 'criticalOverscanSlowRate':
+              newConfig.criticalOverscan = {
+                  ...this.configManager.get().criticalOverscan,
+                  slowRate: parseInt(target.value, 10)
+              };
+              this.updateValueDisplay('criticalOverscanSlowRate', target.value + 'ms');
+              break;
+          case 'highlightBorderWidth':
+              newConfig.highlightBorderWidth = parseInt(target.value, 10);
+              this.updateValueDisplay('highlightBorderWidth', target.value + 'px');
+              break;
+          case 'highlightBorderColor':
+              newConfig.highlightBorderColor = target.value;
+              break;
+          case 'highlightScale':
+              newConfig.highlightScale = parseFloat(target.value);
+              this.updateValueDisplay('highlightScale', target.value + 'x');
+              break;
+          case 'highlightOpacity':
+              newConfig.highlightOpacity = parseFloat(target.value);
+              this.updateValueDisplay('highlightOpacity', target.value);
+              break;
+          case 'highlightAnimation':
+              newConfig.highlightAnimation = (target as HTMLInputElement).checked;
               break;
       }
 
@@ -542,6 +657,14 @@ export class SettingsUI {
         const repeatOptions = this.formContainer.querySelector('#repeat-options') as HTMLElement;
         if (repeatOptions) {
           repeatOptions.style.display = (target as HTMLInputElement).checked ? 'flex' : 'none';
+        }
+      }
+
+      // Show/hide critical overscan options based on enabled state
+      if (name === 'criticalOverscanEnabled') {
+        const criticalOverscanOptions = this.formContainer.querySelector('#criticalOverscanOptions') as HTMLElement;
+        if (criticalOverscanOptions) {
+          criticalOverscanOptions.style.display = (target as HTMLInputElement).checked ? 'block' : 'none';
         }
       }
     });
