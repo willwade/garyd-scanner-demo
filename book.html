@@ -230,18 +230,44 @@
             margin: 30px 0;
         }
 
+        .toc summary {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #2c3e50;
+            cursor: pointer;
+            list-style: none; /* Hide default triangle */
+        }
+
+        .toc summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .toc summary::after {
+            content: "+";
+            float: right;
+            font-weight: bold;
+        }
+
+        .toc[open] summary::after {
+            content: "-";
+        }
+
         .toc ul {
             list-style: none;
             padding-left: 0;
+            margin-top: 15px;
         }
 
         .toc li {
             margin: 8px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding-bottom: 5px;
         }
 
         .toc a {
             color: #2980b9;
             text-decoration: none;
+            display: block; /* Larger hit area */
         }
 
         .toc a:hover {
@@ -255,6 +281,33 @@
             margin: 20px 0;
             border-radius: 8px;
             text-align: center;
+            overflow-x: auto; /* Allow horizontal scroll */
+        }
+
+        details.diagram-collapsible {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        details.diagram-collapsible summary {
+            padding: 15px;
+            background: #f8f9fa;
+            cursor: pointer;
+            font-weight: bold;
+            color: #2980b9;
+            user-select: none;
+        }
+
+        details.diagram-collapsible summary:hover {
+            background: #f0f0f0;
+        }
+
+        details.diagram-collapsible .content {
+            padding: 20px;
+            overflow-x: auto;
         }
 
         pre {
@@ -442,8 +495,8 @@
     <h1>🎯 Switch Scanning: The Interactive Book</h1>
     <p><strong>An interactive exploration of switch access technology for developers, UX designers, clinicians, and occupational therapists.</strong></p>
 
-    <div class="toc">
-        <h3>Table of Contents</h3>
+    <details class="toc" open>
+        <summary>Table of Contents</summary>
         <ul>
             <li><a href="#chapter-1">1. What is a Switch?</a></li>
             <li><a href="#chapter-2">2. The Bandwidth Problem</a></li>
@@ -460,7 +513,7 @@
             <li><a href="#chapter-13">13. Visualization Options 🎨</a></li>
             <li><a href="#chapter-14">14. Block vs Point Technique 👁️</a></li>
         </ul>
-    </div>
+    </details>
 
     <!-- Chapter 1 -->
     <section id="chapter-1">
@@ -615,7 +668,15 @@ Fast Typing         │  Full Access
             </switch-scanner>
         </div>
 
-        <h4>2. Grid Presentation</h4>
+        <h4>2. Flip Chart Presentation</h4>
+        <p>Individual items (or groups) displayed one at a time, like turning cards in a rolodex.</p>
+        <p><strong>Best for:</strong> Reducing visual distraction, step-by-step choices.</p>
+
+        <div class="info-box" style="margin: 10px 0; padding: 10px;">
+            The existence of other items is often indicated "behind" the current one. This helps users focus on one decision at a time.
+        </div>
+
+        <h4>3. Grid Presentation</h4>
         <p>Items arranged in a 2D grid</p>
         <p><strong>Best for:</strong> Large sets, organized layouts</p>
 
@@ -727,6 +788,19 @@ Fast Typing         │  Full Access
    │Restart  │◄─│Highlight Next Item│
    └─────────┘   └─────────────────┘
             </pre>
+        </div>
+
+        <h3>Alternative: Auto-While-Held (User Scan)</h3>
+
+        <p>In standard Auto-Scan, the user presses the switch to <strong>stop/select</strong>. In <strong>Auto-While-Held</strong>, the logic is reversed:</p>
+
+        <ul>
+            <li><strong>Hold Switch:</strong> Scan moves forward.</li>
+            <li><strong>Release Switch:</strong> Scan stops on current item (selection happens on release or after dwell).</li>
+        </ul>
+
+        <div class="highlight-box">
+            <strong>Why use this?</strong> It gives the user direct control over the movement. If they panic or freeze, they likely release the switch, which stops the scan (rather than missing the item as it flies by).
         </div>
     </section>
 
@@ -937,23 +1011,44 @@ Fast Typing         │  Full Access
 
     <!-- Chapter 9 -->
     <section id="chapter-9">
-        <h2>Chapter 9: Elimination Scanning</h2>
+        <h2>Chapter 9: Progressive Segmenting & Elimination</h2>
 
-        <p><strong>Elimination Scanning</strong> is the fastest scanning method for large grids.</p>
+        <p><strong>Progressive Segmenting</strong> is a strategy where the selection set is repeatedly divided (segmented) into smaller and smaller groups until the desired item is reached. This is often called <strong>Elimination Scanning</strong> because you actively eliminate large portions of the grid with each selection.</p>
 
-        <h3>How It Works</h3>
+        <h3>Common Techniques</h3>
 
-        <p>Instead of scanning items or rows, we <strong>eliminate</strong> portions of the grid.</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;">
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+                <h4>Halving (Binary Split)</h4>
+                <p>Splits the grid into <strong>2 halves</strong>.</p>
+                <p><strong>Switches needed:</strong> 2</p>
+                <p><em>"Is it in the Left group or Right group?"</em></p>
+            </div>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+                <h4>Quartering (Quadrant)</h4>
+                <p>Splits the grid into <strong>4 quadrants</strong>.</p>
+                <p><strong>Switches needed:</strong> 4</p>
+                <p><em>"Is it Top-Left, Top-Right, Bottom-Left, or Bottom-Right?"</em></p>
+            </div>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+                <h4>Scan Direct</h4>
+                <p>Splits into many groups (6-9).</p>
+                <p><strong>Switches needed:</strong> 6+</p>
+                <p>Extremely fast but cognitively demanding.</p>
+            </div>
+        </div>
 
-        <p><strong>Example: 4-Switch Elimination (Quadrant Scanning)</strong> of 64 items:</p>
+        <h3>How Elimination Works (Example: 64 Items)</h3>
+
+        <p>Instead of scanning linearly, we dive deep quickly:</p>
 
         <ol>
-            <li><strong>Stage 1:</strong> Split grid into 4 quadrants → User selects quadrant (now 16 items)</li>
-            <li><strong>Stage 2:</strong> Split quadrant into 4 sub-quadrants → User selects sub-quadrant (now 4 items)</li>
-            <li><strong>Stage 3:</strong> Individual items → User selects item</li>
+            <li><strong>Stage 1:</strong> Grid splits into 4 quadrants → You select one (Eliminating 48 items instantly!)</li>
+            <li><strong>Stage 2:</strong> Selected quadrant splits into 4 sub-quadrants → You select one (Eliminating 12 items)</li>
+            <li><strong>Stage 3:</strong> Remaining 4 items shown → You select the target</li>
         </ol>
 
-        <p><strong>Maximum cost: 3 selections!</strong> (Compared to 64 for linear scan)</p>
+        <p><strong>Result:</strong> Access any of 64 items in just <strong>3 selections</strong>!</p>
 
         <h3>Efficiency Comparison for 64 Items</h3>
 
@@ -986,10 +1081,10 @@ Fast Typing         │  Full Access
 
         <div class="demo-instructions">
             🎮 <strong>Experience the speed!</strong><br>
-            1. First scan: Grid splits into 4 colored quadrants<br>
-            2. Select a quadrant: It splits into 4 sub-quadrants<br>
-            3. Select sub-quadrant: Individual items appear<br>
-            4. Select item: Done! Just 3 presses max!
+            1. <strong>Stage 1:</strong> Grid splits into 4 colored quadrants. Press the corresponding switch/button.<br>
+            2. <strong>Stage 2:</strong> Selected area splits again. Press the switch for the sub-quadrant.<br>
+            3. <strong>Stage 3:</strong> Select the final item.<br>
+            <em>Notice: You never "wait" for a scan. You drive the speed!</em>
         </div>
 
         <div class="scanner-container large">
@@ -1003,11 +1098,11 @@ Fast Typing         │  Full Access
         </div>
 
         <div class="info-box">
-            <strong>🎯 Advanced:</strong> Elimination scanning supports 2-8 switches!<br>
-            • 2 switches (binary) - Slowest, simplest<br>
-            • 3 switches - Good balance<br>
-            • 4 switches (quadrant) - <strong>Most common</strong><br>
-            • 5-8 switches - Fastest, most complex
+            <strong>🎯 Switch Count Trade-off:</strong><br>
+            • <strong>2 Switches (Binary):</strong> Simple, but takes more steps (Log₂N). 64 items = 6 steps.<br>
+            • <strong>4 Switches (Quadrant):</strong> Faster (Log₄N). 64 items = 3 steps.<br>
+            • <strong>8 Switches:</strong> Very fast (Log₈N). 64 items = 2 steps.<br><br>
+            <em>Rule of Thumb: Use the maximum number of switches the user can reliably control.</em>
         </div>
     </section>
 
@@ -1022,7 +1117,10 @@ Fast Typing         │  Full Access
         <p>Here's how each scanning pattern works, visualized as flowcharts:</p>
 
         <h4>Linear Scanning Flow</h4>
-        <pre class="mermaid">
+        <details class="diagram-collapsible">
+            <summary>View Linear Scanning Diagram</summary>
+            <div class="content">
+                <pre class="mermaid">
 %%{init: {'theme':'base', 'themeVariables': { 'primaryColor': '#fff', 'primaryTextColor': '#333', 'primaryBorderColor': '#333', 'lineColor': '#333', 'fontFamily': 'Patrick Hand' }}}%%
 flowchart TD
     A[Start Scan] --> B[Highlight Item 1]
@@ -1046,10 +1144,15 @@ flowchart TD
     class J successStyle
     class A startStyle
     class C,E,G,I decisionStyle
-        </pre>
+                </pre>
+            </div>
+        </details>
 
         <h4>Row-Column Scanning Flow</h4>
-        <pre class="mermaid">
+        <details class="diagram-collapsible">
+            <summary>View Row-Column Scanning Diagram</summary>
+            <div class="content">
+                <pre class="mermaid">
 %%{init: {'theme':'base', 'themeVariables': { 'primaryColor': '#fff', 'primaryTextColor': '#333', 'primaryBorderColor': '#333', 'lineColor': '#333', 'fontFamily': 'Patrick Hand' }}}%%
 flowchart TD
     A[Start Scan] --> B[Highlight Row 1]
@@ -1077,10 +1180,15 @@ flowchart TD
     class A startStyle
     class H processStyle
     class C,E,G,I,J,K,L decisionStyle
-        </pre>
+                </pre>
+            </div>
+        </details>
 
         <h4>Elimination Scanning Flow (4-switch)</h4>
-        <pre class="mermaid">
+        <details class="diagram-collapsible">
+            <summary>View Elimination Scanning Diagram</summary>
+            <div class="content">
+                <pre class="mermaid">
 %%{init: {'theme':'base', 'themeVariables': { 'primaryColor': '#fff', 'primaryTextColor': '#333', 'primaryBorderColor': '#333', 'lineColor': '#333', 'fontFamily': 'Patrick Hand' }}}%%
 flowchart TD
     A[Start Scan] --> B[Highlight Top-Left Quadrant]
@@ -1107,7 +1215,9 @@ flowchart TD
     class A startStyle
     class J processStyle
     class C,E,G,K,I decisionStyle
-        </pre>
+                </pre>
+            </div>
+        </details>
 
         <h3>Interactive Comparison: Small Grid (16 items)</h3>
 
@@ -1649,6 +1759,22 @@ flowchart LR
                 <td>Accommodate energy changes</td>
             </tr>
         </table>
+
+        <h3>Advanced Timing: Critical Overscan</h3>
+
+        <p>For users who can react quickly but need to scan large lists without groups, <strong>Critical Overscan</strong> is a powerful technique.</p>
+
+        <p><strong>How it works:</strong></p>
+        <ol>
+            <li><strong>Stage 1 (Fast):</strong> Scan moves VERY fast (e.g., 200ms).</li>
+            <li><strong>User Action:</strong> User presses switch when the target is <em>roughly</em> near.</li>
+            <li><strong>Stage 2 (Slow):</strong> Scan slows down significantly (e.g., 1000ms) and often backs up a few steps.</li>
+            <li><strong>Selection:</strong> User selects the exact item at the slower speed.</li>
+        </ol>
+
+        <div class="info-box">
+            This allows a linear scan of 50 items to be traversed in seconds, without the complexity of row-column patterns!
+        </div>
 
         <h3>Dwell Selection Demo</h3>
 
