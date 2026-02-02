@@ -743,16 +743,17 @@ export class SwitchScannerElement extends HTMLElement {
         controls.appendChild(btn);
       }
 
-      // Add reset button
-      const resetBtn = this.createButton('reset', '↺', config);
+      // Add reset button (use switch 5 to give it a distinct color)
+      const resetBtn = this.createButton('reset', '↺', config, 5);
       controls.appendChild(resetBtn);
     } else {
       // Standard controls for other modes
       controls.innerHTML = '';
 
-      const selectBtn = this.createButton('select', useImageButtons ? '' : 'Select (1)', config);
-      const stepBtn = this.createButton('step', useImageButtons ? '' : 'Step (2)', config);
-      const resetBtn = this.createButton('reset', useImageButtons ? '' : 'Reset (R)', config);
+      // Assign different colors to each button for easy identification
+      const selectBtn = this.createButton('select', useImageButtons ? '' : 'Select (1)', config, 1);
+      const stepBtn = this.createButton('step', useImageButtons ? '' : 'Step (2)', config, 2);
+      const resetBtn = this.createButton('reset', useImageButtons ? '' : 'Reset (R)', config, 3);
 
       controls.appendChild(selectBtn);
       controls.appendChild(stepBtn);
