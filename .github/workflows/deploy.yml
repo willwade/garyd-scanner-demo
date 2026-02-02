@@ -37,9 +37,6 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Copy book to dist
-        run: cp book.html dist/book.html
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
