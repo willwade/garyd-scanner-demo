@@ -1,0 +1,76 @@
+Selection sets
+	"The set of all the items from which choices are made is called the selection set. At any one time it may be more appropriate to present only a sub-set (or group) of this – this is discussed further in the Control and Selection chapter on page 13. If the number of items is larger than can be displayed on one screen (page) then further pages are required. The set can now be thought of as a book or card index rack with some items pro- viding links between the different pages/cards."
+	- Single line presentation
+		Where the visual representations are in a single simple line - ’line’ is used rather than ‘row’ so as to include all possible orientations. Fig 6: Single Line Presentation (Clicker Talking Book) Grid presentation (see fig 7) When there are large numbers of items it can be convenient to present them in the form of a two-dimensional grid. Flip chart presentation Individual items, or some parts of the selection set, may be displayed one at a time in sequence rather like turning the cards in a rotary file index. The existence of other parts of the selection set may be indicated behind the part currently displayed. Fig 7: Grid Presentation (The Grid) Pop up presentation Pop ups are pages (groups) that are displayed ‘within’ the current page. Normally a new page would replace the previous one. Pop ups are usually only displayed for the time required to make a single choice. Custom presentation (see fig 8) There may be cases where it is best to use some quite non-standard meth- od of presentation. This allows items to be given higher priority or visual prominence, or for customisation to a particular application or task.
+	- Grid presentation
+	- Flip chart presentation
+	- Pop up presentation / Secondary-Multi-Page presentation
+		Pop ups are pages (groups) that are displayed ‘within’ the current page. Normally a new page would replace the previous one. Pop ups are usually only displayed for the time required to make a single choice.
+
+Grouping
+	"When there are a large number of items to choose from some level of grouping is required. Groups (or sub-sets) may be presented in a variety of formats: pages, tabs, views, rows, columns etc. In general items can be constructed into a selection set in a layered hierar- chy. At the lowest level there are individual items. These can be contained within groups which themselves can be within super-groups etc. Each level may have an associated range of properties that describe the appearance and actions of items.
+	
+	Most ‘simple to medium’ complexity switch input systems allow a two level hierarchy of scanning. Some are more complex, allowing for an unlimited hierarchy. There are good arguments for both approaches. To reduce the amount of visual load of scanning systems the total selection set is often sub-divided into groups which are displayed separately (nor- mally called pages).
+
+	Moving between pages normally happens on selection of a ‘link’ item. This is similar to the concept of hyper linking on the Internet. Where the number of items to be selected is very small (<10) then a simple single level, single page presentation is normally used."
+
+Highlighting
+ 	- Visual
+ 	- Auditory
+ 	
+ 
+Scanning sequencing methods
+
+	- Simple Scan (Linear)
+	- Group scan 
+		In a group scan (see fig 10) the whole selection set is divided into groups of items and these are then individually highlighted (see the grouping section above). The user firsts selects a group, after which the individual items (or further groups) in that same group are scanned. The hierarchy of subgroups is scanned until one reaches the level of single items. When the item is selected the scan (usually) will be re-set to the top level again.
+		
+		Obviously, groups can be any size or shape, however, a number of common forms exist:
+		Row/Column
+		Column/Row Scan
+		Mixed Row/Column and Group Scan "Some systems employ a mixture of group and row-column scanning – for example, a rectilinear grid can be initially split into two halves as super- groups and then inside these super groups there can be sub-groups with items arranged in rows and columns"
+		Progressive Segmenting Scan
+			- quartering, scan direct, halving, 
+			- A form of this is "Elimination Scanning"
+	- Directed scan. Joystick Scan.  "Directed scans are used to emulate direct selection. The di- rection of the highlighter movement is controlled by switch operations. The scan movements required are Up, Down, Left and Right or combinations that give a 45-degree movement. The system has to decide which the next item in any of those directions is and send the highlight to that item. Selec- tions can then be made either with a switch press or by dwell selection. he ‘natural’ setup for this would normally involve one switch operation per direction, however fewer switches can be used, eg using Right and Down only and ensuring the scan loops back to the start when it reaches the edge of the page; alternatively this could involve a rotating arrow indicating pos- sible directions of scan and a switch selection to implement that direction."
+
+Highlighter movement control
+	- Auto
+		- User / Auto-Whilst-Held Scan
+		
+			"With this scan method the machine progresses the highlight only whilst the user is activating the switch. User scan generally requires a single switch. In this case the scan does not start until a switch press is de- tected. The machine then progresses the highlight at a predetermined rate (as in autoscan) until the user releases the switch.
+			
+			With a single switch the currently highlighted item is selected on switch release or after a dwell time. With two switches the second switch is used to activate the currently highlighted item and the first used to progress the scan."
+		
+		- Critical Overscan
+			
+			"This scan control is devised to give a rapid access to items in a large selec- tion set without the complications of subsets. The machine controls the progression of the highlight which moves initially very quickly, the user then presses the switch to slow the scan and then select an item."
+			
+	- Step scan 
+		"In step scan the user controls the movement of the highlight and the selection of the items"
+		
+		- Two switch
+		- One switch (with dwell or other selection method)
+		
+	- Step scan switch alternation (Swap Switch)
+		"When the switch function is alternated this means that when a selec- tion has been made with a particular switch its function swaps so that it becomes the switch which advances the highlighter. The other switch then takes on the role of selecting. After the next selection the roles reverse again. Alternating the switches may distribute the pattern of switch presses more evenly between the two switches."
+
+Manipulating the highlighter movement
+	- Auto – restart, starting and restarting
+	 	"After selecting an item the highlight can be restarted by either continuing from the position of the last item selected, or by starting from the initial item again. Starting and restarting the scan, can either be automatic (the machine restarts the scan) or manual (wait for the user to press the switch to start). Obviously this only applies for scanning methods where the machine progresses the scan highlight. It may also be required to restart more complex scans after a given number of passes (for example to control selection errors in critical overscan - where after two slow backward passes (say) the scan restarts to move forward). With scans where the highlight is moved by the machine, it may be benefi- cial for the system to highlight the first item for a longer period than the other items."
+	- Dealing with errors
+		"The cost of the errors for switch uses is much greater than for other people since it takes more time and effort to correct wrong selections. There are a number of methods of correcting errors:"
+		- Error items:
+			- ‘backspace’ – this will undo the last character;
+			- ‘undo’/’redo’ – this should undo/redo the last ‘operation’
+			- ‘back’ – this is specific to groups and pages and will reverse the last group/page change
+		- Scan errors:
+			"Errors in switch selections may not trigger an output, without a method of correcting a scan error the user is required to make an inappropriate selection and then undo that selection (a very costly process). Scan errors can be overcome in a range of ways:"
+				- Empty Items - to  allow users to select an item that does not result in an output and resets the scan
+				- Cancel scan option - some systems have a specific method for ‘offering’ a scan cancellation – for example highlighting all the items in the current group.
+				- Switch manipulation -  it is possible to use a specific type of switch activation (eg a long hold) to cancel the scan. See the ‘selection’ section below.
+				
+Selection
+	- Dwell
+	- Switch Encoded selection
+	

@@ -16,6 +16,24 @@ import { ContinuousScanner } from './scanners/ContinuousScanner';
 import { ProbabilityScanner } from './scanners/ProbabilityScanner';
 import { CauseEffectScanner } from './scanners/CauseEffectScanner';
 
+// Import switch button images - Vite will handle path resolution for dev/prod
+import switchBlueUrl from '/switches/switch-blue.png';
+import switchBlueDepressedUrl from '/switches/switch-blue-depressed.png';
+import switchGreenUrl from '/switches/switch-green.png';
+import switchGreenDepressedUrl from '/switches/switch-green-depressed.png';
+import switchRedUrl from '/switches/switch-red.png';
+import switchRedDepressedUrl from '/switches/switch-red-depressed.png';
+import switchYellowUrl from '/switches/switch-yellow.png';
+import switchYellowDepressedUrl from '/switches/switch-yellow-depressed.png';
+
+// Map image URLs by color for easy lookup
+const SWITCH_IMAGES = {
+  blue: { normal: switchBlueUrl, depressed: switchBlueDepressedUrl },
+  green: { normal: switchGreenUrl, depressed: switchGreenDepressedUrl },
+  red: { normal: switchRedUrl, depressed: switchRedDepressedUrl },
+  yellow: { normal: switchYellowUrl, depressed: switchYellowDepressedUrl },
+} as const;
+
 export class SwitchScannerElement extends HTMLElement {
   private configManager!: ConfigManager;
   private audioManager!: AudioManager;
@@ -797,8 +815,7 @@ export class SwitchScannerElement extends HTMLElement {
       });
     } else if (useImageButtons) {
       // Built-in switch images with per-button colors
-      const imagePath = `/switches/switch-${buttonColor}.png`;
-      const depressedPath = `/switches/switch-${buttonColor}-depressed.png`;
+      const buttonImages = SWITCH_IMAGES[buttonColor];
 
       btn.style.cssText = `
         flex: 1;
@@ -812,18 +829,18 @@ export class SwitchScannerElement extends HTMLElement {
         align-items: center;
         justify-content: center;
       `;
-      btn.innerHTML = `<img src="${imagePath}" alt="${label}" style="width: 100%; max-width: 100px; height: auto;">`;
+      btn.innerHTML = `<img src="${buttonImages.normal}" alt="${label}" style="width: 100%; max-width: 100px; height: auto;">`;
 
       // Handle depressed state
       const img = btn.querySelector('img')!;
       btn.addEventListener('mousedown', () => {
-        img.src = depressedPath;
+        img.src = buttonImages.depressed;
       });
       btn.addEventListener('mouseup', () => {
-        img.src = imagePath;
+        img.src = buttonImages.normal;
       });
       btn.addEventListener('mouseleave', () => {
-        img.src = imagePath;
+        img.src = buttonImages.normal;
       });
     } else {
       // Text buttons

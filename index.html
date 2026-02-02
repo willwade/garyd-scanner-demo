@@ -54,20 +54,12 @@
 
     <div class="scanner-grid">
       <div class="scanner-demo">
-        <h2>Row-Column (Standard)</h2>
-        <switch-scanner scan-strategy="row-column" grid-content="numbers" grid-size="64"></switch-scanner>
+        <h2>Elimination (4-Switch Quadrant)</h2>
+        <switch-scanner scan-pattern="elimination" elimination-switch-count="4" grid-content="numbers" grid-size="64"></switch-scanner>
       </div>
 
-      <div class="scanner-demo">
-        <h2>Linear (Slow)</h2>
-        <switch-scanner scan-strategy="linear" scan-rate="1500" grid-size="16"></switch-scanner>
-      </div>
-
-      <div class="scanner-demo">
-        <h2>Keyboard (Row-Group-Column)</h2>
-        <switch-scanner scan-strategy="group-row-column" grid-content="keyboard"></switch-scanner>
-      </div>
     </div>
+
 
     <script type="module" src="/src/main.ts"></script>
   </body>
