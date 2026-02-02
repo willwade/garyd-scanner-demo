@@ -109,7 +109,7 @@ export class SwitchScannerElement extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['scan-strategy', 'scan-pattern', 'scan-technique', 'scan-mode', 'continuous-technique', 'compass-mode', 'grid-content', 'grid-size', 'language', 'scan-rate', 'acceptance-time', 'dwell-time', 'elimination-switch-count', 'custom-items', 'grid-cols', 'theme'];
+    return ['scan-strategy', 'scan-pattern', 'scan-technique', 'scan-mode', 'scan-input-mode', 'continuous-technique', 'compass-mode', 'grid-content', 'grid-size', 'language', 'scan-rate', 'acceptance-time', 'dwell-time', 'elimination-switch-count', 'custom-items', 'grid-cols', 'theme'];
   }
 
   attributeChangedCallback(name: string, oldValue: string, newValue: string) {
@@ -144,6 +144,9 @@ export class SwitchScannerElement extends HTMLElement {
         case 'scan-pattern':
             updates.scanPattern = newValue as AppConfig['scanPattern'];
             updates.scanMode = null; // Clear mode when pattern is set
+            break;
+        case 'scan-input-mode':
+            updates.scanInputMode = newValue as AppConfig['scanInputMode'];
             break;
         case 'scan-technique':
             updates.scanTechnique = newValue as AppConfig['scanTechnique'];
@@ -222,6 +225,9 @@ export class SwitchScannerElement extends HTMLElement {
 
     const mode = this.getAttribute('scan-mode');
     if (mode) overrides.scanMode = mode === 'null' ? null : mode as AppConfig['scanMode'];
+
+    const inputMode = this.getAttribute('scan-input-mode');
+    if (inputMode) overrides.scanInputMode = inputMode as AppConfig['scanInputMode'];
 
     const content = this.getAttribute('grid-content');
     if (content) overrides.gridContent = content as AppConfig['gridContent'];
@@ -406,19 +412,22 @@ export class SwitchScannerElement extends HTMLElement {
 
       .controls {
         display: flex;
-        gap: 10px;
-        padding: 10px;
-        background: #eee;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        background: #f0f0f0;
         justify-content: center;
+        border-top: 1px solid #ddd;
+        flex-shrink: 0;
       }
 
       .controls button {
-        padding: 10px 20px;
-        font-size: 1rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
         cursor: pointer;
         border: 1px solid #ccc;
         background: #fff;
         border-radius: 4px;
+        min-height: 44px; /* Touch friendly */
       }
 
       .controls button:active {
@@ -710,7 +719,8 @@ export class SwitchScannerElement extends HTMLElement {
           border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
           background: white;
           font-family: inherit;
-          font-size: 1.1rem;
+          font-size: 1rem;
+          padding: 5px 15px;
       }
       .scanner-wrapper.sketch .status-bar {
           background: #333;
@@ -729,36 +739,39 @@ export class SwitchScannerElement extends HTMLElement {
     const controls = this.shadowRoot!.querySelector('.controls') as HTMLElement;
     if (!controls) return;
 
-    // Check if elimination mode
-    const isElimination = config.scanPattern === 'elimination';
-    const numSwitches = config.eliminationSwitchCount || 4;
     const useImageButtons = config.useImageButton;
+    controls.innerHTML = '';
 
-    if (isElimination) {
-      // Show switch buttons for elimination mode
-      controls.innerHTML = '';
-
+    // 1. Elimination Mode
+    if (config.scanPattern === 'elimination') {
+      const numSwitches = config.eliminationSwitchCount || 4;
       for (let i = 1; i <= numSwitches; i++) {
         const btn = this.createButton('switch-' + i, `${i}`, config, i);
         controls.appendChild(btn);
       }
-
-      // Add reset button (use switch 5 to give it a distinct color)
+      // Add reset button for elimination (as it can get stuck deep in levels)
       const resetBtn = this.createButton('reset', '↺', config, 5);
+      resetBtn.style.flex = '0 0 auto'; // Make reset button smaller
       controls.appendChild(resetBtn);
-    } else {
-      // Standard controls for other modes
-      controls.innerHTML = '';
-
-      // Assign different colors to each button for easy identification
-      const selectBtn = this.createButton('select', useImageButtons ? '' : 'Select (1)', config, 1);
-      const stepBtn = this.createButton('step', useImageButtons ? '' : 'Step (2)', config, 2);
-      const resetBtn = this.createButton('reset', useImageButtons ? '' : 'Reset (R)', config, 3);
-
-      controls.appendChild(selectBtn);
-      controls.appendChild(stepBtn);
-      controls.appendChild(resetBtn);
+      return;
     }
+
+    // 2. Manual / Step Scan
+    if (config.scanInputMode === 'manual') {
+       // Step (Move) Button - Switch 2
+       const stepBtn = this.createButton('step', useImageButtons ? '' : 'Step (2)', config, 2);
+       controls.appendChild(stepBtn);
+
+       // Select Button - Switch 1
+       const selectBtn = this.createButton('select', useImageButtons ? '' : 'Select (1)', config, 1);
+       controls.appendChild(selectBtn);
+       return;
+    }
+
+    // 3. Auto Scan (Default)
+    // Only 'Select' is strictly needed
+    const selectBtn = this.createButton('select', useImageButtons ? '' : 'Select (1)', config, 1);
+    controls.appendChild(selectBtn);
   }
 
   private createButton(action: string, label: string, config: AppConfig, switchNum?: number): HTMLButtonElement {
