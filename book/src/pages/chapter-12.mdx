@@ -33,6 +33,7 @@ This is the one-stop reference for **patterns** (structure) and **modes** (behav
 - **Probability (PPM):** Items scan by likelihood, not position.
 - **Cause-Effect:** Single-item training mode.
 - **Group-Row-Column:** Explicit group stage before rows/columns.
+- **ColorCode:** Two-button Bayesian selection using red/blue assignments.
 
 ## Probability (PPM) Demo
 
@@ -40,9 +41,55 @@ This is the one-stop reference for **patterns** (structure) and **modes** (behav
   🎮 Watch how the scan prioritizes likely items first.
 </div>
 <div class="scanner-container small">
-  <switch-scanner theme="sketch" scan-mode="probability" grid-size="26"></switch-scanner>
+  <switch-scanner theme="sketch" scan-mode="probability" grid-content="keyboard" grid-size="26"></switch-scanner>
 </div>
 
 <div class="highlight-box">
   PPM is especially useful for AAC where words and letters have strong usage frequency. Use this demo as the reference point for “predictive scanning.”
+</div>
+
+## ColorCode Demo (Two Buttons)
+
+<div class="demo-instructions">
+  🎮 Press <strong>1</strong> for blue or <strong>2</strong> for red. The system reassigns colors after each click and selects once it’s confident.
+</div>
+<div class="scanner-container small">
+  <switch-scanner
+    theme="sketch"
+    scan-mode="color-code"
+    grid-content="keyboard"
+    grid-size="26"
+    custom-items='[
+      {"label":"A","id":"A"},
+      {"label":"B","id":"B"},
+      {"label":"C","id":"C"},
+      {"label":"D","id":"D"},
+      {"label":"E","id":"E"},
+      {"label":"F","id":"F"},
+      {"label":"G","id":"G"},
+      {"label":"H","id":"H"},
+      {"label":"I","id":"I"},
+      {"label":"J","id":"J"},
+      {"label":"K","id":"K"},
+      {"label":"L","id":"L"},
+      {"label":"M","id":"M"},
+      {"label":"N","id":"N"},
+      {"label":"O","id":"O"},
+      {"label":"P","id":"P"},
+      {"label":"Q","id":"Q"},
+      {"label":"R","id":"R"},
+      {"label":"S","id":"S"},
+      {"label":"T","id":"T"},
+      {"label":"U","id":"U"},
+      {"label":"V","id":"V"},
+      {"label":"W","id":"W"},
+      {"label":"X","id":"X"},
+      {"label":"Y","id":"Y"},
+      {"label":"Z","id":"Z"}
+    ]'>
+  </switch-scanner>
+</div>
+
+<div class="info-box">
+  This mode is inspired by ColorCode (Daly, 2022): a Bayesian two-button system that uses color assignments and a language model to infer intent. [Paper](https://aclanthology.org/2022.slpat-1.2.pdf)
 </div>

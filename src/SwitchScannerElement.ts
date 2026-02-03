@@ -15,6 +15,7 @@ import { EliminationScanner } from './scanners/EliminationScanner';
 import { ContinuousScanner } from './scanners/ContinuousScanner';
 import { ProbabilityScanner } from './scanners/ProbabilityScanner';
 import { CauseEffectScanner } from './scanners/CauseEffectScanner';
+import { ColorCodeScanner } from './scanners/ColorCodeScanner';
 
 function getAssetBase(): string {
   const globalBase = (window as unknown as { SWITCH_SCANNER_ASSET_BASE?: string }).SWITCH_SCANNER_ASSET_BASE;
@@ -215,6 +216,8 @@ export class SwitchScannerElement extends HTMLElement {
           updates.scanMode = 'continuous';
       } else if (strategy === 'probability') {
           updates.scanMode = 'probability';
+      } else if (strategy === 'color-code') {
+          updates.scanMode = 'color-code';
       } else if (['row-column', 'column-row', 'linear', 'snake', 'quadrant', 'elimination'].includes(strategy)) {
           updates.scanPattern = strategy as AppConfig['scanPattern'];
           // Row-column and column-row default to block technique
@@ -325,6 +328,8 @@ export class SwitchScannerElement extends HTMLElement {
   }
 
   private renderTemplate() {
+    const isColorCode = this.getAttribute('scan-mode') === 'color-code';
+    const isElimination = this.getAttribute('scan-pattern') === 'elimination';
     this.shadowRoot!.innerHTML = `
       <div class="scanner-wrapper">
         <div class="status-bar">
@@ -333,8 +338,8 @@ export class SwitchScannerElement extends HTMLElement {
         </div>
         <div class="grid-container"></div>
         <div class="controls">
-           <button data-action="select">Select (Space)</button>
-           <button data-action="step">Step (2)</button>
+           <button data-action="select">${isColorCode || isElimination ? 'Blue (1)' : 'Select (Space)'}</button>
+           <button data-action="step">${isColorCode ? 'Red (2)' : isElimination ? 'Switch 2 (2)' : 'Step (2)'}</button>
            <button data-action="reset">Reset (3)</button>
         </div>
         <div class="settings-overlay hidden"></div>
@@ -795,7 +800,19 @@ export class SwitchScannerElement extends HTMLElement {
       return;
     }
 
-    // 2. Manual / Step Scan
+    // 2. ColorCode (Two-button Bayesian)
+    if (config.scanMode === 'color-code') {
+      const blueBtn = this.createButton('switch-1', useImageButtons ? '' : 'Blue (1)', config, 1);
+      const redBtn = this.createButton('switch-2', useImageButtons ? '' : 'Red (2)', config, 2);
+      controls.appendChild(blueBtn);
+      controls.appendChild(redBtn);
+      const resetBtn = this.createButton('reset', useImageButtons ? '' : 'Reset (3)', config, 3);
+      resetBtn.style.flex = '0 0 auto';
+      controls.appendChild(resetBtn);
+      return;
+    }
+
+    // 3. Manual / Step Scan
     if (config.scanInputMode === 'manual') {
        // Step (Move) Button - Switch 2
        const stepBtn = this.createButton('step', useImageButtons ? '' : 'Step (2)', config, 2);
@@ -807,7 +824,7 @@ export class SwitchScannerElement extends HTMLElement {
        return;
     }
 
-    // 3. Auto Scan (Default)
+    // 4. Auto Scan (Default)
     // Only 'Select' is strictly needed
     const selectBtn = this.createButton('select', useImageButtons ? '' : 'Select (1)', config, 1);
     controls.appendChild(selectBtn);
@@ -1266,6 +1283,8 @@ export class SwitchScannerElement extends HTMLElement {
       return new ContinuousScanner(this.gridRenderer, this.configManager, this.audioManager);
     } else if (config.scanMode === 'probability') {
       return new ProbabilityScanner(this.gridRenderer, this.configManager, this.audioManager);
+    } else if (config.scanMode === 'color-code') {
+      return new ColorCodeScanner(this.gridRenderer, this.configManager, this.audioManager);
     }
 
     // Pattern-based scanners

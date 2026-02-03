@@ -31,7 +31,7 @@ export interface AppConfig {
   scanTechnique: 'block' | 'point';
 
   // SPECIAL MODES (patterns with built-in techniques)
-  scanMode: 'group-row-column' | 'continuous' | 'probability' | 'cause-effect' | null;
+  scanMode: 'group-row-column' | 'continuous' | 'probability' | 'cause-effect' | 'color-code' | null;
 
   // CONTINUOUS MODE TECHNIQUE (for scanMode='continuous')
   continuousTechnique: 'gliding' | 'crosshair' | 'eight-direction';
@@ -52,6 +52,12 @@ export interface AppConfig {
     enabled: boolean; // Enable two-stage scanning
     fastRate: number; // ms (fast scan rate, e.g., 100ms)
     slowRate: number; // ms (slow backward scan rate, e.g., 1000ms)
+  };
+
+  // COLOR CODE (two-button Bayesian)
+  colorCode: {
+    errorRate: number; // Probability of clicking the wrong color
+    selectThreshold: number; // Probability threshold to select a key
   };
 
   // Display settings
@@ -118,6 +124,10 @@ export class ConfigManager {
       enabled: false, // Disabled by default (backward compatible)
       fastRate: 100, // 100ms fast scan
       slowRate: 1000, // 1000ms slow backward scan
+    },
+    colorCode: {
+      errorRate: 0.1,
+      selectThreshold: 0.95,
     },
     gridContent: 'numbers',
     gridSize: 64, // 8x8
