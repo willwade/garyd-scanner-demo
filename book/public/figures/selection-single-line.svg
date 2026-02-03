@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 220">
+  <rect x="20" y="20" width="560" height="180" rx="16" fill="#fffaf0" stroke="#d6d6d6" stroke-width="2" stroke-dasharray="6 6" />
+  <text x="30" y="50" font-size="16" fill="#4b4b4b" font-family="Patrick Hand, cursive">Single line presentation</text>
+  <g stroke="#2f2f2f" stroke-width="2" fill="#ffffff" stroke-linecap="round">
+    <rect x="40" y="90" width="90" height="60" rx="10" />
+    <rect x="150" y="90" width="90" height="60" rx="10" />
+    <rect x="260" y="90" width="90" height="60" rx="10" />
+    <rect x="370" y="90" width="90" height="60" rx="10" />
+    <rect x="480" y="90" width="90" height="60" rx="10" />
+  </g>
+  <circle cx="85" cy="120" r="6" fill="#2f7dbb" />
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 220">
+  <rect x="20" y="20" width="560" height="180" rx="16" fill="#fffaf0" stroke="#d6d6d6" stroke-width="2" stroke-dasharray="6 6" />
+  <text x="30" y="50" font-size="16" fill="#4b4b4b" font-family="Patrick Hand, cursive">Grid presentation</text>
+  <g stroke="#2f2f2f" stroke-width="2" fill="#ffffff" stroke-linecap="round">
+    <rect x="120" y="70" width="60" height="40" rx="6" />
+    <rect x="190" y="70" width="60" height="40" rx="6" />
+    <rect x="260" y="70" width="60" height="40" rx="6" />
+    <rect x="330" y="70" width="60" height="40" rx="6" />
+
+    <rect x="120" y="120" width="60" height="40" rx="6" />
+    <rect x="190" y="120" width="60" height="40" rx="6" />
+    <rect x="260" y="120" width="60" height="40" rx="6" />
+    <rect x="330" y="120" width="60" height="40" rx="6" />
+  </g>
+  <rect x="190" y="120" width="60" height="40" rx="6" fill="#cfe8ff" />
+</svg>

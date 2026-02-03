@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 240">
+  <rect x="20" y="20" width="560" height="200" rx="16" fill="#fffaf0" stroke="#d6d6d6" stroke-width="2" stroke-dasharray="6 6" />
+  <text x="30" y="50" font-size="16" fill="#4b4b4b" font-family="Patrick Hand, cursive">Elimination scan flow</text>
+  <rect x="70" y="80" width="160" height="120" rx="10" fill="#ffffff" stroke="#2f2f2f" stroke-width="2" />
+  <rect x="250" y="105" width="120" height="80" rx="10" fill="#ffffff" stroke="#2f2f2f" stroke-width="2" />
+  <rect x="400" y="125" width="80" height="50" rx="10" fill="#ffffff" stroke="#2f2f2f" stroke-width="2" />
+  <path d="M230 140 L250 140" stroke="#2f2f2f" stroke-width="2" />
+  <path d="M370 145 L400 145" stroke="#2f2f2f" stroke-width="2" />
+  <text x="95" y="105" font-size="12" fill="#2f2f2f" font-family="Patrick Hand, cursive">Split</text>
+  <text x="275" y="130" font-size="12" fill="#2f2f2f" font-family="Patrick Hand, cursive">Split</text>
+  <text x="415" y="155" font-size="12" fill="#2f2f2f" font-family="Patrick Hand, cursive">Item</text>
+</svg>

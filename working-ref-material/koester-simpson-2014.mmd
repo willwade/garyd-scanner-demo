@@ -1,0 +1,53 @@
+graph TD
+    %% Global Styling
+    classDef decision fill:#fff,stroke:#333,stroke-width:2px,shape:diamond
+    classDef process fill:#fff,stroke:#333,stroke-width:2px
+    classDef data fill:#fff,stroke:#333,stroke-width:2px,shape:parallelogram
+    classDef revise fill:#fff,stroke:#333,stroke-width:2px,shape:trapezoid-alt
+
+    %% High Level Process (Image 2)
+    Start([Start]) --> SwitchTest[Switch Test]
+    SwitchTest --> SwitchData[/Data: <br/>Switch-Press Times<br/>Switch-Press Errors/]
+    SwitchData --> PerfOK{Performance<br/>OK?}
+    
+    PerfOK -- No --> ReviseSwitch[Revised settings:<br/>Switch Location<br/>Acceptance Delay]
+    ReviseSwitch --> SwitchTest
+    
+    PerfOK -- Yes --> ScanTest[Scan Test]
+    ScanTest --> ScanData[/Data:<br/>Text Entry Rate -TER-<br/>Switch-Press Times<br/>Scanning Errors<br/>Scanning Settings/]
+    ScanData --> ScanModel[Scanning Model]
+    
+    %% Refinement Logic (Integration of Image 1 / Figure 3)
+    ScanModel --> Improved{Can TER or<br/>scanning errors<br/>be improved?}
+    
+    Improved -- No --> Done([Done])
+    
+    Improved -- Yes --> ErrorCheck{Scanning errors<br/>below 25%?}
+
+    %% High Error Branch (Right side of Image 1)
+    ErrorCheck -- No --> FirstLate{First switch<br/>press too late?}
+    FirstLate -- Yes --> ReviseScanDelay[Revise:<br/>Scan Delay]
+    FirstLate -- No --> NextLate{Next switch<br/>press too late?}
+    NextLate -- Yes --> Revise1stDelay[Revise:<br/>1st-Item Delay]
+    NextLate -- No --> Unintentional{Unintentional<br/>switch presses?}
+    Unintentional -- Yes --> ReviseAcceptDelay[Revise:<br/>Acceptance Delay]
+    Unintentional -- No --> MissingRow{Missing first row<br/>selections?}
+    MissingRow -- Yes --> ReviseInit[Revise:<br/>Manual/Auto Init]
+    
+    %% Low Error Branch (Left side of Image 1)
+    ErrorCheck -- Yes --> DeadTime{Too much<br/>dead time?}
+    DeadTime -- Yes --> ReviseDead[Revise:<br/>Manual/Auto Init<br/>1st-Item Delay<br/>Scan Order]
+    DeadTime -- No --> WordPred{Inefficient use<br/>of word pred?}
+    WordPred -- Yes --> ReviseWord[Revise:<br/>Manual/Auto Init<br/>Word Prediction<br/>Scan Pattern<br/>Group Layout]
+    WordPred -- No --> LayoutCheck{Inefficient layout<br/>or scan pattern?}
+    LayoutCheck -- Yes --> ReviseLayout[Revise:<br/>Item Layout<br/>Scan Pattern<br/>Scan Order]
+    LayoutCheck -- No --> Done
+
+    %% Loop-backs to Scan Test
+    ReviseScanDelay & Revise1stDelay & ReviseAcceptDelay & ReviseInit & ReviseDead & ReviseWord & ReviseLayout & MissingRow -- No --> ScanTest
+
+    %% Apply Classes
+    class PerfOK,Improved,ErrorCheck,FirstLate,NextLate,Unintentional,MissingRow,DeadTime,WordPred,LayoutCheck decision
+    class SwitchTest,ScanTest,ScanModel process
+    class SwitchData,ScanData data
+    class ReviseSwitch,ReviseScanDelay,Revise1stDelay,ReviseAcceptDelay,ReviseInit,ReviseDead,ReviseWord,ReviseLayout revise

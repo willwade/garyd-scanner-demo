@@ -18,6 +18,13 @@ nextLabel: "Chapter 6: Two Switch Scanning"
 3. User presses switch to select
 4. System activates item and restarts scan
 
+## Auto-Scan Variants
+
+- **Auto-while-held (user scan):** the highlight moves only while the switch is held down.
+- **Auto-restart:** restart from the first item or continue from last selected item.
+- **Initial item pause:** extra time on the first item to help users prepare.
+- **Scan loops:** stop after N passes (or infinite loops) to avoid endless waiting.
+
 ## Timing tips
 
 - **Too fast** → missed selections
@@ -29,6 +36,16 @@ nextLabel: "Chapter 6: Two Switch Scanning"
 - **Auto-while-held:** The highlight moves only while the switch is held down.
 - **Auto-restart modes:** Restart from the first item or continue from last.
 - **Initial item pause:** Extra time on the first item to help users get ready.
+
+## Why This Matters
+
+For many users, auto-scan is the only feasible mode. The tradeoff is timing pressure: the user must anticipate the highlight and press at exactly the right moment. This makes scan rate, acceptance time, and error recovery critical (see Chapters 13 and 19).
+
+## Selection Methods
+
+- **Press-to-select:** most common, a switch press selects the highlighted item.
+- **Dwell selection:** selection occurs automatically after a set dwell time.
+- **Encoded selection:** patterns like double‑press or long‑hold trigger special actions.
 
 ## Demo
 

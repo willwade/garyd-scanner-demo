@@ -11,7 +11,20 @@ nextLabel: "Chapter 5: Single Switch Scanning"
 
 A **selection set** is all the items available for the user to choose from at any given time.
 
-Large selection sets are usually split into pages or groups, with link items that move between pages.
+Large selection sets are usually split into pages or groups, with link items that move between pages. Think of it like a card index or a book: you’re only looking at one “page” at a time, and certain items act like hyperlinks to other pages.
+
+## Key Ideas
+
+- **Small sets (≈10 items or fewer)** can often stay on a single page with no grouping.
+- **Larger sets** should be divided into groups to reduce visual load and scan time.
+- **Link items** are navigation controls (Next, Back, Home) that move between groups.
+
+## Examples of Selection Sets
+
+- Alphabet keyboard (26 letters)
+- Communication grid (words, phrases, symbols)
+- TV remote (channels, volume, power)
+- App menu (File, Edit, View)
 
 ## Presentation Formats
 
@@ -19,8 +32,27 @@ Large selection sets are usually split into pages or groups, with link items tha
 
 Items arranged in a single row (horizontal or vertical).
 
+<div class="demo-instructions">
+  🎮 Try it: Linear scan of 4 colors.
+</div>
+<div class="scanner-container small">
+  <switch-scanner
+    theme="sketch"
+    scan-pattern="linear"
+    scan-technique="point"
+    scan-rate="1500"
+    grid-cols="4"
+    custom-items='[
+      {"label":"Red","backgroundColor":"#ffcccc","id":"red"},
+      {"label":"Blue","backgroundColor":"#ccccff","id":"blue"},
+      {"label":"Green","backgroundColor":"#ccffcc","id":"green"},
+      {"label":"Yellow","backgroundColor":"#ffffcc","id":"yellow"}
+    ]'>
+  </switch-scanner>
+</div>
+
 <div class="figure-card">
-  <div class="figure-placeholder">Illustration Placeholder: Single Line Presentation</div>
+  <img src="../figures/selection-single-line.svg" alt="Single line presentation illustration" style="width: 100%; height: auto; display: block;" />
   <div class="figure-caption">Figure 6. Single Line Presentation.</div>
 </div>
 
@@ -29,7 +61,7 @@ Items arranged in a single row (horizontal or vertical).
 Individual items displayed one at a time, like turning cards in a rolodex.
 
 <div class="figure-card">
-  <div class="figure-placeholder">Illustration Placeholder: Flip Chart</div>
+  <img src="../figures/selection-flip-chart.svg" alt="Flip chart presentation illustration" style="width: 100%; height: auto; display: block;" />
   <div class="figure-caption">Figure 7. Flip Chart Presentation.</div>
 </div>
 
@@ -38,7 +70,7 @@ Individual items displayed one at a time, like turning cards in a rolodex.
 Items arranged in a 2D grid.
 
 <div class="figure-card">
-  <div class="figure-placeholder">Illustration Placeholder: Grid Presentation</div>
+  <img src="../figures/selection-grid.svg" alt="Grid presentation illustration" style="width: 100%; height: auto; display: block;" />
   <div class="figure-caption">Figure 8. Grid Presentation.</div>
 </div>
 
@@ -46,8 +78,12 @@ Items arranged in a 2D grid.
 
 Secondary pages appear within the current page temporarily.
 
+<div class="info-box">
+  Pop-up panels reduce visual load and are useful for quick contextual choices.
+</div>
+
 <div class="figure-card">
-  <div class="figure-placeholder">Illustration Placeholder: Pop-up Presentation</div>
+  <img src="../figures/selection-popup.svg" alt="Pop-up presentation illustration" style="width: 100%; height: auto; display: block;" />
   <div class="figure-caption">Figure 9. Pop-up Presentation.</div>
 </div>
 
@@ -55,7 +91,33 @@ Secondary pages appear within the current page temporarily.
 
 Non-standard layouts that emphasize important items.
 
+<div class="info-box">
+  Visual load matters. Smaller groups and fewer items per page reduce scanning errors for new users.
+</div>
+
+<div class="demo-instructions">
+  🎮 Compare: try selecting number 59 in each grid below.
+</div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+  <div>
+    <h5>16 Items (4×4)</h5>
+    <div class="scanner-container">
+      <switch-scanner theme="sketch" scan-pattern="linear" scan-technique="point" scan-rate="800" grid-size="16"></switch-scanner>
+    </div>
+  </div>
+  <div>
+    <h5>64 Items (8×8)</h5>
+    <div class="scanner-container">
+      <switch-scanner theme="sketch" scan-pattern="linear" scan-technique="point" scan-rate="800" grid-size="64"></switch-scanner>
+    </div>
+  </div>
+</div>
+
+<div class="warning-box">
+  <strong>The problem:</strong> linear scanning of large sets is painfully slow. Grouping is the fix (see Chapter 7).
+</div>
+
 <div class="figure-card">
-  <div class="figure-placeholder">Illustration Placeholder: Custom Presentation</div>
+  <img src="../figures/selection-custom.svg" alt="Custom presentation illustration" style="width: 100%; height: auto; display: block;" />
   <div class="figure-caption">Figure 10. Custom Presentation.</div>
 </div>

@@ -11,6 +11,16 @@ nextLabel: "Chapter 8: Row-Column Scanning"
 
 Linear scanning of large sets is painfully slow. Grouping reduces scan cost dramatically.
 
+## Grouping and Hierarchy
+
+Large selection sets are usually organized into **layers**:
+
+- **Items** (individual cells)
+- **Groups** (rows, columns, or clusters of items)
+- **Super-groups** (pages or tabs)
+
+This hierarchy reduces scan time and cognitive load. Most systems use a two-level hierarchy, but some allow deeper nesting.
+
 ## Scan Cost
 
 For **N** items in linear scan:
@@ -26,3 +36,11 @@ For **N** items in linear scan:
 
 - Linear average cost: 18 presses
 - Row-column average cost: 9 presses
+
+<div class="highlight-box">
+  That’s about 50% faster. Grouping cuts the scan cost in half for medium grids.
+</div>
+
+<div class="info-box">
+  Groups can be presented as pages, tabs, rows, or columns. The goal is to reduce the distance to frequently used items.
+</div>

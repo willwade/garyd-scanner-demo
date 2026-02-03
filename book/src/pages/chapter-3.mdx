@@ -19,3 +19,41 @@ This is the foundation of all switch use. Without understanding this connection,
 2. Intentional activation
 3. Timed activation
 4. Controlled activation (scanning)
+
+## Demo 1: Simple Cause & Effect
+
+<div class="demo-instructions">
+  🎮 Press Space or click to trigger the effect.
+</div>
+<div class="scanner-container small">
+  <switch-scanner
+    theme="sketch"
+    scan-mode="cause-effect"
+    grid-cols="1"
+    custom-items='[{"label":"🎵 Play Sound", "id":"play"}]'>
+  </switch-scanner>
+</div>
+
+<div class="info-box">
+  <strong>What's happening:</strong>
+  <ul>
+    <li>Only 1 item is available</li>
+    <li>Switch press always triggers it</li>
+    <li>User learns: “My press → effect happens”</li>
+    <li>Builds confidence and understanding</li>
+  </ul>
+</div>
+
+## Demo 2: Visual Feedback
+
+<div class="demo-instructions">
+  🎮 Press to trigger a visual response.
+</div>
+<div class="scanner-container small">
+  <switch-scanner
+    theme="sketch"
+    scan-mode="cause-effect"
+    grid-cols="1"
+    custom-items='[{"label":"✨ Make It Glow", "id":"glow"}]'>
+  </switch-scanner>
+</div>

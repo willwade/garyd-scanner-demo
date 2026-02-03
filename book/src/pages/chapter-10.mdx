@@ -11,6 +11,8 @@ nextLabel: "Chapter 11: Efficiency Calculator"
 
 Compare efficiency across scanning patterns. This chapter is the “why” behind choosing a pattern.
 
+Different patterns can change selection time by 3–10×. This is often a bigger gain than any timing tweak.
+
 ## Pattern selection guide
 
 | Grid Size | Recommended Pattern | Why |
@@ -20,25 +22,37 @@ Compare efficiency across scanning patterns. This chapter is the “why” behin
 | 31-100 items | Row-Column or Elimination | Depends on user ability |
 | 100+ items | Elimination | Only viable option for large grids |
 
+## Other Patterns Worth Knowing
+
+- **Snake scan:** similar to linear but reverses direction at row ends.
+- **Quadrant scan:** pick a quadrant, then scan inside it.
+- **Mixed scans:** combine grouping and row/column within subgroups.
+
+## Scan Direction Options
+
+- **Forward only:** standard left-to-right, top-to-bottom.
+- **Reverse:** right-to-left or bottom-to-top for specific layouts.
+- **Oscillating:** scan back and forth to reduce long return jumps.
+
 ## Visual References
 
 <div class="figure-card">
-  <div class="figure-placeholder">Illustration Placeholder: Linear Scan Flow</div>
+  <img src="../figures/flow-linear.svg" alt="Linear scan flow illustration" style="width: 100%; height: auto; display: block;" />
   <div class="figure-caption">Figure 11. Linear scanning cycle (highlight → wait → select).</div>
 </div>
 
 <div class="figure-card">
-  <div class="figure-placeholder">Illustration Placeholder: Row-Column Flow</div>
+  <img src="../figures/flow-row-column.svg" alt="Row-column scan flow illustration" style="width: 100%; height: auto; display: block;" />
   <div class="figure-caption">Figure 12. Row selection then item selection.</div>
 </div>
 
 <div class="figure-card">
-  <div class="figure-placeholder">Illustration Placeholder: Elimination Flow</div>
+  <img src="../figures/flow-elimination.svg" alt="Elimination scan flow illustration" style="width: 100%; height: auto; display: block;" />
   <div class="figure-caption">Figure 13. Quadrant elimination (4-switch).</div>
 </div>
 
 <div class="figure-card">
-  <div class="figure-placeholder">Illustration Placeholder: Efficiency Comparison Chart</div>
+  <img src="../figures/efficiency-chart.svg" alt="Efficiency comparison chart illustration" style="width: 100%; height: auto; display: block;" />
   <div class="figure-caption">Figure 14. Press count comparison across grid sizes and patterns.</div>
 </div>
 
