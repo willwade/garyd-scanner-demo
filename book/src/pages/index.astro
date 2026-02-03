@@ -5,13 +5,26 @@ const chapterModules = Object.values(
   import.meta.glob('./chapter-*.mdx', { eager: true })
 ) as Array<{ url?: string; frontmatter?: { title?: string } }>;
 
+const base = import.meta.env.BASE_URL;
+const normalizeHref = (href?: string) => {
+  if (!href) return '';
+  if (href.startsWith('http')) return href;
+  if (href.startsWith(base)) return href;
+  if (href.startsWith('/')) {
+    const cleaned = href.replace(/^\/+/, '');
+    const trimmed = cleaned.startsWith('book/') ? cleaned.slice(5) : cleaned;
+    return `${base}${trimmed}`;
+  }
+  return `${base}${href}`;
+};
+
 const chapters = chapterModules
   .map((mod) => {
     const href = mod.url ?? '';
     const label = mod.frontmatter?.title ?? href;
     const match = href.match(/chapter-(\d+)/);
     const order = match ? Number(match[1]) : 999;
-    return { href, label, order };
+    return { href: normalizeHref(href), label, order };
   })
   .sort((a, b) => a.order - b.order);
 
@@ -21,7 +34,7 @@ const glossaryModule = Object.values(
 
 if (glossaryModule[0]) {
   chapters.push({
-    href: glossaryModule[0].url ?? '',
+    href: normalizeHref(glossaryModule[0].url),
     label: glossaryModule[0].frontmatter?.title ?? 'Glossary',
     order: 9999
   });

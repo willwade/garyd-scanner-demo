@@ -8,6 +8,17 @@ const {
   nextLabel
 } = frontmatter;
 const base = import.meta.env.BASE_URL;
+const normalizeHref = (href?: string) => {
+  if (!href) return undefined;
+  if (href.startsWith('http')) return href;
+  if (href.startsWith(base)) return href;
+  if (href.startsWith('/')) {
+    const cleaned = href.replace(/^\/+/, '');
+    const trimmed = cleaned.startsWith('book/') ? cleaned.slice(5) : cleaned;
+    return `${base}${trimmed}`;
+  }
+  return `${base}${href}`;
+};
 const chapterModules = Object.values(
   import.meta.glob('../pages/chapter-*.mdx', { eager: true })
 ) as Array<{ url?: string; frontmatter?: { title?: string } }>;
@@ -18,7 +29,7 @@ const chapters = chapterModules
     const label = mod.frontmatter?.title ?? href;
     const match = href.match(/chapter-(\d+)/);
     const order = match ? Number(match[1]) : 999;
-    return { href, label, order };
+    return { href: normalizeHref(href) ?? href, label, order };
   })
   .sort((a, b) => a.order - b.order);
 
@@ -28,7 +39,7 @@ const glossaryModule = Object.values(
 
 if (glossaryModule[0]) {
   chapters.push({
-    href: glossaryModule[0].url ?? `${base}glossary/`,
+    href: normalizeHref(glossaryModule[0].url) ?? `${base}glossary/`,
     label: glossaryModule[0].frontmatter?.title ?? 'Glossary',
     order: 9999
   });
@@ -270,9 +281,9 @@ if (glossaryModule[0]) {
       <div>
         <slot />
         <div class="nav-links">
-          {prevHref ? <a href={prevHref}>← {prevLabel}</a> : <span class="spacer"></span>}
-          {nextHref ? <a href={nextHref}>{nextLabel} →</a> : <span class="spacer"></span>}
-        </div>
+        {prevHref ? <a href={normalizeHref(prevHref)}>{`← ${prevLabel}`}</a> : <span class="spacer"></span>}
+        {nextHref ? <a href={normalizeHref(nextHref)}>{`${nextLabel} →`}</a> : <span class="spacer"></span>}
+      </div>
       </div>
       <aside class="toc-wrap">
         <details class="toc" open>
