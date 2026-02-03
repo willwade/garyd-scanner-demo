@@ -1,5 +1,5 @@
-import { Scanner } from './Scanner';
-import { SwitchAction } from '../SwitchInput';
+import { Scanner } from '../Scanner';
+import type { SwitchAction } from '../types';
 
 // Color mapping for switches
 const SWITCH_COLORS: Record<string, string> = {
@@ -24,28 +24,24 @@ export class EliminationScanner extends Scanner {
     const config = this.config.get();
     this.numSwitches = config.eliminationSwitchCount || 4;
     this.rangeStart = 0;
-    this.rangeEnd = this.renderer.getItemsCount();
+    this.rangeEnd = this.surface.getItemsCount();
     this.partitionHistory = [];
     super.start();
   }
 
   protected reset() {
     this.rangeStart = 0;
-    this.rangeEnd = this.renderer.getItemsCount();
+    this.rangeEnd = this.surface.getItemsCount();
     this.currentBlock = 0;
     this.partitionHistory = [];
     this.clearHighlights();
   }
 
   private clearHighlights() {
-    this.renderer.setFocus([]);
-    // Clear any color highlights
-    const container = this.renderer.getContainer();
-    const cells = container.querySelectorAll('.grid-cell');
-    cells.forEach(cell => {
-      (cell as HTMLElement).style.backgroundColor = '';
-      (cell as HTMLElement).style.boxShadow = '';
-    });
+    this.surface.setFocus([]);
+    if (this.surface.clearItemStyles) {
+      this.surface.clearItemStyles();
+    }
   }
 
   protected step() {
@@ -63,21 +59,17 @@ export class EliminationScanner extends Scanner {
     if (!partition) return;
 
     // Highlight cells with color and border
-    const container = this.renderer.getContainer();
     for (let i = partition.start; i < partition.end; i++) {
-      const cell = container.querySelector(`[data-index="${i}"]`) as HTMLElement;
-      if (cell) {
-        const switchAction = this.getSwitchAction(this.currentBlock);
-        const color = SWITCH_COLORS[switchAction];
+      const switchAction = this.getSwitchAction(this.currentBlock);
+      const color = SWITCH_COLORS[switchAction];
 
-        // Apply colored background
-        cell.style.backgroundColor = color;
-        cell.style.opacity = '0.4';
-
-        // Add colored border
-        cell.style.boxShadow = `inset 0 0 0 3px ${color}`;
-        cell.style.border = `2px solid ${color}`;
-      }
+      this.surface.setItemStyle?.(i, {
+        backgroundColor: color,
+        opacity: 0.4,
+        borderColor: color,
+        borderWidth: 2,
+        boxShadow: `inset 0 0 0 3px ${color}`
+      });
     }
   }
 
@@ -133,9 +125,8 @@ export class EliminationScanner extends Scanner {
 
       if (rangeSize <= 1) {
         // Already at single item - select it
-        const item = this.renderer.getItem(this.rangeStart);
-        if (item) {
-          this.triggerSelection(item);
+        if (this.rangeStart >= 0) {
+          this.triggerSelection(this.rangeStart);
           this.reset();
           this.restartTimer();
         }
@@ -162,13 +153,14 @@ export class EliminationScanner extends Scanner {
           // If only one item left, highlight it immediately
           if (this.rangeEnd - this.rangeStart === 1) {
             this.clearHighlights();
-            const cell = this.renderer.getContainer().querySelector(`[data-index="${this.rangeStart}"]`) as HTMLElement;
-            if (cell) {
-              const color = SWITCH_COLORS['switch-1'];
-              cell.style.backgroundColor = color;
-              cell.style.opacity = '0.6';
-              cell.style.boxShadow = `inset 0 0 0 4px ${color}, 0 0 10px ${color}`;
-            }
+            const color = SWITCH_COLORS['switch-1'];
+            this.surface.setItemStyle?.(this.rangeStart, {
+              backgroundColor: color,
+              opacity: 0.6,
+              boxShadow: `inset 0 0 0 4px ${color}, 0 0 10px ${color}`,
+              borderColor: color,
+              borderWidth: 2
+            });
           }
         }
 
@@ -198,9 +190,8 @@ export class EliminationScanner extends Scanner {
     // If we're down to a single item, select it
     const rangeSize = this.rangeEnd - this.rangeStart;
     if (rangeSize <= 1) {
-      const item = this.renderer.getItem(this.rangeStart);
-      if (item) {
-        this.triggerSelection(item);
+      if (this.rangeStart >= 0) {
+        this.triggerSelection(this.rangeStart);
         this.reset();
         this.restartTimer();
       }
@@ -215,7 +206,7 @@ export class EliminationScanner extends Scanner {
   public getCost(itemIndex: number): number {
     const n = this.numSwitches;
     let start = 0;
-    let end = this.renderer.getItemsCount();
+    let end = this.surface.getItemsCount();
     let cost = 0;
 
     // Simulate n-way elimination

@@ -1,5 +1,5 @@
-import { Scanner } from './Scanner';
-import { SwitchAction } from '../SwitchInput';
+import { Scanner } from '../Scanner';
+import type { SwitchAction } from '../types';
 
 export class GroupScanner extends Scanner {
   private level: 'group' | 'row' | 'cell' = 'group';
@@ -15,8 +15,8 @@ export class GroupScanner extends Scanner {
   }
 
   private calcGroups() {
-    const totalItems = this.renderer.getItemsCount();
-    const cols = this.renderer.columns;
+    const totalItems = this.surface.getItemsCount();
+    const cols = this.surface.getColumns();
     const totalRows = Math.ceil(totalItems / cols);
 
     // Divide into 3 groups if possible
@@ -36,7 +36,7 @@ export class GroupScanner extends Scanner {
     this.currentGroup = -1;
     this.currentRow = -1;
     this.currentCol = -1;
-    this.renderer.setFocus([]);
+    this.surface.setFocus([]);
   }
 
   protected step() {
@@ -62,7 +62,7 @@ export class GroupScanner extends Scanner {
   }
 
   private stepCell() {
-     const cols = this.renderer.columns;
+     const cols = this.surface.getColumns();
      this.currentCol++;
      if (this.currentCol >= cols) this.currentCol = 0;
 
@@ -70,8 +70,15 @@ export class GroupScanner extends Scanner {
      const actualRow = g.rowStart + this.currentRow;
      const idx = actualRow * cols + this.currentCol;
 
-     if (this.renderer.getItem(idx)) {
-         this.renderer.setFocus([idx]);
+     if (idx < this.surface.getItemsCount()) {
+         const cfg = this.config.get();
+         this.surface.setFocus([idx], {
+           phase: 'item',
+           scanRate: cfg.scanRate,
+           scanPattern: cfg.scanPattern,
+           scanTechnique: cfg.scanTechnique,
+           scanDirection: cfg.scanDirection,
+         });
      } else {
          // Skip (careful with recursion/loops)
          if (this.currentCol < cols - 1) this.stepCell();
@@ -81,8 +88,8 @@ export class GroupScanner extends Scanner {
   private highlightGroup(gIndex: number) {
     const g = this.groups[gIndex];
     const indices: number[] = [];
-    const cols = this.renderer.columns;
-    const totalItems = this.renderer.getItemsCount();
+    const cols = this.surface.getColumns();
+    const totalItems = this.surface.getItemsCount();
 
     for (let r = g.rowStart; r < g.rowEnd; r++) {
         for (let c = 0; c < cols; c++) {
@@ -90,18 +97,32 @@ export class GroupScanner extends Scanner {
             if (idx < totalItems) indices.push(idx);
         }
     }
-    this.renderer.setFocus(indices);
+    const cfg = this.config.get();
+    this.surface.setFocus(indices, {
+      phase: 'major',
+      scanRate: cfg.scanRate,
+      scanPattern: cfg.scanPattern,
+      scanTechnique: cfg.scanTechnique,
+      scanDirection: cfg.scanDirection,
+    });
   }
 
   private highlightRow(row: number) {
-      const cols = this.renderer.columns;
-      const totalItems = this.renderer.getItemsCount();
+      const cols = this.surface.getColumns();
+      const totalItems = this.surface.getItemsCount();
       const indices: number[] = [];
       for (let c = 0; c < cols; c++) {
           const idx = row * cols + c;
           if (idx < totalItems) indices.push(idx);
       }
-      this.renderer.setFocus(indices);
+      const cfg = this.config.get();
+      this.surface.setFocus(indices, {
+        phase: 'minor',
+        scanRate: cfg.scanRate,
+        scanPattern: cfg.scanPattern,
+        scanTechnique: cfg.scanTechnique,
+        scanDirection: cfg.scanDirection,
+      });
   }
 
   public handleAction(action: SwitchAction) {
@@ -138,10 +159,9 @@ export class GroupScanner extends Scanner {
       }
     } else {
       const g = this.groups[this.currentGroup];
-      const idx = (g.rowStart + this.currentRow) * this.renderer.columns + this.currentCol;
-      const item = this.renderer.getItem(idx);
-      if (item) {
-        this.triggerSelection(item);
+      const idx = (g.rowStart + this.currentRow) * this.surface.getColumns() + this.currentCol;
+      if (idx >= 0) {
+        this.triggerSelection(idx);
         this.reset();
         this.restartTimer();
       }
@@ -154,8 +174,8 @@ export class GroupScanner extends Scanner {
   }
 
   public getCost(itemIndex: number): number {
-    const cols = this.renderer.columns;
-    const totalItems = this.renderer.getItemsCount();
+    const cols = this.surface.getColumns();
+    const totalItems = this.surface.getItemsCount();
     const totalRows = Math.ceil(totalItems / cols);
     const groupSize = Math.ceil(totalRows / 3);
 

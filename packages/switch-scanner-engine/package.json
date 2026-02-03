@@ -1,0 +1,26 @@
+{
+  "name": "scan-engine",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Headless scan engine for switch scanning interfaces",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts",
+    "test": "vitest --config vitest.config.ts"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.2",
+    "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "@willwade/ppmpredictor": "^0.0.12"
+  }
+}

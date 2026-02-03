@@ -1,6 +1,5 @@
-import { Scanner } from './Scanner';
-import { SwitchAction } from '../SwitchInput';
-import { GridItem } from '../GridRenderer';
+import { Scanner } from '../Scanner';
+import type { SwitchAction } from '../types';
 
 export class QuadrantScanner extends Scanner {
   private level: 'quadrant' | 'row' | 'cell' = 'quadrant';
@@ -17,8 +16,8 @@ export class QuadrantScanner extends Scanner {
   }
 
   private calcQuadrants() {
-    const totalItems = this.renderer.getItemsCount();
-    const cols = this.renderer.columns;
+    const totalItems = this.surface.getItemsCount();
+    const cols = this.surface.getColumns();
     const totalRows = Math.ceil(totalItems / cols);
 
     const midRow = Math.ceil(totalRows / 2);
@@ -37,7 +36,7 @@ export class QuadrantScanner extends Scanner {
     this.currentQuad = -1;
     this.currentRow = -1;
     this.currentCol = -1;
-    this.renderer.setFocus([]);
+    this.surface.setFocus([]);
   }
 
   protected step() {
@@ -77,10 +76,17 @@ export class QuadrantScanner extends Scanner {
 
     const actualRow = q.rowStart + this.currentRow;
     const actualCol = q.colStart + this.currentCol;
-    const index = actualRow * this.renderer.columns + actualCol;
+    const index = actualRow * this.surface.getColumns() + actualCol;
 
-    if (this.renderer.getItem(index)) {
-       this.renderer.setFocus([index]);
+    if (index < this.surface.getItemsCount()) {
+       const cfg = this.config.get();
+       this.surface.setFocus([index], {
+         phase: 'item',
+         scanRate: cfg.scanRate,
+         scanPattern: cfg.scanPattern,
+         scanTechnique: cfg.scanTechnique,
+         scanDirection: cfg.scanDirection,
+       });
     } else {
        // Skip empty
        this.stepCell(); // Recursive risk?
@@ -90,8 +96,8 @@ export class QuadrantScanner extends Scanner {
   private highlightQuad(qIndex: number) {
     const q = this.quads[qIndex];
     const indices: number[] = [];
-    const cols = this.renderer.columns;
-    const totalItems = this.renderer.getItemsCount();
+    const cols = this.surface.getColumns();
+    const totalItems = this.surface.getItemsCount();
 
     for (let r = q.rowStart; r < q.rowEnd; r++) {
       for (let c = q.colStart; c < q.colEnd; c++) {
@@ -99,19 +105,33 @@ export class QuadrantScanner extends Scanner {
         if (idx < totalItems) indices.push(idx);
       }
     }
-    this.renderer.setFocus(indices);
+    const cfg = this.config.get();
+    this.surface.setFocus(indices, {
+      phase: 'major',
+      scanRate: cfg.scanRate,
+      scanPattern: cfg.scanPattern,
+      scanTechnique: cfg.scanTechnique,
+      scanDirection: cfg.scanDirection,
+    });
   }
 
   private highlightRowSegment(row: number, colStart: number, colEnd: number) {
     const indices: number[] = [];
-    const cols = this.renderer.columns;
-    const totalItems = this.renderer.getItemsCount();
+    const cols = this.surface.getColumns();
+    const totalItems = this.surface.getItemsCount();
 
     for (let c = colStart; c < colEnd; c++) {
         const idx = row * cols + c;
         if (idx < totalItems) indices.push(idx);
     }
-    this.renderer.setFocus(indices);
+    const cfg = this.config.get();
+    this.surface.setFocus(indices, {
+      phase: 'minor',
+      scanRate: cfg.scanRate,
+      scanPattern: cfg.scanPattern,
+      scanTechnique: cfg.scanTechnique,
+      scanDirection: cfg.scanDirection,
+    });
   }
 
   public handleAction(action: SwitchAction) {
@@ -149,10 +169,9 @@ export class QuadrantScanner extends Scanner {
     } else {
       // Select Item
       const q = this.quads[this.currentQuad];
-      const idx = (q.rowStart + this.currentRow) * this.renderer.columns + (q.colStart + this.currentCol);
-      const item = this.renderer.getItem(idx);
-      if (item) {
-        this.triggerSelection(item);
+      const idx = (q.rowStart + this.currentRow) * this.surface.getColumns() + (q.colStart + this.currentCol);
+      if (idx >= 0) {
+        this.triggerSelection(idx);
         this.reset();
         this.restartTimer();
       }
@@ -165,8 +184,8 @@ export class QuadrantScanner extends Scanner {
   }
 
   public getCost(itemIndex: number): number {
-    const cols = this.renderer.columns;
-    const totalItems = this.renderer.getItemsCount();
+    const cols = this.surface.getColumns();
+    const totalItems = this.surface.getItemsCount();
     const totalRows = Math.ceil(totalItems / cols);
     const midRow = Math.ceil(totalRows / 2);
     const midCol = Math.ceil(cols / 2);
@@ -195,7 +214,7 @@ export class QuadrantScanner extends Scanner {
     return (quadIndex + 1) + (rowInQuad + 1) + (colInQuad + 1);
   }
 
-  public mapContentToGrid(content: GridItem[], rows: number, cols: number): GridItem[] {
+  public mapContentToGrid<T>(content: T[], rows: number, cols: number): T[] {
       // Quadrant scanning typically works on a standard grid (A-Z).
       // However, if we want "A" to be the first item selected...
       // Quad 0 scans first. It contains (0,0) to (midRow, midCol).

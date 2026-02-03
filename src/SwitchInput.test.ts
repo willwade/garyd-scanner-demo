@@ -1,9 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { SwitchInput } from './SwitchInput';
 import { ConfigManager } from './ConfigManager';
-import { Scanner } from './scanners/Scanner';
-import { GridRenderer } from './GridRenderer';
-import { AudioManager } from './AudioManager';
+import { Scanner, type ScanSurface } from 'scan-engine';
 
 // Create a simple test scanner
 class TestScanner extends Scanner {
@@ -31,8 +29,7 @@ describe('Long-Hold Cancel Feature', () => {
   let switchInput: SwitchInput;
   let container: HTMLElement;
   let scanner: TestScanner;
-  let renderer: GridRenderer;
-  let audioManager: AudioManager;
+  let surface: ScanSurface;
 
   beforeEach(() => {
     container = document.createElement('div');
@@ -41,21 +38,14 @@ describe('Long-Hold Cancel Feature', () => {
     configManager = new ConfigManager({}, false);
     switchInput = new SwitchInput(configManager, container);
 
-    renderer = new GridRenderer(container);
-    audioManager = {
-      playScanSound: vi.fn(),
-      playSelectSound: vi.fn(),
-    } as any;
+    surface = {
+      getItemsCount: () => 10,
+      getColumns: () => 5,
+      setFocus: vi.fn(),
+      setSelected: vi.fn()
+    };
 
-    // Render some items
-    const items = Array.from({ length: 10 }, (_, i) => ({
-      id: `item-${i}`,
-      label: `${i}`,
-      index: i
-    }));
-    renderer.render(items);
-
-    scanner = new TestScanner(renderer, configManager, audioManager);
+    scanner = new TestScanner(surface, configManager, {});
   });
 
   afterEach(() => {

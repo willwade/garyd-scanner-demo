@@ -1,5 +1,5 @@
-import { Scanner } from './Scanner';
-import { SwitchAction } from '../SwitchInput';
+import { Scanner } from '../Scanner';
+import type { SwitchAction } from '../types';
 
 export class ContinuousScanner extends Scanner {
   private overlay: HTMLElement | null = null;
@@ -58,8 +58,8 @@ export class ContinuousScanner extends Scanner {
       this.technique = config.continuousTechnique || 'crosshair';
 
       // Calculate grid dimensions
-      const totalItems = this.renderer.getItemsCount();
-      this.numCols = this.renderer.columns;
+      const totalItems = this.surface.getItemsCount();
+      this.numCols = this.surface.getColumns();
       this.numRows = Math.ceil(totalItems / this.numCols);
 
       console.log('[ContinuousScanner] Starting:', {
@@ -134,7 +134,7 @@ export class ContinuousScanner extends Scanner {
     this.currentDirection = 0;
     this.compassAngle = 0;
     this.directionStepCounter = 0;
-    this.renderer.setFocus([]);
+    this.surface.setFocus([]);
 
     // Hide all overlays
     if (this.lockedXBar) this.lockedXBar.style.display = 'none';
@@ -359,7 +359,7 @@ export class ContinuousScanner extends Scanner {
 
     console.log('[ContinuousScanner] Creating overlay...');
 
-    const container = this.renderer.getContainer();
+    const container = this.surface.getContainerElement?.();
     console.log('[ContinuousScanner] Container:', container);
 
     if (!container) {
@@ -562,7 +562,9 @@ export class ContinuousScanner extends Scanner {
     // Temporarily hide overlay so elementFromPoint works
     this.overlay.style.display = 'none';
 
-    const root = this.renderer.getContainer().getRootNode() as Document | ShadowRoot;
+    const container = this.surface.getContainerElement?.();
+    if (!container) return;
+    const root = container.getRootNode() as Document | ShadowRoot;
     const element = root.elementFromPoint ? root.elementFromPoint(clientX, clientY) : document.elementFromPoint(clientX, clientY);
 
     this.overlay.style.display = 'block';
@@ -571,10 +573,8 @@ export class ContinuousScanner extends Scanner {
       const gridCell = element.closest('.grid-cell') as HTMLElement;
       if (gridCell && gridCell.dataset.index) {
         const index = parseInt(gridCell.dataset.index, 10);
-        const item = this.renderer.getItem(index);
-        if (item) {
-          this.renderer.setSelected(index);
-          this.triggerSelection(item);
+        if (index >= 0) {
+          this.triggerSelection(index);
         }
       }
     }
@@ -803,7 +803,9 @@ export class ContinuousScanner extends Scanner {
     // Temporarily hide overlay so elementFromPoint works
     this.overlay.style.display = 'none';
 
-    const root = this.renderer.getContainer().getRootNode() as Document | ShadowRoot;
+    const container = this.surface.getContainerElement?.();
+    if (!container) return;
+    const root = container.getRootNode() as Document | ShadowRoot;
     const element = root.elementFromPoint ? root.elementFromPoint(clientX, clientY) : document.elementFromPoint(clientX, clientY);
 
     this.overlay.style.display = 'block';
@@ -812,10 +814,8 @@ export class ContinuousScanner extends Scanner {
       const gridCell = element.closest('.grid-cell') as HTMLElement;
       if (gridCell && gridCell.dataset.index) {
         const index = parseInt(gridCell.dataset.index, 10);
-        const item = this.renderer.getItem(index);
-        if (item) {
-          this.renderer.setSelected(index);
-          this.triggerSelection(item);
+        if (index >= 0) {
+          this.triggerSelection(index);
         }
       }
     }
@@ -824,7 +824,7 @@ export class ContinuousScanner extends Scanner {
   }
 
   public getCost(itemIndex: number): number {
-    const cols = this.renderer.columns;
+    const cols = this.surface.getColumns();
     const row = Math.floor(itemIndex / cols);
     const col = itemIndex % cols;
 
@@ -832,7 +832,7 @@ export class ContinuousScanner extends Scanner {
       // Eight-direction: Wait for direction to align, then move to item, then select
       // Approximate: wait for correct direction (avg 4 steps) + distance + 1 click
       const itemCenterX = ((col + 0.5) / cols) * 100;
-      const itemCenterY = ((row + 0.5) / Math.ceil(this.renderer.getItemsCount() / cols)) * 100;
+      const itemCenterY = ((row + 0.5) / Math.ceil(this.surface.getItemsCount() / cols)) * 100;
       const distance = Math.sqrt(Math.pow(itemCenterX, 2) + Math.pow(itemCenterY, 2)); // Distance from start
       return 4 + Math.round(distance / 0.5) + 1; // Direction wait + movement + click
     } else if (this.technique === 'gliding') {
@@ -843,7 +843,7 @@ export class ContinuousScanner extends Scanner {
     } else {
       // Crosshair: time to scan X to item, then Y to item
       const xPosition = ((col + 0.5) / cols) * 100;
-      const yPosition = ((row + 0.5) / Math.ceil(this.renderer.getItemsCount() / cols)) * 100;
+      const yPosition = ((row + 0.5) / Math.ceil(this.surface.getItemsCount() / cols)) * 100;
       const xSteps = Math.round(xPosition / 0.5); // Steps to reach X position
       const ySteps = Math.round(yPosition / 0.5); // Steps to reach Y position
       return xSteps + ySteps + 2; // X scan + Y scan + 2 clicks

@@ -103,7 +103,21 @@ export class GridRenderer {
     });
   }
 
-  public setFocus(indices: number[], config?: { highlightBorderWidth: number; highlightBorderColor: string; highlightScale: number; highlightOpacity: number; highlightAnimation: boolean; highlightScanLine?: boolean; scanDirection?: string; scanPattern?: string; scanRate?: number }) {
+  public setFocus(
+    indices: number[],
+    config?: {
+      highlightBorderWidth: number;
+      highlightBorderColor: string;
+      highlightScale: number;
+      highlightOpacity: number;
+      highlightAnimation: boolean;
+      highlightScanLine?: boolean;
+      scanDirection?: string;
+      scanPattern?: string;
+      scanRate?: number;
+    },
+    _meta?: Record<string, unknown>
+  ) {
     const effectiveConfig = config ?? this.highlightConfig ?? undefined;
     // Update styles if config provided
     if (config) {

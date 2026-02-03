@@ -5,17 +5,21 @@ import { GridRenderer, GridItem } from './GridRenderer';
 import { SettingsUI } from './SettingsUI';
 import { AlphabetManager } from './AlphabetManager';
 
-import { Scanner } from './scanners/Scanner';
-import { RowColumnScanner } from './scanners/RowColumnScanner';
-import { LinearScanner } from './scanners/LinearScanner';
-import { SnakeScanner } from './scanners/SnakeScanner';
-import { QuadrantScanner } from './scanners/QuadrantScanner';
-import { GroupScanner } from './scanners/GroupScanner';
-import { EliminationScanner } from './scanners/EliminationScanner';
-import { ContinuousScanner } from './scanners/ContinuousScanner';
-import { ProbabilityScanner } from './scanners/ProbabilityScanner';
-import { CauseEffectScanner } from './scanners/CauseEffectScanner';
-import { ColorCodeScanner } from './scanners/ColorCodeScanner';
+import {
+  Scanner,
+  RowColumnScanner,
+  LinearScanner,
+  SnakeScanner,
+  QuadrantScanner,
+  GroupScanner,
+  EliminationScanner,
+  ContinuousScanner,
+  ProbabilityScanner,
+  CauseEffectScanner,
+  ColorCodeScanner,
+  type ScanSurface,
+  type ScanCallbacks
+} from 'scan-engine';
 import { loadAACFile, getBrowserExtensions } from 'aac-board-viewer';
 import type { AACTree, AACPage, AACButton } from 'aac-board-viewer';
 
@@ -40,6 +44,8 @@ export class SwitchScannerElement extends HTMLElement {
   private alphabetManager!: AlphabetManager;
   private gridRenderer!: GridRenderer;
   private settingsUI!: SettingsUI;
+  private scanSurface!: ScanSurface;
+  private scanCallbacks!: ScanCallbacks;
 
   private currentScanner: Scanner | null = null;
   private baseItems: GridItem[] = [];
@@ -79,6 +85,61 @@ export class SwitchScannerElement extends HTMLElement {
 
     const gridContainer = this.shadowRoot!.querySelector('.grid-container') as HTMLElement;
     this.gridRenderer = new GridRenderer(gridContainer);
+    this.scanSurface = {
+      getItemsCount: () => this.gridRenderer.getItemsCount(),
+      getColumns: () => this.gridRenderer.columns,
+      setFocus: (indices, meta) => this.gridRenderer.setFocus(indices, undefined, meta),
+      setSelected: (index) => this.gridRenderer.setSelected(index),
+      getItemData: (index) => {
+        const item = this.gridRenderer.getItem(index);
+        if (!item) return null;
+        return { label: item.label, isEmpty: item.isEmpty };
+      },
+      setItemStyle: (index, style) => {
+        const el = this.gridRenderer.getElement(index);
+        if (!el) return;
+        if (style.backgroundColor !== undefined) el.style.backgroundColor = style.backgroundColor;
+        if (style.textColor !== undefined) el.style.color = style.textColor;
+        if (style.borderColor !== undefined) el.style.borderColor = style.borderColor;
+        if (style.borderWidth !== undefined) el.style.borderWidth = `${style.borderWidth}px`;
+        if (style.boxShadow !== undefined) el.style.boxShadow = style.boxShadow;
+        if (style.opacity !== undefined) el.style.opacity = String(style.opacity);
+      },
+      clearItemStyles: () => {
+        this.gridRenderer.getContainer().querySelectorAll('.grid-cell').forEach((cell) => {
+          const el = cell as HTMLElement;
+          el.style.backgroundColor = '';
+          el.style.color = '';
+          el.style.borderColor = '';
+          el.style.borderWidth = '';
+          el.style.boxShadow = '';
+          el.style.opacity = '';
+        });
+      },
+      getContainerElement: () => this.gridRenderer.getContainer()
+    };
+
+    this.scanCallbacks = {
+      onScanStep: () => this.audioManager?.playScanSound(),
+      onSelect: (index) => {
+        const item = this.gridRenderer.getItem(index);
+        if (!item) return;
+        const event = new CustomEvent('scanner:selection', {
+          bubbles: true,
+          composed: true,
+          detail: { item }
+        });
+        this.gridRenderer.getContainer().dispatchEvent(event);
+        this.audioManager?.playSelectSound();
+      },
+      onRedraw: () => {
+        const event = new CustomEvent('scanner:redraw', {
+          bubbles: true,
+          composed: true
+        });
+        this.gridRenderer.getContainer().dispatchEvent(event);
+      }
+    };
 
     const settingsOverlay = this.shadowRoot!.querySelector('.settings-overlay') as HTMLElement;
     this.settingsUI = new SettingsUI(this.configManager, this.alphabetManager, settingsOverlay);
@@ -1685,33 +1746,33 @@ export class SwitchScannerElement extends HTMLElement {
 
     // Special modes take precedence
     if (config.scanMode === 'cause-effect') {
-      return new CauseEffectScanner(this.gridRenderer, this.configManager, this.audioManager);
+      return new CauseEffectScanner(this.scanSurface, this.configManager, this.scanCallbacks);
     } else if (config.scanMode === 'group-row-column') {
-      return new GroupScanner(this.gridRenderer, this.configManager, this.audioManager);
+      return new GroupScanner(this.scanSurface, this.configManager, this.scanCallbacks);
     } else if (config.scanMode === 'continuous') {
       console.log('[SwitchScannerElement] Creating ContinuousScanner');
-      return new ContinuousScanner(this.gridRenderer, this.configManager, this.audioManager);
+      return new ContinuousScanner(this.scanSurface, this.configManager, this.scanCallbacks);
     } else if (config.scanMode === 'probability') {
-      return new ProbabilityScanner(this.gridRenderer, this.configManager, this.audioManager);
+      return new ProbabilityScanner(this.scanSurface, this.configManager, this.scanCallbacks);
     } else if (config.scanMode === 'color-code') {
-      return new ColorCodeScanner(this.gridRenderer, this.configManager, this.audioManager);
+      return new ColorCodeScanner(this.scanSurface, this.configManager, this.scanCallbacks);
     }
 
     // Pattern-based scanners
     switch (config.scanPattern) {
       case 'linear':
-        return new LinearScanner(this.gridRenderer, this.configManager, this.audioManager);
+        return new LinearScanner(this.scanSurface, this.configManager, this.scanCallbacks);
       case 'snake':
-        return new SnakeScanner(this.gridRenderer, this.configManager, this.audioManager);
+        return new SnakeScanner(this.scanSurface, this.configManager, this.scanCallbacks);
       case 'quadrant':
-        return new QuadrantScanner(this.gridRenderer, this.configManager, this.audioManager);
+        return new QuadrantScanner(this.scanSurface, this.configManager, this.scanCallbacks);
       case 'elimination':
-        return new EliminationScanner(this.gridRenderer, this.configManager, this.audioManager);
+        return new EliminationScanner(this.scanSurface, this.configManager, this.scanCallbacks);
       case 'column-row':
-        return new RowColumnScanner(this.gridRenderer, this.configManager, this.audioManager);
+        return new RowColumnScanner(this.scanSurface, this.configManager, this.scanCallbacks);
       case 'row-column':
       default:
-        return new RowColumnScanner(this.gridRenderer, this.configManager, this.audioManager);
+        return new RowColumnScanner(this.scanSurface, this.configManager, this.scanCallbacks);
     }
   }
 

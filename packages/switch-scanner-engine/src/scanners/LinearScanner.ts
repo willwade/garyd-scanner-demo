@@ -1,5 +1,5 @@
-import { Scanner } from './Scanner';
-import { SwitchAction } from '../SwitchInput';
+import { Scanner } from '../Scanner';
+import type { SwitchAction } from '../types';
 
 export class LinearScanner extends Scanner {
   private currentIndex: number = -1;
@@ -17,18 +17,14 @@ export class LinearScanner extends Scanner {
   }
 
   private countItems(): number {
-    let i = 0;
-    while (this.renderer.getItem(i)) {
-      i++;
-    }
-    return i;
+    return this.surface.getItemsCount();
   }
 
   protected reset() {
     this.currentIndex = -1;
     this.direction = 1; // Reset direction
     this.loopCount = 0; // Reset loop count
-    this.renderer.setFocus([]);
+    this.surface.setFocus([]);
   }
 
   protected step() {
@@ -40,7 +36,14 @@ export class LinearScanner extends Scanner {
         this.currentIndex = this.totalItems - 1;
         this.reportCycleCompleted();
       }
-      this.renderer.setFocus([this.currentIndex]);
+      const cfg = this.config.get();
+      this.surface.setFocus([this.currentIndex], {
+        phase: 'item',
+        scanRate: cfg.scanRate,
+        scanPattern: cfg.scanPattern,
+        scanTechnique: cfg.scanTechnique,
+        scanDirection: cfg.scanDirection,
+      });
       return;
     }
 
@@ -77,7 +80,14 @@ export class LinearScanner extends Scanner {
         break;
     }
 
-    this.renderer.setFocus([this.currentIndex]);
+    const cfg = this.config.get();
+    this.surface.setFocus([this.currentIndex], {
+      phase: 'item',
+      scanRate: cfg.scanRate,
+      scanPattern: cfg.scanPattern,
+      scanTechnique: cfg.scanTechnique,
+      scanDirection: cfg.scanDirection,
+    });
   }
 
   public handleAction(action: SwitchAction) {
@@ -85,7 +95,7 @@ export class LinearScanner extends Scanner {
       // Manually step
       if (this.timer) clearTimeout(this.timer); // Pause auto-scan if stepping manually?
       this.step();
-      this.audio.playScanSound();
+      this.callbacks.onScanStep?.();
       // Resume auto-scan? Or stay paused? Depends on mode.
       // For now, resume.
       this.scheduleNextStep();
@@ -97,10 +107,8 @@ export class LinearScanner extends Scanner {
 
   protected doSelection() {
     if (this.currentIndex >= 0) {
-      const item = this.renderer.getItem(this.currentIndex);
-      if (item) {
-        this.renderer.setSelected(this.currentIndex);
-        this.triggerSelection(item);
+      if (this.currentIndex >= 0) {
+        this.triggerSelection(this.currentIndex);
         // Restart scan from 0 or stay? Usually restart.
         this.reset();
         // Reset timer

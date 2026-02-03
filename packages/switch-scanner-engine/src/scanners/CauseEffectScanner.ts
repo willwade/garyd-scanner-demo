@@ -1,5 +1,5 @@
-import { Scanner } from './Scanner';
-import { SwitchAction } from '../SwitchInput';
+import { Scanner } from '../Scanner';
+import type { SwitchAction } from '../types';
 
 export class CauseEffectScanner extends Scanner {
   public start() {
@@ -8,11 +8,18 @@ export class CauseEffectScanner extends Scanner {
 
     // In Cause & Effect, we typically focus everything or the single item immediately.
     // We do NOT schedule a step timer.
-    const count = this.renderer.getItemsCount();
+    const count = this.surface.getItemsCount();
     if (count > 0) {
         // Focus all items to indicate they are "active" / ready
         const indices = Array.from({ length: count }, (_, i) => i);
-        this.renderer.setFocus(indices);
+        const cfg = this.config.get();
+        this.surface.setFocus(indices, {
+          phase: 'major',
+          scanRate: cfg.scanRate,
+          scanPattern: cfg.scanPattern,
+          scanTechnique: cfg.scanTechnique,
+          scanDirection: cfg.scanDirection,
+        });
     }
   }
 
@@ -27,18 +34,14 @@ export class CauseEffectScanner extends Scanner {
     // For Cause & Effect, ANY switch action typically triggers the effect.
     // We trigger selection on all items (or the first one if singular).
 
-    const count = this.renderer.getItemsCount();
+    const count = this.surface.getItemsCount();
     if (count > 0) {
       // Just select the first one as the "event" source, or all?
       // Usually visual feedback on the item is desired.
       // We'll select index 0 by default for simplicity, or we can iterate.
       // If there's only 1 item, index 0 is correct.
 
-      const item = this.renderer.getItem(0);
-      if (item) {
-        this.triggerSelection(item);
-        this.renderer.setSelected(0);
-      }
+      this.triggerSelection(0);
     }
   }
 
@@ -48,10 +51,17 @@ export class CauseEffectScanner extends Scanner {
 
   protected reset(): void {
     // Reset focus?
-    const count = this.renderer.getItemsCount();
+    const count = this.surface.getItemsCount();
     if (count > 0) {
       const indices = Array.from({ length: count }, (_, i) => i);
-      this.renderer.setFocus(indices);
+      const cfg = this.config.get();
+      this.surface.setFocus(indices, {
+        phase: 'major',
+        scanRate: cfg.scanRate,
+        scanPattern: cfg.scanPattern,
+        scanTechnique: cfg.scanTechnique,
+        scanDirection: cfg.scanDirection,
+      });
     }
   }
 

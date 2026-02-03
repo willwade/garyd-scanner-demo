@@ -1,18 +1,11 @@
-import { Scanner } from './Scanner';
-import { GridRenderer } from '../GridRenderer';
-import { ConfigManager } from '../ConfigManager';
-import { AudioManager } from '../AudioManager';
-import { SwitchAction } from '../SwitchInput';
+import { Scanner } from '../Scanner';
+import type { SwitchAction } from '../types';
 
 type ColorCodeColor = 'red' | 'blue';
 
 export class ColorCodeScanner extends Scanner {
   private probabilities: number[] = [];
   private colors: ColorCodeColor[] = [];
-
-  constructor(renderer: GridRenderer, config: ConfigManager, audio: AudioManager) {
-    super(renderer, config, audio);
-  }
 
   public start() {
     this.isRunning = true;
@@ -23,7 +16,7 @@ export class ColorCodeScanner extends Scanner {
 
   public stop() {
     this.isRunning = false;
-    this.renderer.setFocus([]);
+    this.surface.setFocus([]);
   }
 
   public handleAction(action: SwitchAction): void {
@@ -67,7 +60,7 @@ export class ColorCodeScanner extends Scanner {
   }
 
   private initializeBelief() {
-    const count = this.renderer.getItemsCount();
+    const count = this.surface.getItemsCount();
     const value = count > 0 ? 1 / count : 0;
     this.probabilities = new Array(count).fill(value);
   }
@@ -96,10 +89,10 @@ export class ColorCodeScanner extends Scanner {
     const redColor = '#f9c6c6';
     const blueColor = '#cfe3ff';
     for (let i = 0; i < this.colors.length; i++) {
-      const el = this.renderer.getElement(i);
-      if (!el) continue;
-      el.style.backgroundColor = this.colors[i] === 'red' ? redColor : blueColor;
-      el.style.color = '#1e1e1e';
+      this.surface.setItemStyle?.(i, {
+        backgroundColor: this.colors[i] === 'red' ? redColor : blueColor,
+        textColor: '#1e1e1e'
+      });
     }
   }
 
@@ -129,11 +122,7 @@ export class ColorCodeScanner extends Scanner {
     }
 
     if (this.probabilities[maxIndex] >= selectThreshold) {
-      const item = this.renderer.getItem(maxIndex);
-      if (item) {
-        this.renderer.setSelected(maxIndex);
-        this.triggerSelection(item);
-      }
+      this.triggerSelection(maxIndex);
       this.initializeBelief();
     }
   }

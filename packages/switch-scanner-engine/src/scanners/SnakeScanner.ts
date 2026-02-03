@@ -1,6 +1,5 @@
-import { Scanner } from './Scanner';
-import { SwitchAction } from '../SwitchInput';
-import { GridItem } from '../GridRenderer';
+import { Scanner } from '../Scanner';
+import type { SwitchAction } from '../types';
 
 export class SnakeScanner extends Scanner {
   private currentRow: number = 0;
@@ -16,8 +15,8 @@ export class SnakeScanner extends Scanner {
   }
 
   private updateDimensions() {
-    const total = this.renderer.getItemsCount();
-    this.maxCol = this.renderer.columns;
+    const total = this.surface.getItemsCount();
+    this.maxCol = this.surface.getColumns();
     this.maxRow = Math.ceil(total / this.maxCol);
   }
 
@@ -25,7 +24,14 @@ export class SnakeScanner extends Scanner {
     this.currentRow = 0;
     this.currentCol = 0;
     this.direction = 1;
-    this.renderer.setFocus([0]);
+    const cfg = this.config.get();
+    this.surface.setFocus([0], {
+      phase: 'item',
+      scanRate: cfg.scanRate,
+      scanPattern: cfg.scanPattern,
+      scanTechnique: cfg.scanTechnique,
+      scanDirection: cfg.scanDirection,
+    });
   }
 
   protected step() {
@@ -54,12 +60,19 @@ export class SnakeScanner extends Scanner {
 
     // Check if index is valid (last row might be incomplete)
     // If invalid, skip to start
-    if (index >= this.renderer.getItemsCount()) {
+    if (index >= this.surface.getItemsCount()) {
         this.reset();
         return;
     }
 
-    this.renderer.setFocus([index]);
+    const cfg = this.config.get();
+    this.surface.setFocus([index], {
+      phase: 'item',
+      scanRate: cfg.scanRate,
+      scanPattern: cfg.scanPattern,
+      scanTechnique: cfg.scanTechnique,
+      scanDirection: cfg.scanDirection,
+    });
   }
 
   public handleAction(action: SwitchAction) {
@@ -73,10 +86,8 @@ export class SnakeScanner extends Scanner {
 
   protected doSelection() {
     const index = this.currentRow * this.maxCol + this.currentCol;
-    const item = this.renderer.getItem(index);
-    if (item) {
-      this.renderer.setSelected(index);
-      this.triggerSelection(item);
+    if (index >= 0) {
+      this.triggerSelection(index);
       this.reset();
       if (this.timer) clearTimeout(this.timer);
       this.scheduleNextStep();
@@ -88,7 +99,7 @@ export class SnakeScanner extends Scanner {
     return itemIndex; // approx
   }
 
-  public mapContentToGrid(content: GridItem[], rows: number, cols: number): GridItem[] {
+  public mapContentToGrid<T>(content: T[], rows: number, cols: number): T[] {
       // Create a new array of same length
       const newContent = new Array(content.length);
 

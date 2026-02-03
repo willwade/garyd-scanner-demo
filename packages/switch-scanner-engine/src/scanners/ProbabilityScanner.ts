@@ -1,16 +1,11 @@
-import { Scanner } from './Scanner';
-import { SwitchAction } from '../SwitchInput';
+import { Scanner } from '../Scanner';
+import type { SwitchAction } from '../types';
 import { PredictorManager } from '../PredictorManager';
 
 export class ProbabilityScanner extends Scanner {
-  private predictor: PredictorManager;
+  private predictor: PredictorManager = new PredictorManager();
   private scanOrder: number[] = [];
   private currentIndex: number = -1;
-
-  constructor(renderer: any, config: any, audio: any) {
-    super(renderer, config, audio);
-    this.predictor = new PredictorManager();
-  }
 
   public start() {
     this.updateProbabilities();
@@ -19,7 +14,7 @@ export class ProbabilityScanner extends Scanner {
 
   protected reset() {
     this.currentIndex = -1;
-    this.renderer.setFocus([]);
+      this.surface.setFocus([]);
   }
 
   protected step() {
@@ -29,7 +24,14 @@ export class ProbabilityScanner extends Scanner {
     }
 
     const actualIndex = this.scanOrder[this.currentIndex];
-    this.renderer.setFocus([actualIndex]);
+    const cfg = this.config.get();
+    this.surface.setFocus([actualIndex], {
+      phase: 'item',
+      scanRate: cfg.scanRate,
+      scanPattern: cfg.scanPattern,
+      scanTechnique: cfg.scanTechnique,
+      scanDirection: cfg.scanDirection,
+    });
   }
 
   public handleAction(action: SwitchAction) {
@@ -44,13 +46,14 @@ export class ProbabilityScanner extends Scanner {
   protected doSelection() {
     if (this.currentIndex >= 0) {
       const actualIndex = this.scanOrder[this.currentIndex];
-      const item = this.renderer.getItem(actualIndex);
-      if (item) {
-        this.renderer.setSelected(actualIndex);
-        this.triggerSelection(item);
+      if (actualIndex >= 0) {
+        this.triggerSelection(actualIndex);
 
         // Update predictor
-        this.predictor.addToContext(item.label.toLowerCase());
+        const data = this.surface.getItemData?.(actualIndex);
+        if (data?.label) {
+          this.predictor.addToContext(data.label.toLowerCase());
+        }
 
         // Recalculate probabilities and order
         this.updateProbabilities();
@@ -70,14 +73,15 @@ export class ProbabilityScanner extends Scanner {
     // preds is [{text: 'a', probability: 0.5}, ...]
 
     // Map grid items to probabilities
-    const itemsCount = this.renderer.getItemsCount();
+    const itemsCount = this.surface.getItemsCount();
     const itemProbs: { index: number, prob: number }[] = [];
 
     for (let i = 0; i < itemsCount; i++) {
-      const item = this.renderer.getItem(i);
       let prob = 0.0001; // Base probability
-      if (item && item.label) {
-         const p = preds.find((p: any) => p.text.toLowerCase() === item.label.toLowerCase());
+      const data = this.surface.getItemData?.(i);
+      if (data?.label) {
+         const label = data.label.toLowerCase();
+         const p = preds.find((p: any) => p.text.toLowerCase() === label);
          if (p) prob = p.probability;
       }
       itemProbs.push({ index: i, prob });

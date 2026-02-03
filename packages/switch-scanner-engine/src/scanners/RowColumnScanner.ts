@@ -1,6 +1,5 @@
-import { Scanner } from './Scanner';
-import { SwitchAction } from '../SwitchInput';
-import { GridItem } from '../GridRenderer';
+import { Scanner } from '../Scanner';
+import type { SwitchAction } from '../types';
 
 export class RowColumnScanner extends Scanner {
   private level: 'rows' | 'cells' = 'rows';
@@ -19,15 +18,15 @@ export class RowColumnScanner extends Scanner {
   }
 
   private recalcDimensions() {
-    const totalItems = this.renderer.getItemsCount();
+    const totalItems = this.surface.getItemsCount();
     if (this.isColumnRow) {
          // In Column-Row, primary groups are columns.
          // But GridRenderer is always Row-Major layout.
          // So "Rows" in scanner logic might mean "Columns" visually?
          // Let's implement distinct logic for clarity.
-         this.totalRows = this.renderer.columns;
+         this.totalRows = this.surface.getColumns();
     } else {
-         this.totalRows = Math.ceil(totalItems / this.renderer.columns);
+         this.totalRows = Math.ceil(totalItems / this.surface.getColumns());
     }
   }
 
@@ -36,7 +35,7 @@ export class RowColumnScanner extends Scanner {
     this.level = this.useBlockScanning ? 'rows' : 'cells';
     this.currentRow = -1;
     this.currentCol = -1;
-    this.renderer.setFocus([]);
+    this.surface.setFocus([]);
   }
 
   protected step() {
@@ -58,8 +57,8 @@ export class RowColumnScanner extends Scanner {
   private stepMinor() {
     // Determine bounds for minor step
     let maxMinor = 0;
-    const totalItems = this.renderer.getItemsCount();
-    const cols = this.renderer.columns;
+    const totalItems = this.surface.getItemsCount();
+    const cols = this.surface.getColumns();
     const rows = Math.ceil(totalItems / cols);
 
     if (this.useBlockScanning) {
@@ -117,13 +116,20 @@ export class RowColumnScanner extends Scanner {
     }
 
     if (index >= 0 && index < totalItems) {
-      this.renderer.setFocus([index]);
+      const cfg = this.config.get();
+      this.surface.setFocus([index], {
+        phase: this.useBlockScanning ? 'minor' : 'item',
+        scanRate: cfg.scanRate,
+        scanPattern: cfg.scanPattern,
+        scanTechnique: cfg.scanTechnique,
+        scanDirection: cfg.scanDirection,
+      });
     }
   }
 
   private highlightMajor(majorIndex: number) {
-    const cols = this.renderer.columns;
-    const totalItems = this.renderer.getItemsCount();
+    const cols = this.surface.getColumns();
+    const totalItems = this.surface.getItemsCount();
     const indices = [];
 
     if (this.isColumnRow) {
@@ -141,7 +147,14 @@ export class RowColumnScanner extends Scanner {
         for (let i = start; i < end; i++) indices.push(i);
     }
 
-    this.renderer.setFocus(indices);
+    const cfg = this.config.get();
+    this.surface.setFocus(indices, {
+      phase: 'major',
+      scanRate: cfg.scanRate,
+      scanPattern: cfg.scanPattern,
+      scanTechnique: cfg.scanTechnique,
+      scanDirection: cfg.scanDirection,
+    });
   }
 
   public handleAction(action: SwitchAction) {
@@ -166,14 +179,14 @@ export class RowColumnScanner extends Scanner {
       if (this.currentRow >= 0) {
         this.level = 'cells';
         this.currentCol = -1;
-        this.renderer.setSelected(-1);
+        this.surface.setSelected(-1);
         if (this.timer) clearTimeout(this.timer);
         this.scheduleNextStep();
       }
     } else {
       // Select Item (either point scanning or second level of block scanning)
       let index = -1;
-      const cols = this.renderer.columns;
+      const cols = this.surface.getColumns();
 
       if (this.useBlockScanning) {
         if (this.isColumnRow) {
@@ -192,10 +205,8 @@ export class RowColumnScanner extends Scanner {
         }
       }
 
-      const item = this.renderer.getItem(index);
-      if (item) {
-        this.renderer.setSelected(index);
-        this.triggerSelection(item);
+      if (index >= 0) {
+        this.triggerSelection(index);
         this.reset();
         if (this.timer) clearTimeout(this.timer);
         this.scheduleNextStep();
@@ -204,7 +215,7 @@ export class RowColumnScanner extends Scanner {
   }
 
   public getCost(itemIndex: number): number {
-    const cols = this.renderer.columns;
+    const cols = this.surface.getColumns();
     const row = Math.floor(itemIndex / cols);
     const col = itemIndex % cols;
 
@@ -224,7 +235,7 @@ export class RowColumnScanner extends Scanner {
     }
   }
 
-  public mapContentToGrid(content: GridItem[], rows: number, cols: number): GridItem[] {
+  public mapContentToGrid<T>(content: T[], rows: number, cols: number): T[] {
       // If Row-Column, default identity mapping is correct (A, B, C fills row).
       if (this.config.get().scanPattern !== 'column-row') {
           return content;

@@ -118,6 +118,11 @@
   - [x] SCANNING_PATTERNS_ANALYSIS.md deep dive
 
 - [x] 🔨 **Scanning Patterns Analysis Document** ✅ DONE
+
+### Board Loading
+- [ ] 🔨 **Switch board loading to @willwade/aac-processors** (TODO)
+  - [ ] Replace `aac-board-viewer` dependency in switch-scanner with direct `@willwade/aac-processors` usage for OBZ parsing
+  - [ ] Keep client-side file upload working
   - [x] Complete analysis of 7 key components
   - [x] Pattern efficiency comparisons (Linear vs Row-Column vs Elimination)
   - [x] Alphabet layout analysis (alphabetical vs frequency order)

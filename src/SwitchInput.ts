@@ -1,19 +1,5 @@
 import { ConfigManager } from './ConfigManager';
-
-export type SwitchAction =
-  | 'select'
-  | 'step'
-  | 'reset'
-  | 'cancel'
-  | 'menu'
-  | 'switch-1'
-  | 'switch-2'
-  | 'switch-3'
-  | 'switch-4'
-  | 'switch-5'
-  | 'switch-6'
-  | 'switch-7'
-  | 'switch-8';
+import type { SwitchAction } from 'scan-engine';
 
 // Color mapping for switches
 export const SWITCH_COLORS: Record<Exclude<SwitchAction, 'select' | 'step' | 'reset' | 'cancel' | 'menu'>, string> = {
