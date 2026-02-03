@@ -108,7 +108,36 @@ export class SwitchScannerElement extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['scan-strategy', 'scan-pattern', 'scan-technique', 'scan-mode', 'scan-input-mode', 'continuous-technique', 'compass-mode', 'grid-content', 'grid-size', 'language', 'scan-rate', 'acceptance-time', 'dwell-time', 'elimination-switch-count', 'custom-items', 'grid-cols', 'theme', 'cancel-method', 'long-hold-time', 'critical-overscan-enabled', 'critical-overscan-fast-rate', 'critical-overscan-slow-rate'];
+    return [
+      'scan-strategy',
+      'scan-pattern',
+      'scan-technique',
+      'scan-mode',
+      'scan-input-mode',
+      'continuous-technique',
+      'compass-mode',
+      'grid-content',
+      'grid-size',
+      'language',
+      'scan-rate',
+      'acceptance-time',
+      'dwell-time',
+      'elimination-switch-count',
+      'custom-items',
+      'grid-cols',
+      'theme',
+      'cancel-method',
+      'long-hold-time',
+      'critical-overscan-enabled',
+      'critical-overscan-fast-rate',
+      'critical-overscan-slow-rate',
+      'highlight-scan-line',
+      'highlight-border-width',
+      'highlight-border-color',
+      'highlight-scale',
+      'highlight-opacity',
+      'highlight-animation'
+    ];
   }
 
   attributeChangedCallback(name: string, oldValue: string, newValue: string) {
@@ -185,6 +214,24 @@ export class SwitchScannerElement extends HTMLElement {
             break;
         case 'long-hold-time':
             updates.longHoldTime = parseInt(newValue, 10);
+            break;
+        case 'highlight-scan-line':
+            updates.highlightScanLine = newValue === 'true' || newValue === '1';
+            break;
+        case 'highlight-border-width':
+            updates.highlightBorderWidth = parseInt(newValue, 10);
+            break;
+        case 'highlight-border-color':
+            updates.highlightBorderColor = newValue;
+            break;
+        case 'highlight-scale':
+            updates.highlightScale = parseFloat(newValue);
+            break;
+        case 'highlight-opacity':
+            updates.highlightOpacity = parseFloat(newValue);
+            break;
+        case 'highlight-animation':
+            updates.highlightAnimation = newValue === 'true' || newValue === '1';
             break;
         case 'critical-overscan-enabled':
             updates.criticalOverscan = {
@@ -286,6 +333,24 @@ export class SwitchScannerElement extends HTMLElement {
 
     const longHold = this.getAttribute('long-hold-time');
     if (longHold) overrides.longHoldTime = parseInt(longHold, 10);
+
+    const scanLine = this.getAttribute('highlight-scan-line');
+    if (scanLine) overrides.highlightScanLine = scanLine === 'true' || scanLine === '1';
+
+    const highlightBorderWidth = this.getAttribute('highlight-border-width');
+    if (highlightBorderWidth) overrides.highlightBorderWidth = parseInt(highlightBorderWidth, 10);
+
+    const highlightBorderColor = this.getAttribute('highlight-border-color');
+    if (highlightBorderColor) overrides.highlightBorderColor = highlightBorderColor;
+
+    const highlightScale = this.getAttribute('highlight-scale');
+    if (highlightScale) overrides.highlightScale = parseFloat(highlightScale);
+
+    const highlightOpacity = this.getAttribute('highlight-opacity');
+    if (highlightOpacity) overrides.highlightOpacity = parseFloat(highlightOpacity);
+
+    const highlightAnimation = this.getAttribute('highlight-animation');
+    if (highlightAnimation) overrides.highlightAnimation = highlightAnimation === 'true' || highlightAnimation === '1';
 
     const criticalEnabled = this.getAttribute('critical-overscan-enabled');
     const criticalFast = this.getAttribute('critical-overscan-fast-rate');
@@ -418,6 +483,7 @@ export class SwitchScannerElement extends HTMLElement {
         user-select: none;
         min-height: 50px;
         overflow: hidden;
+        position: relative;
       }
 
       .scan-focus {
@@ -441,6 +507,55 @@ export class SwitchScannerElement extends HTMLElement {
 
       .scan-focus.animate-pulse {
         animation: pulse 1.5s ease-in-out infinite;
+      }
+
+      .scan-focus::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        pointer-events: none;
+        animation-duration: var(--scan-line-duration, 1000ms);
+        animation-delay: var(--scan-line-delay, 0ms);
+        animation-timing-function: linear;
+        animation-iteration-count: 1;
+        animation-fill-mode: both;
+        animation-name: scan-line-horizontal;
+        background: rgba(255,152,0,0.9);
+        width: 2px;
+        height: 100%;
+      }
+
+      .scan-focus.scan-line-vertical::after {
+        animation-name: scan-line-vertical;
+        width: 100%;
+        height: 2px;
+      }
+
+      .scan-focus.scan-line-reverse::after {
+        animation-direction: reverse;
+      }
+
+      @keyframes scan-line-horizontal {
+        0% { left: 0; opacity: 0; }
+        5% { opacity: var(--scan-line-enabled, 0); }
+        95% { opacity: var(--scan-line-enabled, 0); }
+        100% { left: calc(100% - 2px); opacity: 0; }
+      }
+
+      @keyframes scan-line-vertical {
+        0% { top: 0; opacity: 0; }
+        5% { opacity: var(--scan-line-enabled, 0); }
+        95% { opacity: var(--scan-line-enabled, 0); }
+        100% { top: calc(100% - 2px); opacity: 0; }
+      }
+
+      .scan-focus.scan-line-only {
+        outline: none;
+        outline-offset: 0;
+        transform: none;
+        opacity: 1;
       }
 
       .dwell-active {
@@ -738,6 +853,12 @@ export class SwitchScannerElement extends HTMLElement {
           transform: scale(var(--focus-scale, 1.02));
           opacity: var(--focus-opacity, 1.0);
           transition: transform 0.1s, opacity 0.1s;
+      }
+
+      .scanner-wrapper.sketch .scan-focus.scan-line-only {
+          box-shadow: none;
+          transform: none;
+          opacity: 1;
       }
 
       .scanner-wrapper.sketch .scan-focus.animate-pulse {
@@ -1263,6 +1384,18 @@ export class SwitchScannerElement extends HTMLElement {
           const visualItems = this.applyVisualization(displayItems, config);
           this.gridRenderer.render(visualItems, cols);
       }
+
+      this.gridRenderer.updateHighlightStyles({
+          highlightBorderWidth: config.highlightBorderWidth,
+          highlightBorderColor: config.highlightBorderColor,
+          highlightScale: config.highlightScale,
+          highlightOpacity: config.highlightOpacity,
+          highlightAnimation: config.highlightAnimation,
+          highlightScanLine: config.highlightScanLine,
+          scanDirection: config.scanDirection,
+          scanPattern: config.scanPattern,
+          scanRate: config.scanRate
+      });
   }
 
   private createScanner(config: AppConfig): Scanner {
@@ -1316,7 +1449,17 @@ export class SwitchScannerElement extends HTMLElement {
     this.currentScanner = this.createScanner(config);
 
     // Update highlight styles when config changes
-    this.gridRenderer.updateHighlightStyles(config);
+    this.gridRenderer.updateHighlightStyles({
+      highlightBorderWidth: config.highlightBorderWidth,
+      highlightBorderColor: config.highlightBorderColor,
+      highlightScale: config.highlightScale,
+      highlightOpacity: config.highlightOpacity,
+      highlightAnimation: config.highlightAnimation,
+      highlightScanLine: config.highlightScanLine,
+      scanDirection: config.scanDirection,
+      scanPattern: config.scanPattern,
+      scanRate: config.scanRate
+    });
 
     console.log('[SwitchScannerElement] Starting new scanner:', this.currentScanner.constructor.name);
     this.currentScanner.start();

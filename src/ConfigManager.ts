@@ -80,6 +80,7 @@ export interface AppConfig {
   highlightScale: number; // number (1.0-1.5, scale factor for highlighted items, 1.0 = no zoom)
   highlightOpacity: number; // number (0.3-1.0, opacity of highlighted items)
   highlightAnimation: boolean; // Enable pulse animation on highlighted items
+  highlightScanLine: boolean; // Moving scan line through the focused cell
 
   // Language & Layout
   language: string;
@@ -153,6 +154,7 @@ export class ConfigManager {
     highlightScale: 1.0, // 1.0 = no zoom, 1.2 = 20% larger
     highlightOpacity: 1.0, // Full opacity
     highlightAnimation: false, // No animation by default
+    highlightScanLine: false,
   };
 
   constructor(overrides?: Partial<AppConfig>, loadFromUrl: boolean = true) {

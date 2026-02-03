@@ -33,6 +33,16 @@ export class LinearScanner extends Scanner {
 
   protected step() {
     const config = this.config.get();
+    // Critical overscan: slow backward phase ignores normal scan direction
+    if (config.criticalOverscan.enabled && this.overscanState === 'slow_backward') {
+      this.currentIndex--;
+      if (this.currentIndex < 0) {
+        this.currentIndex = this.totalItems - 1;
+        this.reportCycleCompleted();
+      }
+      this.renderer.setFocus([this.currentIndex]);
+      return;
+    }
 
     switch (config.scanDirection) {
       case 'circular':

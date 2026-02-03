@@ -13,6 +13,7 @@ export class GridRenderer {
   private items: GridItem[] = [];
   private elements: HTMLElement[] = [];
   public columns: number = 8;
+  private highlightConfig: { highlightBorderWidth: number; highlightBorderColor: string; highlightScale: number; highlightOpacity: number; highlightAnimation: boolean; highlightScanLine?: boolean; scanDirection?: string; scanPattern?: string; scanRate?: number } | null = null;
 
   constructor(container: HTMLElement | string) {
     if (typeof container === 'string') {
@@ -32,13 +33,23 @@ export class GridRenderer {
    * Update highlight visualization styles based on config
    * Sets CSS custom properties for border, scale, opacity, and animation
    */
-  public updateHighlightStyles(config: { highlightBorderWidth: number; highlightBorderColor: string; highlightScale: number; highlightOpacity: number; highlightAnimation: boolean }) {
+  public updateHighlightStyles(config: { highlightBorderWidth: number; highlightBorderColor: string; highlightScale: number; highlightOpacity: number; highlightAnimation: boolean; highlightScanLine?: boolean; scanDirection?: string; scanPattern?: string; scanRate?: number }) {
+    this.highlightConfig = config;
     // Set CSS custom properties on the container
-    this.container.style.setProperty('--focus-border-width', `${config.highlightBorderWidth}px`);
+    const borderWidth = config.highlightScanLine ? 0 : config.highlightBorderWidth;
+    this.container.style.setProperty('--focus-border-width', `${borderWidth}px`);
     this.container.style.setProperty('--focus-color', config.highlightBorderColor);
     this.container.style.setProperty('--focus-scale', config.highlightScale.toString());
     this.container.style.setProperty('--focus-opacity', config.highlightOpacity.toString());
     this.container.style.setProperty('--focus-animation', config.highlightAnimation ? 'pulse' : 'none');
+    this.container.style.setProperty('--scan-line-enabled', config.highlightScanLine ? '1' : '0');
+    const orientation = config.scanPattern === 'column-row' ? 'vertical' : 'horizontal';
+    this.container.style.setProperty('--scan-line-orientation', orientation);
+    const direction = config.scanDirection === 'reverse' ? 'reverse' : 'forward';
+    this.container.style.setProperty('--scan-line-direction', direction);
+    if (config.scanRate) {
+      this.container.style.setProperty('--scan-line-duration', `${config.scanRate}ms`);
+    }
   }
 
   public render(items: GridItem[], columns: number = 8) {
@@ -89,7 +100,8 @@ export class GridRenderer {
     });
   }
 
-  public setFocus(indices: number[], config?: { highlightBorderWidth: number; highlightBorderColor: string; highlightScale: number; highlightOpacity: number; highlightAnimation: boolean }) {
+  public setFocus(indices: number[], config?: { highlightBorderWidth: number; highlightBorderColor: string; highlightScale: number; highlightOpacity: number; highlightAnimation: boolean; highlightScanLine?: boolean; scanDirection?: string; scanPattern?: string; scanRate?: number }) {
+    const effectiveConfig = config ?? this.highlightConfig ?? undefined;
     // Update styles if config provided
     if (config) {
       this.updateHighlightStyles(config);
@@ -99,17 +111,40 @@ export class GridRenderer {
     this.elements.forEach(el => {
       el.classList.remove('scan-focus');
       el.classList.remove('animate-pulse');
+      el.classList.remove('scan-line-vertical');
+      el.classList.remove('scan-line-reverse');
+      el.classList.remove('scan-line-only');
+      el.style.removeProperty('--scan-line-duration');
+      el.style.removeProperty('--scan-line-delay');
     });
 
+    const perCellDuration = effectiveConfig?.scanRate && indices.length > 0
+      ? Math.max(100, Math.floor(effectiveConfig.scanRate / indices.length))
+      : undefined;
+
     // Add focus to specified indices
-    indices.forEach(idx => {
+    indices.forEach((idx, order) => {
       if (this.elements[idx]) {
         const el = this.elements[idx];
         el.classList.add('scan-focus');
 
         // Add animation class if enabled
-        if (config?.highlightAnimation) {
+        if (effectiveConfig?.highlightAnimation) {
           el.classList.add('animate-pulse');
+        }
+
+        if (effectiveConfig?.highlightScanLine) {
+          el.classList.add('scan-line-only');
+          if (effectiveConfig?.scanPattern === 'column-row') {
+            el.classList.add('scan-line-vertical');
+          }
+          if (effectiveConfig?.scanDirection === 'reverse') {
+            el.classList.add('scan-line-reverse');
+          }
+          if (perCellDuration) {
+            el.style.setProperty('--scan-line-duration', `${perCellDuration}ms`);
+            el.style.setProperty('--scan-line-delay', `${order * perCellDuration}ms`);
+          }
         }
       }
     });
