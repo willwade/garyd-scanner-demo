@@ -18,6 +18,13 @@ nextLabel: "Chapter 6: Two Switch Scanning"
 3. User presses switch to select
 4. System activates item and restarts scan
 
+## Auto-Scan Flow (Mental Model)
+
+```text
+Start → Highlight Item → Wait → (Press?) → Select → Restart
+                    ↘ No press → Next item ↗
+```
+
 ## Auto-Scan Variants
 
 - **Auto-while-held (user scan):** the highlight moves only while the switch is held down.
@@ -46,6 +53,15 @@ For many users, auto-scan is the only feasible mode. The tradeoff is timing pres
 - **Press-to-select:** most common, a switch press selects the highlighted item.
 - **Dwell selection:** selection occurs automatically after a set dwell time.
 - **Encoded selection:** patterns like double‑press or long‑hold trigger special actions.
+
+## Auto-While-Held (User Scan)
+
+In standard auto‑scan, the press stops the scan and selects. In **auto‑while‑held**, the logic reverses:
+
+- **Hold** the switch to move forward.
+- **Release** to stop and select (or dwell).
+
+This can feel safer for some users because letting go stops the movement.
 
 ## Demo
 

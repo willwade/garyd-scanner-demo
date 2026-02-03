@@ -81,3 +81,29 @@ Different patterns can change selection time by 3–10×. This is often a bigger
     </div>
   </div>
 </div>
+
+## Large Grid Comparison (64 items)
+
+<div class="demo-instructions">
+  🎮 Compare how long it takes to reach a high number in each pattern.
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+  <div>
+    <h4>Linear</h4>
+    <div class="scanner-container small">
+      <switch-scanner theme="sketch" scan-pattern="linear" scan-rate="600" grid-size="64"></switch-scanner>
+    </div>
+  </div>
+  <div>
+    <h4>Row-Column</h4>
+    <div class="scanner-container small">
+      <switch-scanner theme="sketch" scan-pattern="row-column" scan-technique="block" scan-rate="600" grid-size="64"></switch-scanner>
+    </div>
+  </div>
+  <div>
+    <h4>Elimination</h4>
+    <div class="scanner-container small">
+      <switch-scanner theme="sketch" scan-pattern="elimination" elimination-switch-count="4" scan-rate="1000" grid-size="64"></switch-scanner>
+    </div>
+  </div>
+</div>
