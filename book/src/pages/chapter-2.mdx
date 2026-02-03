@@ -27,6 +27,47 @@ Imagine a sushi bar where dishes rotate past you on a conveyor belt. You cannot 
   <strong>Switch users trade TIME for ACCESS.</strong> They don't have instant access to any item like a mouse user. They must wait for the scan to reach the item they want, then activate their switch at precisely the right moment.
 </div>
 
+## Interactive Sushi Counter
+
+<div class="sushi-demo">
+  <div class="sushi-restaurant">
+    <div class="sushi-reach-zone">
+      REACH ZONE
+      <div style="font-size:10px; font-weight:normal; margin-top:4px;">(Click plates here)</div>
+    </div>
+    <svg class="sushi-belt-bg" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <rect x="0" y="30" width="100%" height="50" fill="#636e72" rx="4" />
+      <line x1="0" y1="35" x2="100%" y2="35" stroke="#b2bec3" stroke-width="2" stroke-dasharray="10,10" opacity="0.3" />
+      <line x1="0" y1="75" x2="100%" y2="75" stroke="#2d3436" stroke-width="4" />
+    </svg>
+    <div class="sushi-belt-items"></div>
+    <div class="sushi-tutorial">
+      <h3>Sushi Conveyor</h3>
+      <p>Dishes rotate past you. You cannot reach everything.</p>
+      <p><strong>Wait</strong> for the dish to enter the red <strong>Reach Zone</strong>, then click it.</p>
+      <p><em>It gets faster every time you eat.</em></p>
+      <button class="sushi-start">Start Eating</button>
+    </div>
+  </div>
+  <div class="sushi-controls">
+    <div class="sushi-stat">
+      <div class="sushi-score">0</div>
+      <div style="font-weight: bold; color: #636e72;">
+        Speed: <span class="sushi-speed-display">2</span>
+      </div>
+    </div>
+    <div class="slider-container">
+      <span style="font-size:12px;">Slow</span>
+      <input class="sushi-speed" type="range" min="2" max="35" value="2" step="0.5" />
+      <span style="font-size:12px;">Fast</span>
+    </div>
+    <div class="sushi-actions">
+      <button class="sushi-reset reset">Reset Speed</button>
+      <button class="sushi-chaos">🔥 Chaos Mode</button>
+    </div>
+  </div>
+</div>
+
 ## Takeaway
 
 Scanning is slow but powerful. It gives full access to large selection sets with a single switch—just not instantly.
