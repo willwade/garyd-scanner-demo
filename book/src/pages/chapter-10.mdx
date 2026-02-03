@@ -37,45 +37,48 @@ Different patterns can change selection time by 3–10×. This is often a bigger
 ## Visual References
 
 <div class="figure-card">
-  <img src="../figures/flow-linear.svg" alt="Linear scan flow illustration" style="width: 100%; height: auto; display: block;" />
+  <img src={`${import.meta.env.BASE_URL}figures/flow-linear.svg`} alt="Linear scan flow illustration" style="width: 100%; height: auto; display: block;" />
   <div class="figure-caption">Figure 11. Linear scanning cycle (highlight → wait → select).</div>
 </div>
 
 <div class="figure-card">
-  <img src="../figures/flow-row-column.svg" alt="Row-column scan flow illustration" style="width: 100%; height: auto; display: block;" />
+  <img src={`${import.meta.env.BASE_URL}figures/flow-row-column.svg`} alt="Row-column scan flow illustration" style="width: 100%; height: auto; display: block;" />
   <div class="figure-caption">Figure 12. Row selection then item selection.</div>
 </div>
 
 <div class="figure-card">
-  <img src="../figures/flow-elimination.svg" alt="Elimination scan flow illustration" style="width: 100%; height: auto; display: block;" />
+  <img src={`${import.meta.env.BASE_URL}figures/flow-elimination.svg`} alt="Elimination scan flow illustration" style="width: 100%; height: auto; display: block;" />
   <div class="figure-caption">Figure 13. Quadrant elimination (4-switch).</div>
 </div>
 
 <div class="figure-card">
-  <img src="../figures/efficiency-chart.svg" alt="Efficiency comparison chart illustration" style="width: 100%; height: auto; display: block;" />
+  <img src={`${import.meta.env.BASE_URL}figures/efficiency-chart.svg`} alt="Efficiency comparison chart illustration" style="width: 100%; height: auto; display: block;" />
   <div class="figure-caption">Figure 14. Press count comparison across grid sizes and patterns.</div>
 </div>
 
 ## Interactive Comparison
 
 <div class="demo-instructions">
-  🎮 Try selecting the same item in each pattern below and compare time/effort.
+  🎮 Challenge: time yourself selecting the same item in each pattern below.
 </div>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
   <div>
     <h4>Linear (16 items)</h4>
+    <p><strong>Max:</strong> 16 presses | <strong>Avg:</strong> 8 presses</p>
     <div class="scanner-container small">
       <switch-scanner theme="sketch" scan-pattern="linear" scan-rate="900" grid-size="16"></switch-scanner>
     </div>
   </div>
   <div>
     <h4>Row-Column (16 items)</h4>
+    <p><strong>Max:</strong> 8 presses | <strong>Avg:</strong> 5 presses</p>
     <div class="scanner-container small">
       <switch-scanner theme="sketch" scan-pattern="row-column" scan-technique="block" scan-rate="900" grid-size="16"></switch-scanner>
     </div>
   </div>
   <div>
     <h4>Elimination (16 items)</h4>
+    <p><strong>Max:</strong> 3 presses | <strong>Avg:</strong> 3 presses</p>
     <div class="scanner-container small">
       <switch-scanner theme="sketch" scan-pattern="elimination" elimination-switch-count="4" scan-rate="900" grid-size="16"></switch-scanner>
     </div>
@@ -90,20 +93,27 @@ Different patterns can change selection time by 3–10×. This is often a bigger
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
   <div>
     <h4>Linear</h4>
+    <p><strong>Max:</strong> 64 presses | <strong>Avg:</strong> 32 presses</p>
     <div class="scanner-container small">
       <switch-scanner theme="sketch" scan-pattern="linear" scan-rate="600" grid-size="64"></switch-scanner>
     </div>
   </div>
   <div>
     <h4>Row-Column</h4>
+    <p><strong>Max:</strong> 16 presses | <strong>Avg:</strong> 9 presses</p>
     <div class="scanner-container small">
       <switch-scanner theme="sketch" scan-pattern="row-column" scan-technique="block" scan-rate="600" grid-size="64"></switch-scanner>
     </div>
   </div>
   <div>
     <h4>Elimination</h4>
+    <p><strong>Max:</strong> 3 presses | <strong>Avg:</strong> 3 presses</p>
     <div class="scanner-container small">
       <switch-scanner theme="sketch" scan-pattern="elimination" elimination-switch-count="4" scan-rate="1000" grid-size="64"></switch-scanner>
     </div>
   </div>
+</div>
+
+<div class="info-box">
+  For large grids, elimination scanning delivers the biggest gains. The difference is often 10× or more.
 </div>

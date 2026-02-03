@@ -103,8 +103,8 @@
 
 ### Documentation & Education
 - [x] 🔨 **Interactive Scanning Book** ✅ DONE
-  - [x] Created comprehensive interactive book (book.html)
-  - [x] 14 chapters with 20+ interactive demos
+  - [x] Created comprehensive interactive book (Astro book in `book/`)
+  - [x] 24 chapters + glossary with interactive demos
   - [x] Chapter 1-9: Foundations (switch basics → elimination scanning)
   - [x] Chapter 10: Pattern Comparison (side-by-side demos)
   - [x] Chapter 11: Efficiency Calculator (interactive cost tool)
@@ -112,8 +112,8 @@
   - [x] Chapter 13: Visualization Options (border, scale, animation)
   - [x] Chapter 14: Block vs Point technique comparison
   - [x] Mobile responsive design
-  - [x] Navigation system (Next/Prev buttons, progress bar, back-to-top)
-  - [x] GitHub Pages auto-deployment setup
+  - [x] Navigation system (Next/Prev buttons, sticky ToC, search)
+  - [x] GitHub Pages auto-deployment setup (build:gh)
   - [x] BOOK_README.md user guide
   - [x] SCANNING_PATTERNS_ANALYSIS.md deep dive
 
@@ -326,7 +326,7 @@
 
 ### Documentation
 - [x] Switch Scanning Guide (complete reference)
-- [x] Interactive Scanning Book (14 chapters)
+- [x] Interactive Scanning Book (24 chapters + glossary)
 - [x] Scanning Patterns Analysis (7 key components deep dive)
 - [x] Efficiency Calculator with real-time calculations
 - [x] User Profile configurations with examples
@@ -410,7 +410,7 @@
 **Recently Completed:**
 - Critical Overscan (Medium project)
 - Highlight Visualization (Medium project)
-- Interactive Book with 14 chapters
+- Interactive Book with 24 chapters + glossary
 - Scanning Patterns Analysis documentation
 - Efficiency Calculator
 
@@ -426,7 +426,7 @@
 - Switch Scanning Guide: `SWITCH_SCANNING_GUIDE.md`
 - Additional Guide: `SWITCH_SCANNING_GUIDE-additional.md`
 - Pattern Analysis: `SCANNING_PATTERNS_ANALYSIS.md`
-- Book: `book.html` (14 chapters, 20+ demos)
+- Book: Astro site in `book/` (24 chapters + glossary, interactive demos)
 - User Guide: `BOOK_README.md`
 - Deployment Info: `BOOK_DEPLOYMENT.md`
 - Testing Guide: `TESTING.md`

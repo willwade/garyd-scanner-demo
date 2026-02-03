@@ -30,6 +30,7 @@ Step scanning removes timing pressure. The user advances at their own pace, whic
 | Cognitive load | Must watch timing | No timing pressure |
 | Physical effort | 1 switch | 2 switches |
 | Speed | Fixed | Variable (user-paced) |
+| Best for | Single switch users | Users with good motor control |
 
 ## Step Scan Alternation (Swap Switch)
 
@@ -40,8 +41,25 @@ This helps reduce fatigue when one switch position is more tiring than the other
 ## Demo
 
 <div class="demo-instructions">
-  🎮 Use the step button to advance and select.
+  🎮 Use <strong>Key "2"</strong> to advance and <strong>Space</strong> to select.
 </div>
 <div class="scanner-container">
-  <switch-scanner theme="sketch" scan-input-mode="manual" scan-pattern="linear" scan-technique="point" grid-size="9"></switch-scanner>
+  <switch-scanner
+    theme="sketch"
+    scan-input-mode="manual"
+    scan-pattern="linear"
+    scan-technique="point"
+    grid-size="9"
+    custom-items='[
+      {"label":"🍎 Apple","id":"apple"},
+      {"label":"🍌 Banana","id":"banana"},
+      {"label":"🍇 Grapes","id":"grapes"},
+      {"label":"🍊 Orange","id":"orange"},
+      {"label":"🍓 Strawberry","id":"strawberry"},
+      {"label":"🍉 Watermelon","id":"watermelon"},
+      {"label":"🍑 Peach","id":"peach"},
+      {"label":"🍒 Cherry","id":"cherry"},
+      {"label":"🍋 Lemon","id":"lemon"}
+    ]'>
+  </switch-scanner>
 </div>

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && node fix-book-paths.cjs",
+    "build": "tsc && vite build",
     "build:component": "vite build --config vite.book.config.ts",
     "build:book": "npm run build:component && cd book && ASTRO_BASE=/garyd-scanner-demo/book/ ASTRO_TELEMETRY_DISABLED=1 npm run build",
     "build:gh": "npm run build && npm run build:book && rm -rf dist/book && mkdir -p dist/book && cp -R book/dist/* dist/book/",

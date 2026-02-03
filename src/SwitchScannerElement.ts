@@ -107,7 +107,7 @@ export class SwitchScannerElement extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['scan-strategy', 'scan-pattern', 'scan-technique', 'scan-mode', 'scan-input-mode', 'continuous-technique', 'compass-mode', 'grid-content', 'grid-size', 'language', 'scan-rate', 'acceptance-time', 'dwell-time', 'elimination-switch-count', 'custom-items', 'grid-cols', 'theme', 'cancel-method', 'long-hold-time'];
+    return ['scan-strategy', 'scan-pattern', 'scan-technique', 'scan-mode', 'scan-input-mode', 'continuous-technique', 'compass-mode', 'grid-content', 'grid-size', 'language', 'scan-rate', 'acceptance-time', 'dwell-time', 'elimination-switch-count', 'custom-items', 'grid-cols', 'theme', 'cancel-method', 'long-hold-time', 'critical-overscan-enabled', 'critical-overscan-fast-rate', 'critical-overscan-slow-rate'];
   }
 
   attributeChangedCallback(name: string, oldValue: string, newValue: string) {
@@ -184,6 +184,24 @@ export class SwitchScannerElement extends HTMLElement {
             break;
         case 'long-hold-time':
             updates.longHoldTime = parseInt(newValue, 10);
+            break;
+        case 'critical-overscan-enabled':
+            updates.criticalOverscan = {
+                ...this.configManager.get().criticalOverscan,
+                enabled: newValue === 'true' || newValue === '1'
+            };
+            break;
+        case 'critical-overscan-fast-rate':
+            updates.criticalOverscan = {
+                ...this.configManager.get().criticalOverscan,
+                fastRate: parseInt(newValue, 10)
+            };
+            break;
+        case 'critical-overscan-slow-rate':
+            updates.criticalOverscan = {
+                ...this.configManager.get().criticalOverscan,
+                slowRate: parseInt(newValue, 10)
+            };
             break;
     }
     this.configManager.update(updates);
@@ -265,6 +283,17 @@ export class SwitchScannerElement extends HTMLElement {
 
     const longHold = this.getAttribute('long-hold-time');
     if (longHold) overrides.longHoldTime = parseInt(longHold, 10);
+
+    const criticalEnabled = this.getAttribute('critical-overscan-enabled');
+    const criticalFast = this.getAttribute('critical-overscan-fast-rate');
+    const criticalSlow = this.getAttribute('critical-overscan-slow-rate');
+    if (criticalEnabled || criticalFast || criticalSlow) {
+      overrides.criticalOverscan = {
+        enabled: criticalEnabled === 'true' || criticalEnabled === '1',
+        fastRate: criticalFast ? parseInt(criticalFast, 10) : 100,
+        slowRate: criticalSlow ? parseInt(criticalSlow, 10) : 1000
+      };
+    }
 
     // Custom items and columns are handled separately, not in AppConfig directly
     const customItems = this.getAttribute('custom-items');
