@@ -16,6 +16,8 @@ import { ContinuousScanner } from './scanners/ContinuousScanner';
 import { ProbabilityScanner } from './scanners/ProbabilityScanner';
 import { CauseEffectScanner } from './scanners/CauseEffectScanner';
 import { ColorCodeScanner } from './scanners/ColorCodeScanner';
+import { loadAACFile, getBrowserExtensions } from 'aac-board-viewer';
+import type { AACTree, AACPage, AACButton } from 'aac-board-viewer';
 
 function getAssetBase(): string {
   const globalBase = (window as unknown as { SWITCH_SCANNER_ASSET_BASE?: string }).SWITCH_SCANNER_ASSET_BASE;
@@ -45,6 +47,9 @@ export class SwitchScannerElement extends HTMLElement {
   private forcedGridCols: number | null = null;
   private outputHistory: string[] = [];
   private redoStack: string[] = [];
+  private boardTree: AACTree | null = null;
+  private boardPageId: string | null = null;
+  private boardLoadError: string | null = null;
 
   private dwellTimer: number | null = null;
   private currentDwellTarget: HTMLElement | null = null;
@@ -78,12 +83,15 @@ export class SwitchScannerElement extends HTMLElement {
 
     const settingsOverlay = this.shadowRoot!.querySelector('.settings-overlay') as HTMLElement;
     this.settingsUI = new SettingsUI(this.configManager, this.alphabetManager, settingsOverlay);
+    this.setupBoardControls();
 
     // Initial Grid & Scanner Setup
     const initialConfig = this.configManager.get();
 
     // Create scanner first so we can use it for mapping content during grid update
     this.currentScanner = this.createScanner(initialConfig);
+
+    await this.initBoardIfNeeded();
 
     await this.updateGrid(initialConfig, true);
 
@@ -118,6 +126,9 @@ export class SwitchScannerElement extends HTMLElement {
       'compass-mode',
       'grid-content',
       'grid-size',
+      'board-src',
+      'board-upload',
+      'board-page',
       'language',
       'scan-rate',
       'acceptance-time',
@@ -187,6 +198,23 @@ export class SwitchScannerElement extends HTMLElement {
             break;
         case 'grid-size':
             updates.gridSize = parseInt(newValue, 10);
+            break;
+        case 'board-src':
+            if (newValue) {
+                this.configManager.update({ gridContent: 'board' });
+                this.loadBoardFromUrl(newValue);
+            }
+            break;
+        case 'board-page':
+            if (newValue) {
+                this.setBoardPage(newValue);
+            }
+            break;
+        case 'board-upload':
+            if (this.hasAttribute('board-upload')) {
+                this.configManager.update({ gridContent: 'board' });
+            }
+            this.updateBoardControlsVisibility();
             break;
         case 'language':
             updates.language = newValue;
@@ -382,6 +410,153 @@ export class SwitchScannerElement extends HTMLElement {
     }
   }
 
+  private updateBoardControlsVisibility() {
+      const boardControls = this.shadowRoot?.querySelector('.board-controls') as HTMLElement | null;
+      if (!boardControls) return;
+      const show = this.hasAttribute('board-upload');
+      boardControls.classList.toggle('hidden', !show);
+  }
+
+  private async initBoardIfNeeded() {
+      if (!this.configManager) return;
+      const config = this.configManager.get();
+      const boardSrc = this.getAttribute('board-src');
+      const shouldLoad = config.gridContent === 'board' || !!boardSrc || this.hasAttribute('board-upload');
+      if (!shouldLoad) return;
+
+      if (config.gridContent !== 'board') {
+          this.configManager.update({ gridContent: 'board' });
+      }
+
+      this.updateBoardControlsVisibility();
+
+      if (boardSrc) {
+          await this.loadBoardFromUrl(boardSrc);
+      }
+  }
+
+  private async loadBoardFromUrl(url: string) {
+      try {
+          this.setBoardStatus('Loading board…');
+          const resolvedUrl = this.resolveBoardUrl(url);
+          const response = await fetch(resolvedUrl);
+          if (!response.ok) {
+              throw new Error(`Failed to load board: ${response.status}`);
+          }
+          const blob = await response.blob();
+          const name = resolvedUrl.split('/').pop() || 'board';
+          const file = new File([blob], name, { type: blob.type || 'application/octet-stream' });
+          await this.loadBoardFromFile(file);
+      } catch (err) {
+          console.error(err);
+          this.boardLoadError = err instanceof Error ? err.message : 'Failed to load board';
+          this.setBoardStatus('Failed to load board.');
+      }
+  }
+
+  private async loadBoardFromFile(file: File) {
+      try {
+          this.setBoardStatus(`Parsing ${file.name}…`);
+          const tree = await loadAACFile(file);
+          this.boardTree = tree;
+          this.boardPageId = this.resolveBoardPageId(tree);
+          this.boardLoadError = null;
+          this.setBoardStatus(tree.metadata?.name ? tree.metadata.name : file.name);
+          await this.updateGrid(this.configManager.get(), true);
+          this.currentScanner?.start();
+      } catch (err) {
+          console.error(err);
+          this.boardLoadError = err instanceof Error ? err.message : 'Failed to parse board';
+          this.setBoardStatus('Failed to parse board.');
+      }
+  }
+
+  private resolveBoardPageId(tree: AACTree): string | null {
+      const meta = tree.metadata || {};
+      const preferred = meta.defaultHomePageId || tree.rootId;
+      if (preferred && tree.pages[preferred]) return preferred;
+
+      const toolbarId = tree.toolbarId;
+      const nonToolbar = Object.values(tree.pages).find(page => page.id !== toolbarId);
+      return nonToolbar ? nonToolbar.id : Object.keys(tree.pages)[0] || null;
+  }
+
+  private setBoardStatus(text: string) {
+      const status = this.shadowRoot?.querySelector('.board-status') as HTMLElement | null;
+      if (status) {
+          status.textContent = text;
+      }
+  }
+
+  private resolveBoardUrl(url: string) {
+      if (!url.startsWith('/')) return url;
+      const base = getAssetBase();
+      if (base === '/') return url;
+      return `${base}${url.replace(/^\//, '')}`;
+  }
+
+  private getCurrentBoardPage(): AACPage | null {
+      if (!this.boardTree || !this.boardPageId) return null;
+      return this.boardTree.pages[this.boardPageId] || null;
+  }
+
+  private resolveBoardImage(button: AACButton): string | undefined {
+      const resolved = button.resolvedImageEntry;
+      if (resolved && typeof resolved === 'string' && resolved.startsWith('data:image/')) {
+          return resolved;
+      }
+      const image = button.image;
+      if (image && typeof image === 'string') {
+          return image;
+      }
+      return undefined;
+  }
+
+  private buildBoardGrid() {
+      const page = this.getCurrentBoardPage();
+      if (!page) return null;
+
+      const rows = page.grid.length;
+      const cols = page.grid.reduce((max, row) => Math.max(max, row.length), 0);
+      const items: GridItem[] = [];
+
+      for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+              const button = page.grid[r]?.[c] ?? null;
+              if (!button || button.visibility === 'Hidden' || button.visibility === 'Disabled' || button.visibility === 'Empty') {
+                  items.push({
+                      id: `empty-${r}-${c}`,
+                      label: '',
+                      type: 'action',
+                      isEmpty: true
+                  });
+                  continue;
+              }
+
+              items.push({
+                  id: button.id || `btn-${r}-${c}`,
+                  label: button.label || '',
+                  message: button.message || '',
+                  targetPageId: button.targetPageId,
+                  scanBlock: button.scanBlock ?? button.scanBlocks?.[0],
+                  image: this.resolveBoardImage(button),
+                  type: button.targetPageId ? 'action' : 'word',
+                  backgroundColor: button.style?.backgroundColor,
+                  textColor: button.style?.fontColor
+              });
+          }
+      }
+
+      return { items, cols };
+  }
+
+  private async setBoardPage(pageId: string) {
+      if (!this.boardTree || !this.boardTree.pages[pageId]) return;
+      this.boardPageId = pageId;
+      await this.updateGrid(this.configManager.get(), true);
+      this.currentScanner?.start();
+  }
+
   private updateTheme(theme: string) {
       const wrapper = this.shadowRoot!.querySelector('.scanner-wrapper');
       if (wrapper) {
@@ -390,6 +565,28 @@ export class SwitchScannerElement extends HTMLElement {
               wrapper.classList.add(theme);
           }
       }
+  }
+
+  private setupBoardControls() {
+      const input = this.shadowRoot?.querySelector('.board-file') as HTMLInputElement | null;
+      if (!input) return;
+
+      try {
+          const extensions = getBrowserExtensions?.() || [];
+          if (extensions.length > 0) {
+              const acceptList = extensions.map((ext) => (ext.startsWith('.') ? ext : `.${ext}`)).join(',');
+              input.accept = acceptList;
+          }
+      } catch (err) {
+          console.warn('Unable to set board file accept list.', err);
+      }
+
+      input.addEventListener('change', async () => {
+          const file = input.files?.[0];
+          if (!file) return;
+          await this.loadBoardFromFile(file);
+          input.value = '';
+      });
   }
 
   private renderTemplate() {
@@ -406,6 +603,13 @@ export class SwitchScannerElement extends HTMLElement {
            <button data-action="select">${isColorCode || isElimination ? 'Blue (1)' : 'Select (Space)'}</button>
            <button data-action="step">${isColorCode ? 'Red (2)' : isElimination ? 'Switch 2 (2)' : 'Step (2)'}</button>
            <button data-action="reset">Reset (3)</button>
+        </div>
+        <div class="board-controls hidden">
+          <label class="board-upload">
+            <input class="board-file" type="file" />
+            Load AAC Board
+          </label>
+          <span class="board-status"></span>
         </div>
         <div class="settings-overlay hidden"></div>
       </div>
@@ -601,6 +805,42 @@ export class SwitchScannerElement extends HTMLElement {
         user-select: none;
         -webkit-user-select: none;
         pointer-events: none;
+      }
+
+      .board-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 16px;
+        border-top: 1px solid #eee;
+        background: #fafafa;
+        font-size: 0.85rem;
+        color: #333;
+      }
+
+      .board-controls.hidden {
+        display: none;
+      }
+
+      .board-upload {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background: #fff;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .board-upload input {
+        display: none;
+      }
+
+      .board-status {
+        font-style: italic;
+        color: #666;
       }
 
       .settings-overlay {
@@ -1189,6 +1429,20 @@ export class SwitchScannerElement extends HTMLElement {
 
         const output = this.shadowRoot!.querySelector('.output-text');
         if (output) {
+             const config = this.configManager.get();
+             if (config.gridContent === 'board') {
+                  if (item.targetPageId) {
+                      this.setBoardPage(item.targetPageId);
+                      return;
+                  }
+
+                  const text = item.message || item.label;
+                  if (text) {
+                      output.textContent = (output.textContent || '') + text;
+                  }
+                  return;
+             }
+
              const label = item.label;
              const current = output.textContent || '';
 
@@ -1351,7 +1605,34 @@ export class SwitchScannerElement extends HTMLElement {
   }
 
   private async updateGrid(config: AppConfig, forceRegen: boolean = false) {
-      // 1. Generate Base Content (Linear)
+      // 1. Board content: use AAC grid layout directly.
+      if (config.gridContent === 'board') {
+          const boardGrid = this.buildBoardGrid();
+          const displayItems = boardGrid?.items || [];
+          const cols = boardGrid?.cols || 0;
+
+          this.gridRenderer.render(displayItems, cols || 1);
+
+          if (config.viewMode !== 'standard' && this.currentScanner) {
+              const visualItems = this.applyVisualization(displayItems, config);
+              this.gridRenderer.render(visualItems, cols || 1);
+          }
+
+          this.gridRenderer.updateHighlightStyles({
+              highlightBorderWidth: config.highlightBorderWidth,
+              highlightBorderColor: config.highlightBorderColor,
+              highlightScale: config.highlightScale,
+              highlightOpacity: config.highlightOpacity,
+              highlightAnimation: config.highlightAnimation,
+              highlightScanLine: config.highlightScanLine,
+              scanDirection: config.scanDirection,
+              scanPattern: config.scanPattern,
+              scanRate: config.scanRate
+          });
+          return;
+      }
+
+      // 2. Generate Base Content (Linear)
       if (forceRegen) {
           if (this.customItems && this.customItems.length > 0) {
               this.baseItems = this.customItems;
@@ -1362,7 +1643,7 @@ export class SwitchScannerElement extends HTMLElement {
           }
       }
 
-      // 2. Determine Dimensions
+      // 3. Determine Dimensions
       const total = this.baseItems.length;
       let cols = Math.ceil(Math.sqrt(total));
       if (this.forcedGridCols && this.forcedGridCols > 0) {
@@ -1370,16 +1651,16 @@ export class SwitchScannerElement extends HTMLElement {
       }
       const rows = Math.ceil(total / cols);
 
-      // 3. Map Content to Grid based on Strategy
+      // 4. Map Content to Grid based on Strategy
       let displayItems = this.baseItems;
       if (this.currentScanner) {
           displayItems = this.currentScanner.mapContentToGrid(this.baseItems, rows, cols);
       }
 
-      // 4. Render
+      // 5. Render
       this.gridRenderer.render(displayItems, cols);
 
-      // 5. Apply Visualization (if needed)
+      // 6. Apply Visualization (if needed)
       if (config.viewMode !== 'standard' && this.currentScanner) {
           const visualItems = this.applyVisualization(displayItems, config);
           this.gridRenderer.render(visualItems, cols);

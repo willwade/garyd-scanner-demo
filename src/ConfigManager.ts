@@ -61,7 +61,7 @@ export interface AppConfig {
   };
 
   // Display settings
-  gridContent: 'numbers' | 'keyboard';
+  gridContent: 'numbers' | 'keyboard' | 'board';
   gridSize: number; // Total items (e.g. 64) or specific layout
   showUI: boolean;
   soundEnabled: boolean;

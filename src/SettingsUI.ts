@@ -160,6 +160,7 @@ export class SettingsUI {
             <select id="gridContent" class="setting-input" name="gridContent">
               <option value="numbers">Numbers</option>
               <option value="keyboard">Keyboard</option>
+              <option value="board">AAC Board</option>
             </select>
             <small>What to display in the grid</small>
           </div>
@@ -168,8 +169,8 @@ export class SettingsUI {
             <label for="gridSize">Grid Size <span class="value-display">${config.gridSize}</span></label>
             <input type="number" id="gridSize" class="setting-input" name="gridSize"
                    value="${config.gridSize}" min="4" max="100"
-                   ${config.gridContent === 'keyboard' ? 'disabled' : ''}>
-            <small>Number of items (disabled for keyboard mode)</small>
+                   ${config.gridContent === 'keyboard' || config.gridContent === 'board' ? 'disabled' : ''}>
+            <small>Number of items (disabled for keyboard/board mode)</small>
           </div>
         </div>
 

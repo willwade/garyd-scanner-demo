@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@willwade/ppmpredictor": "^0.0.12",
+    "aac-board-viewer": "^0.2.8",
     "worldalphabets": "^0.0.33"
   }
 }

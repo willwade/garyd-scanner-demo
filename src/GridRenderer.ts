@@ -3,6 +3,9 @@ export interface GridItem {
   label: string;
   image?: string;
   type?: 'action' | 'char' | 'word';
+  message?: string;
+  targetPageId?: string;
+  scanBlock?: number;
   backgroundColor?: string;
   textColor?: string;
   isEmpty?: boolean; // If true, selecting this item won't trigger output
