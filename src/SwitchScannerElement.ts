@@ -49,7 +49,6 @@ export class SwitchScannerElement extends HTMLElement {
   private redoStack: string[] = [];
   private boardTree: AACTree | null = null;
   private boardPageId: string | null = null;
-  private boardLoadError: string | null = null;
 
   private dwellTimer: number | null = null;
   private currentDwellTarget: HTMLElement | null = null;
@@ -449,7 +448,6 @@ export class SwitchScannerElement extends HTMLElement {
           await this.loadBoardFromFile(file);
       } catch (err) {
           console.error(err);
-          this.boardLoadError = err instanceof Error ? err.message : 'Failed to load board';
           this.setBoardStatus('Failed to load board.');
       }
   }
@@ -460,13 +458,11 @@ export class SwitchScannerElement extends HTMLElement {
           const tree = await loadAACFile(file);
           this.boardTree = tree;
           this.boardPageId = this.resolveBoardPageId(tree);
-          this.boardLoadError = null;
           this.setBoardStatus(tree.metadata?.name ? tree.metadata.name : file.name);
           await this.updateGrid(this.configManager.get(), true);
           this.currentScanner?.start();
       } catch (err) {
           console.error(err);
-          this.boardLoadError = err instanceof Error ? err.message : 'Failed to parse board';
           this.setBoardStatus('Failed to parse board.');
       }
   }
