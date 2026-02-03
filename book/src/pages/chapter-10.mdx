@@ -1,0 +1,69 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 10: Pattern Comparison"
+prevHref: "/book/chapter-9"
+prevLabel: "Chapter 9: Progressive Segmenting & Elimination"
+nextHref: "/book/chapter-11"
+nextLabel: "Chapter 11: Efficiency Calculator"
+---
+
+# Chapter 10: Pattern Comparison
+
+Compare efficiency across scanning patterns. This chapter is the “why” behind choosing a pattern.
+
+## Pattern selection guide
+
+| Grid Size | Recommended Pattern | Why |
+| --- | --- | --- |
+| 1-10 items | Linear | Simple, fast enough |
+| 11-30 items | Row-Column | Good balance of speed and complexity |
+| 31-100 items | Row-Column or Elimination | Depends on user ability |
+| 100+ items | Elimination | Only viable option for large grids |
+
+## Visual References
+
+<div class="figure-card">
+  <div class="figure-placeholder">Illustration Placeholder: Linear Scan Flow</div>
+  <div class="figure-caption">Figure 11. Linear scanning cycle (highlight → wait → select).</div>
+</div>
+
+<div class="figure-card">
+  <div class="figure-placeholder">Illustration Placeholder: Row-Column Flow</div>
+  <div class="figure-caption">Figure 12. Row selection then item selection.</div>
+</div>
+
+<div class="figure-card">
+  <div class="figure-placeholder">Illustration Placeholder: Elimination Flow</div>
+  <div class="figure-caption">Figure 13. Quadrant elimination (4-switch).</div>
+</div>
+
+<div class="figure-card">
+  <div class="figure-placeholder">Illustration Placeholder: Efficiency Comparison Chart</div>
+  <div class="figure-caption">Figure 14. Press count comparison across grid sizes and patterns.</div>
+</div>
+
+## Interactive Comparison
+
+<div class="demo-instructions">
+  🎮 Try selecting the same item in each pattern below and compare time/effort.
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+  <div>
+    <h4>Linear (16 items)</h4>
+    <div class="scanner-container small">
+      <switch-scanner theme="sketch" scan-pattern="linear" scan-rate="900" grid-size="16"></switch-scanner>
+    </div>
+  </div>
+  <div>
+    <h4>Row-Column (16 items)</h4>
+    <div class="scanner-container small">
+      <switch-scanner theme="sketch" scan-pattern="row-column" scan-technique="block" scan-rate="900" grid-size="16"></switch-scanner>
+    </div>
+  </div>
+  <div>
+    <h4>Elimination (16 items)</h4>
+    <div class="scanner-container small">
+      <switch-scanner theme="sketch" scan-pattern="elimination" elimination-switch-count="4" scan-rate="900" grid-size="16"></switch-scanner>
+    </div>
+  </div>
+</div>

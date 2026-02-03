@@ -1,0 +1,68 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 14: Visualization Options"
+prevHref: "/book/chapter-13"
+prevLabel: "Chapter 13: Scan Timing"
+nextHref: "/book/chapter-15"
+nextLabel: "Chapter 15: Block vs Point Technique"
+---
+
+# Chapter 14: Visualization Options
+
+Highlighting style affects speed and error rate.
+
+The goal is to make the active item unambiguous without creating distraction. Some users benefit from bold, high-contrast cues, while others find excessive animation disruptive.
+
+## Visual options
+
+- Borders / outlines
+- Color changes
+- Scale / zoom
+- Animation
+- Opacity dimming
+
+## Recommendations by need
+
+- **Low vision:** Thick borders, high contrast, mild animation
+- **Cognitive load:** Simple highlighting, avoid animation
+- **Advanced users:** Minimal highlighting, thin borders
+
+## Demo: Border Width
+
+<div class="demo-instructions">
+  🎮 Compare thin vs thick borders for visibility.
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+  <div>
+    <h4>Thin (2px)</h4>
+    <div class="scanner-container small">
+      <switch-scanner theme="sketch" scan-pattern="linear" scan-rate="1500" grid-size="9" highlight-border-width="2"></switch-scanner>
+    </div>
+  </div>
+  <div>
+    <h4>Thick (8px)</h4>
+    <div class="scanner-container small">
+      <switch-scanner theme="sketch" scan-pattern="linear" scan-rate="1500" grid-size="9" highlight-border-width="8"></switch-scanner>
+    </div>
+  </div>
+</div>
+
+## Demo: Scale
+
+<div class="demo-instructions">
+  🎮 Notice how a larger scale draws attention.
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+  <div>
+    <h4>No Zoom</h4>
+    <div class="scanner-container small">
+      <switch-scanner theme="sketch" scan-pattern="linear" scan-rate="1500" grid-size="9" highlight-scale="1.0"></switch-scanner>
+    </div>
+  </div>
+  <div>
+    <h4>Zoom (1.2)</h4>
+    <div class="scanner-container small">
+      <switch-scanner theme="sketch" scan-pattern="linear" scan-rate="1500" grid-size="9" highlight-scale="1.2"></switch-scanner>
+    </div>
+  </div>
+</div>

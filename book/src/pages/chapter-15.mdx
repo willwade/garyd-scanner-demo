@@ -1,0 +1,50 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 15: Block vs Point Technique"
+prevHref: "/book/chapter-14"
+prevLabel: "Chapter 14: Visualization Options"
+nextHref: "/book/chapter-16"
+nextLabel: "Chapter 16: Scan Patterns (Linear vs Row/Column)"
+---
+
+# Chapter 15: Block vs Point Technique
+
+When using row-column scanning, how should groups be highlighted?
+
+Block technique trades speed for clarity; point technique reduces visual clutter but requires more visual precision. Try both with real users.
+
+## Block technique
+
+- Entire row lights up
+- Easy to see
+- Best for beginners and low vision
+
+## Point technique
+
+- Only row indicator highlights
+- Less visual clutter
+- Best for dense grids and experienced users
+
+<div class="info-box">
+  Best practice: start with block technique for beginners, then experiment with point technique.
+</div>
+
+## Demo
+
+<div class="demo-instructions">
+  🎮 Compare block vs point for row selection.
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+  <div>
+    <h4>Block</h4>
+    <div class="scanner-container">
+      <switch-scanner theme="sketch" scan-pattern="row-column" scan-technique="block" scan-rate="1500" grid-size="16"></switch-scanner>
+    </div>
+  </div>
+  <div>
+    <h4>Point</h4>
+    <div class="scanner-container">
+      <switch-scanner theme="sketch" scan-pattern="row-column" scan-technique="point" scan-rate="1500" grid-size="16"></switch-scanner>
+    </div>
+  </div>
+</div>

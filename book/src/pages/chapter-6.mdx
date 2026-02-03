@@ -1,0 +1,39 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 6: Two Switch Scanning"
+prevHref: "/book/chapter-5"
+prevLabel: "Chapter 5: Single Switch Scanning"
+nextHref: "/book/chapter-7"
+nextLabel: "Chapter 7: Why Group?"
+---
+
+# Chapter 6: Two Switch Scanning
+
+**Two Switch Scanning (Step Scan)** gives the user more control over timing.
+
+## How it works
+
+- **Switch 1 (Advance):** Move to next item
+- **Switch 2 (Select):** Choose current item
+
+## Comparison: Auto-Scan vs Step Scan
+
+| Feature | Auto-Scan (1 Switch) | Step Scan (2 Switches) |
+| --- | --- | --- |
+| Timing control | System controls | User controls |
+| Cognitive load | Must watch timing | No timing pressure |
+| Physical effort | 1 switch | 2 switches |
+| Speed | Fixed | Variable (user-paced) |
+
+## Step Scan Alternation (Swap Switch)
+
+Some systems swap switch roles after each selection to balance physical load.
+
+## Demo
+
+<div class="demo-instructions">
+  🎮 Use the step button to advance and select.
+</div>
+<div class="scanner-container">
+  <switch-scanner theme="sketch" scan-input-mode="manual" scan-pattern="linear" scan-technique="point" grid-size="9"></switch-scanner>
+</div>

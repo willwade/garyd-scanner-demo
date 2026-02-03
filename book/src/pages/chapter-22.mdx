@@ -1,0 +1,120 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 22: Implementing Scanners"
+prevHref: "/book/chapter-21"
+prevLabel: "Chapter 21: User Profiles"
+nextHref: "/book/chapter-23"
+nextLabel: "Chapter 23: Accessibility Testing"
+---
+
+# Chapter 22: Implementing Scanners
+
+For developers: keep scanning logic deterministic, configuration-driven, and measurable. OTs need predictable behavior that they can tune; developers need clear parameters with measurable effects.
+
+## Why This Matters
+
+Single-switch scanning performance is dominated by timing, layout, and errors. If the implementation hides or blends those factors, clinicians and developers can’t reliably improve text entry rate (TER). The goal here is a predictable system with explicit settings and instrumentation.
+
+## Settings Optimization (Koester & Simpson 2014)
+
+A structured decision tree improves text entry rate (TER). A key rule is the **25% scanning error threshold**: if errors exceed 25% of correct selections, focus on reducing errors before optimizing efficiency.
+
+<div class="figure-card">
+  <img src="/figures/koester-simpson-2014-flowchart.svg" alt="Koester and Simpson 2014 settings optimization flowchart" style="width: 100%; height: auto; display: block;" />
+  <div class="figure-caption">Decision tree for identifying revised scanning settings (Koester & Simpson, 2014).</div>
+</div>
+
+<div class="info-box">
+  Summary: fix switch consistency → measure scanning errors → if &gt;25% focus on timing and initiation; if &le;25% focus on dead time, prediction use, and layout.
+</div>
+
+## What You Need to Measure
+
+At minimum, capture three inputs before trying to optimize:
+
+- **Switch press time** (mean and variability). Use this to set a starting scan delay (see Chapter 13 and the .65 rule).
+- **Scanning errors** (timing errors and wrong selections). This determines whether you’re in the “reduce errors” branch.
+- **TER** (words per minute or characters per second). This is the top-level outcome metric.
+
+If you log scan steps, you can diagnose whether errors are “late press,” “early press,” or “missed row/column” problems.
+
+## Decision Branch Summary
+
+Use this as a short-form implementation guide.
+
+- If **Performance is not OK**: revise switch location, switch type, or acceptance delay; re-run switch test.
+- If **Performance is OK**: run scan test and compute errors + TER.
+- If **TER can’t improve**: stop.
+- If **Errors &gt; 25%**: reduce errors first.
+- If **Errors ≤ 25%**: reduce dead time, improve layout, and optimize prediction usage.
+
+## Error-Reduction Interventions
+
+When errors are high, target the specific failure mode:
+
+- **First press too late** → increase scan delay or add scan-init delay.
+- **Next press too late** → add 1st-item delay for rows/columns.
+- **Unintentional presses** → increase acceptance delay.
+- **Missing first-row selections** → adjust manual vs auto initiation.
+
+These are intentionally conservative changes; once errors drop, move to efficiency improvements.
+
+## Efficiency Improvements
+
+Once errors are controlled, aim for fewer scan steps and less dead time:
+
+- Remove unnecessary scan targets (title bar, message window).
+- Put letters + prediction first; stay on that group until word is complete.
+- Use frequency-based letter layout unless there’s a strong user reason not to.
+- Reduce loop count to 1 when possible.
+
+## Implementation Checklist
+
+- Settings are stored as explicit fields and versioned per profile.
+- All timing parameters are displayed in milliseconds in the UI.
+- Each selection logs: target, selected item, scan delay, and error type.
+- The system can replay a session to review errors.
+- A scan-test mode exists for short, repeatable measurements.
+
+## Code Integration Notes
+
+The book includes a small TypeScript module (`ScanSettingsAdvisor.ts`) that translates error patterns into suggested adjustments. Treat it as an advisory layer, not an automatic reconfiguration. The interface should allow clinicians to accept or reject the changes and then retest.
+
+## Settings Advisor (Prototype)
+
+<div class="reaction-test" id="settingsAdvisor">
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+    <label>
+      <strong>Performance OK?</strong><br />
+      <select id="advisorPerformance" style="width: 100%; padding: 8px; margin-top: 6px;">
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </label>
+    <label>
+      <strong>TER/Errors can improve?</strong><br />
+      <select id="advisorImprove" style="width: 100%; padding: 8px; margin-top: 6px;">
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </label>
+    <label>
+      <strong>Scanning Errors (%)</strong><br />
+      <input id="advisorErrors" type="number" min="0" max="200" value="30" style="width: 100%; padding: 8px; margin-top: 6px;" />
+    </label>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 12px;">
+    <label><input type="checkbox" id="advisorFirstLate" /> First press too late</label>
+    <label><input type="checkbox" id="advisorNextLate" /> Next press too late</label>
+    <label><input type="checkbox" id="advisorUnintentional" /> Unintentional presses</label>
+    <label><input type="checkbox" id="advisorMissingRow" /> Missing first-row selections</label>
+    <label><input type="checkbox" id="advisorDeadTime" /> Too much dead time</label>
+    <label><input type="checkbox" id="advisorWordPred" /> Inefficient word prediction</label>
+    <label><input type="checkbox" id="advisorLayout" /> Inefficient layout/pattern</label>
+  </div>
+  <div class="button-row" style="margin-top: 12px;">
+    <button id="advisorRun">Get Recommendations</button>
+  </div>
+  <p><strong>Summary:</strong> <span id="advisorSummary">—</span></p>
+  <div id="advisorResults"></div>
+</div>

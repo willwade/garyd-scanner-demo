@@ -1,0 +1,33 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 23: Accessibility Testing"
+prevHref: "/book/chapter-22"
+prevLabel: "Chapter 22: Implementing Scanners"
+nextHref: "/book/chapter-24"
+nextLabel: "Chapter 24: Resources & Next Steps"
+---
+
+# Chapter 23: Accessibility Testing
+
+Accessibility testing for scanning is mostly about timing, visibility, and error recovery. Aim for repeatable checks.
+
+## Core tests
+
+- **Single-switch simulation:** Use only Space to test all paths.
+- **Timing sweeps:** Test slow/medium/fast rates.
+- **Error drills:** Practice undo, cancel, and recovery.
+- **Fatigue runs:** 20–30 minutes sustained use.
+
+## Measurement Checklist
+
+- Record TER, scanning errors, and reaction time before and after changes.
+- Verify that any highlight is visible in low light and bright light.
+- Confirm the user can recover within two scan cycles.
+- Validate at least one “safe mode” configuration.
+
+## Common failure modes
+
+- No undo/back path
+- Highlights too subtle
+- Scan loops never end
+- User can’t recover from a mistake in under two cycles

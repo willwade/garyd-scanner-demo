@@ -1,0 +1,46 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 8: Row-Column Scanning"
+prevHref: "/book/chapter-7"
+prevLabel: "Chapter 7: Why Group?"
+nextHref: "/book/chapter-9"
+nextLabel: "Chapter 9: Progressive Segmenting & Elimination"
+---
+
+# Chapter 8: Row-Column Scanning
+
+**Row-Column Scanning** is the most common grouped scanning method.
+
+## How it works
+
+**Stage 1:** Scan rows → select a row
+
+**Stage 2:** Scan items in the row → select item
+
+## Why it’s effective
+
+Row-column scanning reduces scan cost for medium-to-large grids. A 6×6 grid takes at most 12 presses, not 36.
+
+## Related Variants
+
+- Column-Row scanning
+- Mixed group + row/column scans
+
+<div class="info-box">
+  Tip: For dense grids, try **point technique** to reduce visual clutter. For beginners, start with **block technique**.
+</div>
+
+## Demo
+
+<div class="demo-instructions">
+  🎮 Watch rows scan first, then items in the selected row.
+</div>
+<div class="scanner-container">
+  <switch-scanner
+    theme="sketch"
+    scan-pattern="row-column"
+    scan-technique="block"
+    scan-rate="1000"
+    grid-size="16">
+  </switch-scanner>
+</div>

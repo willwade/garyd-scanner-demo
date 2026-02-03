@@ -1,0 +1,40 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 11: Efficiency Calculator"
+prevHref: "/book/chapter-10"
+prevLabel: "Chapter 10: Pattern Comparison"
+nextHref: "/book/chapter-12"
+nextLabel: "Chapter 12: Patterns & Modes Hub"
+---
+
+# Chapter 11: Efficiency Calculator
+
+Use this chapter to compare scan costs across patterns and layouts.
+
+## Frequency vs Alphabetical Layout
+
+Placing frequent letters early can halve scan time for common words.
+
+<div class="info-box">
+  Tip: Use frequency layout for communication grids unless there is a strong reason for alphabetical order.
+</div>
+
+## Demo (Alphabetical vs Frequency)
+
+<div class="demo-instructions">
+  🎮 Compare how quickly you can select common letters in each layout.
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+  <div>
+    <h4>Alphabetical</h4>
+    <div class="scanner-container small">
+      <switch-scanner theme="sketch" scan-pattern="row-column" layout-mode="alphabetical" grid-size="26"></switch-scanner>
+    </div>
+  </div>
+  <div>
+    <h4>Frequency</h4>
+    <div class="scanner-container small">
+      <switch-scanner theme="sketch" scan-pattern="row-column" layout-mode="frequency" grid-size="26"></switch-scanner>
+    </div>
+  </div>
+</div>

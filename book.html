@@ -6,10 +6,20 @@
     <title>Switch Scanning: The Interactive Book</title>
     <!-- Don't import main.css - it has overflow:hidden that breaks scrolling -->
     <!-- <link rel="stylesheet" href="./src/style.css"> -->
-    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
-    <!-- Mermaid.js for diagrams -->
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --paper: #fffdf9;
+            --ink: #2f2f2f;
+            --ink-soft: #4b4b4b;
+            --accent: #2f7dbb;
+            --accent-2: #f39c12;
+            --accent-3: #27ae60;
+            --line: #d6d6d6;
+            --shadow: rgba(47, 125, 187, 0.08);
+            --card: #ffffff;
+        }
+
         /* Override everything - ensure scrolling works! */
         html, body {
             overflow-x: hidden !important;
@@ -24,13 +34,13 @@
         }
 
         body {
-            font-family: 'Patrick Hand', sans-serif;
-            line-height: 1.8;
-            max-width: 900px;
+            font-family: 'Atkinson Hyperlegible', sans-serif;
+            line-height: 1.75;
+            max-width: 980px;
             margin: 0 auto;
-            padding: 40px 20px 100px 20px;
-            background: #fffdf9;
-            color: #333;
+            padding: 36px 18px 120px 18px;
+            background: var(--paper);
+            color: var(--ink);
             display: block;
             position: relative;
         }
@@ -38,27 +48,29 @@
         h1, h2, h3 {
             font-weight: normal;
             margin-top: 40px;
+            font-family: 'Patrick Hand', cursive;
         }
 
         h1 {
-            font-size: 2.5rem;
-            color: #2c3e50;
-            border-bottom: 3px solid #3498db;
-            padding-bottom: 10px;
+            font-size: 2.6rem;
+            color: #1f2a33;
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 12px;
+            letter-spacing: 0.5px;
         }
 
         h2 {
-            font-size: 2rem;
-            color: #34495e;
+            font-size: 2.05rem;
+            color: #2b3a46;
         }
 
         section {
-            margin-bottom: 80px;
-            padding: 30px;
-            border: 2px dashed #bdc3c7;
-            border-radius: 15px;
-            background: white;
-            box-shadow: 5px 5px 0px rgba(52, 152, 219, 0.1);
+            margin-bottom: 70px;
+            padding: 28px;
+            border: 2px dashed var(--line);
+            border-radius: 18px;
+            background: var(--card);
+            box-shadow: 6px 6px 0px var(--shadow);
             page-break-inside: avoid;
         }
 
@@ -66,7 +78,7 @@
             min-height: 250px;
             max-height: 60vh;
             margin: 20px 0;
-            border: 2px solid #3498db;
+            border: 2px solid var(--accent);
             border-radius: 8px;
             overflow: hidden;
             background: #f8f9fa;
@@ -85,20 +97,20 @@
         /* Mobile responsive */
         @media (max-width: 768px) {
             body {
-                padding: 20px 15px 80px 15px;
+                padding: 18px 14px 90px 14px;
             }
 
             h1 {
-                font-size: 1.8rem;
+                font-size: 2rem;
             }
 
             h2 {
-                font-size: 1.5rem;
+                font-size: 1.6rem;
             }
 
             section {
-                padding: 20px 15px;
-                margin-bottom: 60px;
+                padding: 18px 16px;
+                margin-bottom: 50px;
             }
 
             .scanner-container {
@@ -128,7 +140,7 @@
 
         .demo-box {
             background: #eef5fb;
-            border: 2px solid #3498db;
+            border: 2px solid var(--accent);
             border-radius: 8px;
             padding: 20px;
             margin: 20px 0;
@@ -172,7 +184,7 @@
         }
 
         .comparison-table th {
-            background: #3498db;
+            background: var(--accent);
             color: white;
         }
 
@@ -195,11 +207,11 @@
         }
 
         .info-box {
-            background: #74b9ff;
-            border-left: 4px solid #0984e3;
+            background: #e5f1ff;
+            border-left: 4px solid #3c7dd9;
             padding: 15px;
             margin: 15px 0;
-            color: white;
+            color: var(--ink);
         }
 
         #feedback {
@@ -224,16 +236,17 @@
         }
 
         .toc {
-            background: #ecf0f1;
+            background: #f2f5f8;
             padding: 20px;
-            border-radius: 8px;
-            margin: 30px 0;
+            border-radius: 14px;
+            margin: 24px 0;
+            border: 2px dashed var(--line);
         }
 
         .toc summary {
             font-weight: bold;
             font-size: 1.2rem;
-            color: #2c3e50;
+            color: #2b3a46;
             cursor: pointer;
             list-style: none; /* Hide default triangle */
         }
@@ -274,9 +287,154 @@
             text-decoration: underline;
         }
 
+        .hero {
+            background: linear-gradient(135deg, #fff7e6, #eef5fb);
+            border: 2px dashed var(--line);
+            border-radius: 20px;
+            padding: 24px;
+            margin: 20px 0 30px;
+            box-shadow: 6px 6px 0px var(--shadow);
+        }
+
+        .hero p {
+            margin: 10px 0 0;
+            color: var(--ink-soft);
+        }
+
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+            margin-top: 12px;
+        }
+
+        .toc-part {
+            background: #fff;
+            border: 2px dashed var(--line);
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .toc-part h4 {
+            margin: 0 0 8px;
+            font-family: 'Patrick Hand', cursive;
+            font-size: 1.1rem;
+        }
+
+        .toc-part ul {
+            padding-left: 18px;
+            margin: 0;
+        }
+
+        .index-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 12px 0 0;
+        }
+
+        .index-chips a {
+            display: inline-block;
+            padding: 6px 12px;
+            border: 1px dashed var(--line);
+            border-radius: 999px;
+            background: #fff;
+            text-decoration: none;
+            color: var(--ink);
+            font-size: 0.95rem;
+        }
+
+        .figure-card {
+            border: 2px dashed var(--line);
+            border-radius: 16px;
+            padding: 16px;
+            background: #fffaf0;
+            margin: 16px 0;
+        }
+
+        .figure-placeholder {
+            border: 2px dashed var(--accent);
+            border-radius: 14px;
+            background: repeating-linear-gradient(
+                -45deg,
+                #fdfdfd,
+                #fdfdfd 10px,
+                #f1f1f1 10px,
+                #f1f1f1 20px
+            );
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #5f6b76;
+            font-family: 'Patrick Hand', cursive;
+        }
+
+        .figure-caption {
+            margin-top: 10px;
+            font-size: 0.95rem;
+            color: var(--ink-soft);
+        }
+
+        .glossary-link {
+            color: var(--accent);
+            text-decoration: underline;
+            text-decoration-style: dotted;
+        }
+
+        .glossary-term {
+            border: 2px dashed var(--line);
+            border-radius: 12px;
+            padding: 12px;
+            margin: 10px 0;
+            background: #fff;
+        }
+
+        .reaction-test {
+            border: 2px dashed var(--line);
+            border-radius: 16px;
+            padding: 16px;
+            background: #f9fbff;
+            margin: 16px 0;
+        }
+
+        .reaction-display {
+            height: 120px;
+            border: 2px dashed var(--accent);
+            border-radius: 14px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 12px;
+            font-family: 'Patrick Hand', cursive;
+        }
+
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .button-row button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Patrick Hand', cursive;
+            font-size: 1rem;
+        }
+
+        .button-row button.secondary {
+            background: #6c7a89;
+        }
+
         .diagram {
             background: white;
-            border: 1px solid #ddd;
+            border: 2px dashed var(--line);
             padding: 20px;
             margin: 20px 0;
             border-radius: 8px;
@@ -339,7 +497,7 @@
         }
 
         .chapter-nav button {
-            background: #3498db;
+            background: var(--accent);
             color: white;
             border: none;
             padding: 12px 24px;
@@ -354,7 +512,7 @@
         }
 
         .chapter-nav button:hover {
-            background: #2980b9;
+            background: #23679a;
         }
 
         .chapter-nav button:disabled {
@@ -375,7 +533,7 @@
             top: 0;
             left: 0;
             height: 4px;
-            background: #3498db;
+            background: var(--accent);
             width: 0%;
             transition: width 0.3s;
             z-index: 1000;
@@ -385,7 +543,7 @@
             position: fixed;
             bottom: 80px;
             left: 20px;
-            background: #34495e;
+            background: #2b3a46;
             color: white;
             width: 50px;
             height: 50px;
@@ -432,94 +590,96 @@
             overflow: hidden;
         }
 
-        /* Mermaid Diagram Sketch Theme */
-        .mermaid {
-            font-family: 'Patrick Hand', sans-serif !important;
-            background: white;
-            padding: 20px;
-            border: 2px dashed #bdc3c7;
-            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-            margin: 20px 0;
-            overflow-x: auto;
-        }
-
-        /* Override mermaid SVG styles for sketch look */
-        .mermaid svg {
-            font-family: 'Patrick Hand', cursive !important;
-        }
-
-        .mermaid .node rect,
-        .mermaid .node circle,
-        .mermaid .node ellipse,
-        .mermaid .node polygon,
-        .mermaid .node path {
-            stroke-width: 2px !important;
-            stroke: #333 !important;
-            stroke-dasharray: 1000;
-            stroke-dashoffset: 0;
-            animation: none !important;
-        }
-
-        .mermaid .node .label {
-            font-family: 'Patrick Hand', cursive !important;
-            font-size: 16px !important;
-            color: #333 !important;
-        }
-
-        .mermaid .edgePath .path {
-            stroke-width: 2px !important;
-            stroke: #333 !important;
-            stroke-dasharray: 5, 5 !important; /* Dashed lines for sketchy look */
-        }
-
-        .mermaid .edgeLabel {
-            font-family: 'Patrick Hand', cursive !important;
-            background-color: white !important;
-            padding: 5px 10px !important;
-            border: 2px dashed #333 !important;
-            border-radius: 10px !important;
-        }
-
-        .mermaid .cluster rect {
-            stroke: #3498db !important;
-            stroke-width: 2px !important;
-            stroke-dasharray: 5, 5 !important;
-            fill: rgba(52, 152, 219, 0.05) !important;
-        }
     </style>
 </head>
 <body>
     <div class="progress-bar" id="progressBar"></div>
     <button class="back-to-top" id="backToTop" title="Back to top">↑</button>
 
-    <h1>🎯 Switch Scanning: The Interactive Book</h1>
-    <p><strong>An interactive exploration of switch access technology for developers, UX designers, clinicians, and occupational therapists.</strong></p>
+    <div class="hero">
+        <h1>🎯 Switch Scanning: The Interactive Book</h1>
+        <p><strong>An interactive exploration of switch access technology for developers, UX designers, clinicians, and occupational therapists.</strong></p>
+        <div class="index-chips">
+            <a href="#chapter-1">Foundations</a>
+            <a href="#chapter-5">Basic Scanning</a>
+            <a href="#chapter-7">Grouping & Efficiency</a>
+            <a href="#chapter-12">Patterns & Modes</a>
+            <a href="#chapter-19">User-Centered Design</a>
+            <a href="#chapter-22">For Developers</a>
+            <a href="#appendix-glossary">Glossary</a>
+        </div>
+    </div>
 
     <details class="toc" open>
         <summary>Table of Contents</summary>
-        <ul>
-            <li><a href="#chapter-1">1. What is a Switch?</a></li>
-            <li><a href="#chapter-2">2. The Bandwidth Problem</a></li>
-            <li><a href="#chapter-3">3. Cause & Effect</a></li>
-            <li><a href="#chapter-4">4. Selection Sets</a></li>
-            <li><a href="#chapter-5">5. Single Switch Scanning</a></li>
-            <li><a href="#chapter-6">6. Two Switch Scanning</a></li>
-            <li><a href="#chapter-7">7. Why Group?</a></li>
-            <li><a href="#chapter-8">8. Row-Column Scanning</a></li>
-            <li><a href="#chapter-9">9. Elimination Scanning</a></li>
-            <li><a href="#chapter-10">10. Pattern Comparison ⚡</a></li>
-            <li><a href="#chapter-11">11. Efficiency Calculator 📊</a></li>
-            <li><a href="#chapter-12">12. Timing & Optimization ⏱️</a></li>
-            <li><a href="#chapter-13">13. Visualization Options 🎨</a></li>
-            <li><a href="#chapter-14">14. Block vs Point Technique 👁️</a></li>
-        </ul>
+        <div class="toc-grid">
+            <div class="toc-part">
+                <h4>Part I: Foundations</h4>
+                <ul>
+                    <li><a href="#chapter-1">1. What is a Switch?</a></li>
+                    <li><a href="#chapter-2">2. The Bandwidth Problem</a></li>
+                    <li><a href="#chapter-3">3. Cause & Effect</a></li>
+                    <li><a href="#chapter-4">4. Selection Sets</a></li>
+                </ul>
+            </div>
+            <div class="toc-part">
+                <h4>Part II: Basic Scanning</h4>
+                <ul>
+                    <li><a href="#chapter-5">5. Single Switch Scanning</a></li>
+                    <li><a href="#chapter-6">6. Two Switch Scanning</a></li>
+                    <li><a href="#chapter-13">13. Timing & Optimization (.65 Rule)</a></li>
+                </ul>
+            </div>
+            <div class="toc-part">
+                <h4>Part III: Grouping & Efficiency</h4>
+                <ul>
+                    <li><a href="#chapter-7">7. Why Group?</a></li>
+                    <li><a href="#chapter-8">8. Row-Column Scanning</a></li>
+                    <li><a href="#chapter-9">9. Progressive Segmenting & Elimination</a></li>
+                    <li><a href="#chapter-10">10. Pattern Comparison</a></li>
+                    <li><a href="#chapter-11">11. Efficiency Calculator</a></li>
+                </ul>
+            </div>
+            <div class="toc-part">
+                <h4>Part IV: Patterns & Modes</h4>
+                <ul>
+                    <li><a href="#chapter-12">12. Patterns & Modes Hub</a></li>
+                    <li><a href="#chapter-15">15. Block vs Point Technique</a></li>
+                    <li><a href="#chapter-16">16. Continuous Scanning</a></li>
+                    <li><a href="#chapter-17">17. Critical Overscan</a></li>
+                    <li><a href="#chapter-18">18. Directed Scanning</a></li>
+                </ul>
+            </div>
+            <div class="toc-part">
+                <h4>Part V: User-Centered Design</h4>
+                <ul>
+                    <li><a href="#chapter-19">19. Error Recovery</a></li>
+                    <li><a href="#chapter-20">20. Feedback & Highlighting</a></li>
+                    <li><a href="#chapter-21">21. User Profiles</a></li>
+                </ul>
+            </div>
+            <div class="toc-part">
+                <h4>Part VI: For Developers</h4>
+                <ul>
+                    <li><a href="#chapter-22">22. Implementing Scanners</a></li>
+                    <li><a href="#chapter-23">23. Accessibility Testing</a></li>
+                    <li><a href="#chapter-24">24. Design Patterns</a></li>
+                </ul>
+            </div>
+            <div class="toc-part">
+                <h4>Appendices</h4>
+                <ul>
+                    <li><a href="#appendix-glossary">Appendix B: Glossary</a></li>
+                </ul>
+            </div>
+        </div>
     </details>
 
     <!-- Chapter 1 -->
     <section id="chapter-1">
         <h2>Chapter 1: What is a Switch?</h2>
 
-        <p>A <strong>switch</strong> is an assistive technology device that provides a simple binary input: <strong>ON</strong> or <strong>OFF</strong>. Unlike a keyboard with many keys or a mouse with X/Y coordinates, a switch is the simplest possible input mechanism.</p>
+        <p>A <strong><a class="glossary-link" href="#glossary-term-switch">switch</a></strong> is an assistive technology device that provides a simple binary input: <strong>ON</strong> or <strong>OFF</strong>. Unlike a keyboard with many keys or a mouse with X/Y coordinates, a switch is the simplest possible input mechanism.</p>
 
         <h3>Physical Switch Types</h3>
 
@@ -641,12 +801,18 @@ Fast Typing         │  Full Access
         <h2>Chapter 4: Selection Sets</h2>
 
         <p>A <strong>Selection Set</strong> is all the items available for the user to choose from at any given time.</p>
+        <p>Large selection sets are usually split into pages or groups, with link items that move between pages.</p>
 
         <h3>Presentation Formats</h3>
 
         <h4>1. Single Line Presentation</h4>
         <p>Items arranged in a single row (horizontal or vertical)</p>
         <p><strong>Best for:</strong> Small sets (&lt;10 items), simple choices</p>
+
+        <div class="figure-card">
+            <div class="figure-placeholder">Illustration Placeholder: Single Line Presentation</div>
+            <div class="figure-caption">Figure 6. Single Line Presentation (e.g., clicker talking book style).</div>
+        </div>
 
         <div class="demo-instructions">
             🎮 <strong>Try it:</strong> Linear scan of 4 colors
@@ -676,9 +842,37 @@ Fast Typing         │  Full Access
             The existence of other items is often indicated "behind" the current one. This helps users focus on one decision at a time.
         </div>
 
+        <div class="figure-card">
+            <div class="figure-placeholder">Illustration Placeholder: Flip Chart</div>
+            <div class="figure-caption">Figure 7. Flip Chart Presentation (one item shown at a time).</div>
+        </div>
+
         <h4>3. Grid Presentation</h4>
         <p>Items arranged in a 2D grid</p>
         <p><strong>Best for:</strong> Large sets, organized layouts</p>
+
+        <div class="figure-card">
+            <div class="figure-placeholder">Illustration Placeholder: Grid Presentation</div>
+            <div class="figure-caption">Figure 8. Grid Presentation (classic AAC matrix layout).</div>
+        </div>
+
+        <h4>4. Pop-up / Secondary Page Presentation</h4>
+        <p>Secondary pages appear <em>within</em> the current page temporarily, then disappear after one choice.</p>
+        <p><strong>Best for:</strong> Contextual choices, quick sub-menus.</p>
+
+        <div class="figure-card">
+            <div class="figure-placeholder">Illustration Placeholder: Pop-up Presentation</div>
+            <div class="figure-caption">Figure 9. Pop-up Presentation (temporary sub-page).</div>
+        </div>
+
+        <h4>5. Custom Presentation</h4>
+        <p>Non-standard layouts that emphasize important items with size, color, or placement.</p>
+        <p><strong>Best for:</strong> Prioritizing frequent choices or adapting to a specific task.</p>
+
+        <div class="figure-card">
+            <div class="figure-placeholder">Illustration Placeholder: Custom Presentation</div>
+            <div class="figure-caption">Figure 10. Custom Presentation (prioritized items).</div>
+        </div>
 
         <div class="demo-instructions">
             🎮 <strong>Compare:</strong> Try selecting number 59 in each grid below. Notice how much longer the 64-item grid takes!
@@ -733,6 +927,13 @@ Fast Typing         │  Full Access
             <li>User presses switch to select</li>
             <li>System activates item and restarts scan</li>
         </ol>
+
+        <h3>Variants You’ll See in Real Devices</h3>
+        <ul>
+            <li><strong>Auto-while-held:</strong> The highlight moves only while the switch is held down.</li>
+            <li><strong>Auto-restart modes:</strong> Restart from the first item or continue from last.</li>
+            <li><strong>Initial item pause:</strong> Extra time on the first item to help users get ready.</li>
+        </ul>
 
         <div class="demo-instructions">
             🎮 <strong>Challenge:</strong> Can you select the number 7?<br>
@@ -876,6 +1077,9 @@ Fast Typing         │  Full Access
                 <td>Users with good motor control ✓</td>
             </tr>
         </table>
+
+        <h3>Step Scan Alternation (Swap Switch)</h3>
+        <p>Some systems swap switch roles after each selection to balance physical load. The switch used to select becomes the “advance” switch on the next cycle.</p>
     </section>
 
     <!-- Chapter 7 -->
@@ -974,6 +1178,12 @@ Fast Typing         │  Full Access
                 <li><strong>Select item:</strong> Item activates, scan restarts</li>
             </ol>
         </div>
+
+        <h3>Related Grouping Variants</h3>
+        <ul>
+            <li><strong>Column-Row Scan:</strong> Columns first, then items within a column.</li>
+            <li><strong>Mixed Group Scan:</strong> Split into big regions first, then rows/columns within a region.</li>
+        </ul>
 
         <h3>Block vs Point Technique</h3>
 
@@ -1114,110 +1324,22 @@ Fast Typing         │  Full Access
 
         <h3>Visualizing the Patterns</h3>
 
-        <p>Here's how each scanning pattern works, visualized as flowcharts:</p>
+        <p>Instead of flowcharts, here are illustration placeholders we can later replace with the PDF-style sketches.</p>
 
-        <h4>Linear Scanning Flow</h4>
-        <details class="diagram-collapsible">
-            <summary>View Linear Scanning Diagram</summary>
-            <div class="content">
-                <pre class="mermaid">
-%%{init: {'theme':'base', 'themeVariables': { 'primaryColor': '#fff', 'primaryTextColor': '#333', 'primaryBorderColor': '#333', 'lineColor': '#333', 'fontFamily': 'Patrick Hand' }}}%%
-flowchart TD
-    A[Start Scan] --> B[Highlight Item 1]
-    B --> C{Switch Press?}
-    C -->|No| D[Highlight Item 2]
-    D --> E{Switch Press?}
-    E -->|No| F[Highlight Item 3]
-    F --> G{Switch Press?}
-    G -->|No| H[Continue...]
-    H --> I{Switch Press?}
-    I -->|Yes| J["✓ SELECT"]
-    I -->|No| K[Loop to Start]
-    C -->|Yes| J
-    E -->|Yes| J
-    G -->|Yes| J
+        <div class="figure-card">
+            <div class="figure-placeholder">Illustration Placeholder: Linear Scan Flow</div>
+            <div class="figure-caption">Figure 11. Linear scanning cycle (highlight → wait → select).</div>
+        </div>
 
-    classDef successStyle fill:#4CAF50,stroke:#333,stroke-width:3px
-    classDef startStyle fill:#3498db,stroke:#333,stroke-width:2px
-    classDef decisionStyle fill:#FF9800,stroke:#333,stroke-width:2px
+        <div class="figure-card">
+            <div class="figure-placeholder">Illustration Placeholder: Row-Column Flow</div>
+            <div class="figure-caption">Figure 12. Row selection then item selection.</div>
+        </div>
 
-    class J successStyle
-    class A startStyle
-    class C,E,G,I decisionStyle
-                </pre>
-            </div>
-        </details>
-
-        <h4>Row-Column Scanning Flow</h4>
-        <details class="diagram-collapsible">
-            <summary>View Row-Column Scanning Diagram</summary>
-            <div class="content">
-                <pre class="mermaid">
-%%{init: {'theme':'base', 'themeVariables': { 'primaryColor': '#fff', 'primaryTextColor': '#333', 'primaryBorderColor': '#333', 'lineColor': '#333', 'fontFamily': 'Patrick Hand' }}}%%
-flowchart TD
-    A[Start Scan] --> B[Highlight Row 1]
-    B --> C{Switch Press?}
-    C -->|No| D[Highlight Row 2]
-    D --> E{Switch Press?}
-    E -->|No| F[Highlight Row 3]
-    F --> G{Switch Press?}
-    G -->|Yes Row| H[Enter Row 1]
-    H --> I[Highlight Item 1.1]
-    I --> J{Switch Press?}
-    J -->|No| K[Highlight Item 1.2]
-    K --> L{Switch Press?}
-    L -->|Yes Item| M["✓ SELECT"]
-    C -->|Yes Row| H
-    E -->|Yes Row| H
-    G -->|Yes Row| H
-
-    classDef successStyle fill:#4CAF50,stroke:#333,stroke-width:3px
-    classDef startStyle fill:#3498db,stroke:#333,stroke-width:2px
-    classDef processStyle fill:#FF9800,stroke:#333,stroke-width:2px
-    classDef decisionStyle fill:#fff,stroke:#333,stroke-width:2px
-
-    class M successStyle
-    class A startStyle
-    class H processStyle
-    class C,E,G,I,J,K,L decisionStyle
-                </pre>
-            </div>
-        </details>
-
-        <h4>Elimination Scanning Flow (4-switch)</h4>
-        <details class="diagram-collapsible">
-            <summary>View Elimination Scanning Diagram</summary>
-            <div class="content">
-                <pre class="mermaid">
-%%{init: {'theme':'base', 'themeVariables': { 'primaryColor': '#fff', 'primaryTextColor': '#333', 'primaryBorderColor': '#333', 'lineColor': '#333', 'fontFamily': 'Patrick Hand' }}}%%
-flowchart TD
-    A[Start Scan] --> B[Highlight Top-Left Quadrant]
-    B --> C{Switch Press?}
-    C -->|No| D[Highlight Top-Right]
-    D --> E{Switch Press?}
-    E -->|No| F[Highlight Bottom-Left]
-    F --> G{Switch Press?}
-    G -->|No| H[Highlight Bottom-Right]
-    H --> I{Items Remain?}
-    I -->|Yes| J[Recurse into Selected]
-    J --> K{Switch Press?}
-    K -->|Yes| L["✓ SELECT"]
-    C -->|Yes| L
-    E -->|Yes| L
-    G -->|Yes| L
-
-    classDef successStyle fill:#4CAF50,stroke:#333,stroke-width:3px
-    classDef startStyle fill:#3498db,stroke:#333,stroke-width:2px
-    classDef processStyle fill:#FF9800,stroke:#333,stroke-width:2px
-    classDef decisionStyle fill:#fff,stroke:#333,stroke-width:2px
-
-    class L successStyle
-    class A startStyle
-    class J processStyle
-    class C,E,G,K,I decisionStyle
-                </pre>
-            </div>
-        </details>
+        <div class="figure-card">
+            <div class="figure-placeholder">Illustration Placeholder: Elimination Flow</div>
+            <div class="figure-caption">Figure 13. Quadrant elimination (4-switch).</div>
+        </div>
 
         <h3>Interactive Comparison: Small Grid (16 items)</h3>
 
@@ -1350,60 +1472,10 @@ flowchart TD
 
         <h3>Efficiency Comparison Chart</h3>
         <p>Here's a visual comparison of how many switch presses each pattern requires for different grid sizes:</p>
-
-        <pre class="mermaid">
-%%{init: {'theme':'base', 'themeVariables': { 'primaryColor': '#fff', 'primaryTextColor': '#333', 'primaryBorderColor': '#333', 'lineColor': '#333', 'fontFamily': 'Patrick Hand' }}}%%
-flowchart LR
-    subgraph GridSizes["Grid Sizes"]
-        direction TB
-        N16["16 items<br/>(4×4)"]
-        N64["64 items<br/>(8×8)"]
-        N100["100 items<br/>(10×10)"]
-    end
-
-    subgraph Linear["Linear Scanning"]
-        direction TB
-        L16["16 presses"]
-        L64["64 presses"]
-        L100["100 presses"]
-    end
-
-    subgraph RowCol["Row-Column Scanning"]
-        direction TB
-        R16["8 presses"]
-        R64["16 presses"]
-        R100["20 presses"]
-    end
-
-    subgraph Elim["Elimination (4-switch)"]
-        direction TB
-        E16["2-3 presses"]
-        E64["3-4 presses"]
-        E100["4-5 presses"]
-    end
-
-    N16 -.->|Linear| L16
-    N16 -.->|Row-Col| R16
-    N16 -.->|Elim| E16
-
-    N64 -.->|Linear| L64
-    N64 -.->|Row-Col| R64
-    N64 -.->|Elim| E64
-
-    N100 -.->|Linear| L100
-    N100 -.->|Row-Col| R100
-    N100 -.->|Elim| E100
-
-    classDef linearStyle fill:#ffebee,stroke:#333,stroke-width:2px
-    classDef rowColStyle fill:#fff3e0,stroke:#333,stroke-width:2px
-    classDef elimStyle fill:#e8f5e9,stroke:#333,stroke-width:2px
-    classDef gridSizeStyle fill:#f3f4f6,stroke:#333,stroke-width:2px
-
-    class L16,L64,L100 linearStyle
-    class R16,R64,R100 rowColStyle
-    class E16,E64,E100 elimStyle
-    class N16,N64,N100 gridSizeStyle
-        </pre>
+        <div class="figure-card">
+            <div class="figure-placeholder">Illustration Placeholder: Efficiency Comparison Chart</div>
+            <div class="figure-caption">Figure 14. Press count comparison across grid sizes and patterns.</div>
+        </div>
 
         <p><strong>Key Insight:</strong> As grid size grows, Elimination scanning's advantage becomes dramatic!</p>
     </section>
@@ -1660,7 +1732,39 @@ flowchart LR
 
     <!-- Chapter 12 -->
     <section id="chapter-12">
-        <h2>Chapter 12: Timing & Optimization</h2>
+        <h2>Chapter 12: Patterns & Modes Hub</h2>
+
+        <p>This is the one-stop reference for <strong>patterns</strong> (how items are organized) and <strong>modes</strong> (specialized scanning behaviors).</p>
+
+        <h3>Patterns (Structure)</h3>
+        <ul>
+            <li><strong>Linear:</strong> Item-by-item scan.</li>
+            <li><strong>Row-Column:</strong> Rows first, then items within a row.</li>
+            <li><strong>Progressive Segmenting / Elimination:</strong> Repeatedly split until target remains.</li>
+        </ul>
+
+        <h3>Modes (Behavior)</h3>
+        <ul>
+            <li><strong>Continuous:</strong> Smooth, mouse-like movement (Chapter 16).</li>
+            <li><strong>Probability (PPM):</strong> Items scan by likelihood, not position.</li>
+            <li><strong>Cause-Effect:</strong> Single-item training mode.</li>
+            <li><strong>Group-Row-Column:</strong> Explicit group stage before rows/columns.</li>
+        </ul>
+
+        <div class="info-box">
+            <strong>Quick links:</strong> 
+            <a href="#chapter-10">Pattern Comparison</a> ·
+            <a href="#chapter-11">Efficiency Calculator</a> ·
+            <a href="#chapter-15">Block vs Point</a> ·
+            <a href="#chapter-16">Continuous</a> ·
+            <a href="#chapter-17">Critical Overscan</a> ·
+            <a href="#chapter-18">Directed</a>
+        </div>
+    </section>
+
+    <!-- Chapter 13 -->
+    <section id="chapter-13">
+        <h2>Chapter 13: Timing & Optimization (.65 Rule)</h2>
 
         <p>Finding the right scan rate is crucial. Too fast = errors. Too slow = frustration.</p>
 
@@ -1760,9 +1864,77 @@ flowchart LR
             </tr>
         </table>
 
+        <h3>The .65 Rule (Research-Based Starting Point)</h3>
+        <p>Research on single-switch row-column scanning suggests that a good initial <strong>scan rate</strong> is about <strong>65% of a user's mean reaction time</strong>. This is commonly called the <strong>.65 rule</strong>.</p>
+        <p><strong>Rule of thumb:</strong> <code>Scan Rate ≈ Mean Reaction Time ÷ 0.65</code> (roughly 1.54× the reaction time).</p>
+        <p>If the user’s press times are highly variable, a faster scan rate will create errors. In those cases, increase the scan rate or add acceptance time to reduce timing mistakes.</p>
+
+        <div class="info-box">
+            <strong>Practical takeaway:</strong> Use the .65 rule to get into the right neighborhood, then adjust based on accuracy, fatigue, and user preference.
+        </div>
+
+        <h3>Acceptance Time & Selection Confirmation</h3>
+        <p><strong>Acceptance time</strong> is a small delay that confirms a switch press before selection is finalized. It reduces accidental triggers from tremors or double-taps.</p>
+        <ul>
+            <li><strong>Short (150-300ms):</strong> Good for advanced users.</li>
+            <li><strong>Medium (300-600ms):</strong> Good default.</li>
+            <li><strong>Long (600-1000ms):</strong> Useful for users with tremors.</li>
+        </ul>
+
+        <h3>Reaction Time Quick Test (3 trials)</h3>
+        <p>Use this quick test to estimate a starting autoscan rate. Start the test, then hit the switch (or Space key) as soon as you hear the ding and see the smiley face.</p>
+
+        <div class="reaction-test" id="reactionTest">
+            <div class="reaction-display" id="reactionDisplay">🙂 Ready?</div>
+            <div class="button-row">
+                <button id="reactionStart">Start Test</button>
+                <button class="secondary" id="reactionReset">Reset</button>
+            </div>
+            <p><strong>Trial:</strong> <span id="reactionTrial">0</span> / 3</p>
+            <p><strong>Last Reaction Time:</strong> <span id="reactionLast">—</span></p>
+            <p><strong>Average Reaction Time:</strong> <span id="reactionAvg">—</span></p>
+            <p><strong>Recommended Scan Rate (.65 rule):</strong> <span id="reactionRate">—</span></p>
+            <p style="color: var(--ink-soft); margin-top: 6px;">Tip: Use the Space bar to respond once the test starts.</p>
+        </div>
+
+        <h3>Scan Time Estimator</h3>
+        <p>This quick estimator combines your scan rate with a scan pattern to predict average time per selection.</p>
+
+        <div class="reaction-test" id="scanEstimator">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                <label>
+                    <strong>Scan Rate (ms)</strong><br>
+                    <input id="estimateScanRate" type="number" min="200" max="5000" value="1000" style="width: 100%; padding: 8px; margin-top: 6px;">
+                </label>
+                <label>
+                    <strong>Grid Size (items)</strong><br>
+                    <input id="estimateGridSize" type="number" min="4" max="200" value="36" style="width: 100%; padding: 8px; margin-top: 6px;">
+                </label>
+                <label>
+                    <strong>Pattern</strong><br>
+                    <select id="estimatePattern" style="width: 100%; padding: 8px; margin-top: 6px;">
+                        <option value="linear">Linear</option>
+                        <option value="row-column">Row-Column</option>
+                        <option value="elimination">Elimination</option>
+                    </select>
+                </label>
+                <label>
+                    <strong>Elimination Switches</strong><br>
+                    <input id="estimateSwitches" type="number" min="2" max="8" value="4" style="width: 100%; padding: 8px; margin-top: 6px;">
+                </label>
+            </div>
+            <div class="button-row" style="margin-top: 12px;">
+                <button id="estimateUseReaction">Use Reaction Avg</button>
+                <button class="secondary" id="estimateReset">Reset</button>
+            </div>
+            <p><strong>Estimated Avg Presses:</strong> <span id="estimatePresses">—</span></p>
+            <p><strong>Estimated Time per Selection:</strong> <span id="estimateTime">—</span></p>
+        </div>
+
         <h3>Advanced Timing: Critical Overscan</h3>
 
         <p>For users who can react quickly but need to scan large lists without groups, <strong>Critical Overscan</strong> is a powerful technique.</p>
+        <p><em>See Chapter 17 for a dedicated walkthrough and design considerations.</em></p>
 
         <p><strong>How it works:</strong></p>
         <ol>
@@ -1851,11 +2023,12 @@ flowchart LR
         </div>
     </section>
 
-    <!-- Chapter 13 -->
-    <section id="chapter-13">
-        <h2>Chapter 13: Visualization Options</h2>
+    <!-- Chapter 14 -->
+    <section id="chapter-14">
+        <h2>Chapter 14: Visualization Options</h2>
 
         <p>How the highlight looks matters! Let's explore different visualization options.</p>
+        <p><em>For auditory and tactile feedback, see Chapter 20.</em></p>
 
         <h3>Interactive: Border Width Comparison</h3>
 
@@ -2008,9 +2181,9 @@ flowchart LR
         </table>
     </section>
 
-    <!-- Chapter 14 -->
-    <section id="chapter-14">
-        <h2>Chapter 14: Block vs Point Technique</h2>
+    <!-- Chapter 15 -->
+    <section id="chapter-15">
+        <h2>Chapter 15: Block vs Point Technique</h2>
 
         <p>When using row-column scanning, how should groups be highlighted?</p>
 
@@ -2114,6 +2287,431 @@ Does user have low vision?
         </div>
     </section>
 
+    <!-- Chapter 16 -->
+    <section id="chapter-16">
+        <h2>Chapter 16: Continuous Scanning</h2>
+
+        <p><strong>Continuous scanning</strong> moves the focus smoothly rather than stepping item-by-item. It can feel more like joystick control and helps some users target mid-grid items faster.</p>
+
+        <h3>Common Techniques</h3>
+        <ul>
+            <li><strong>Gliding cursor:</strong> A highlight moves across the grid and wraps at edges.</li>
+            <li><strong>Crosshair:</strong> Horizontal and vertical scans intersect on the target.</li>
+            <li><strong>Compass (8-direction):</strong> The focus moves in eight directions with directional inputs.</li>
+        </ul>
+
+        <div class="figure-card">
+            <div class="figure-placeholder">Illustration Placeholder: Continuous Scanning</div>
+            <div class="figure-caption">Figure 15. Continuous scanning styles (glide, crosshair, compass).</div>
+        </div>
+
+        <h3>Interactive Demos</h3>
+        <div class="demo-instructions">
+            🎮 <strong>Try it:</strong> Observe how each continuous technique moves focus.
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+            <div>
+                <h4>Gliding Cursor</h4>
+                <div class="scanner-container small">
+                    <switch-scanner
+                        theme="sketch"
+                        scan-mode="continuous"
+                        continuous-technique="gliding"
+                        grid-size="16">
+                    </switch-scanner>
+                </div>
+            </div>
+            <div>
+                <h4>Crosshair</h4>
+                <div class="scanner-container small">
+                    <switch-scanner
+                        theme="sketch"
+                        scan-mode="continuous"
+                        continuous-technique="crosshair"
+                        grid-size="16">
+                    </switch-scanner>
+                </div>
+            </div>
+            <div>
+                <h4>Compass (Fixed-8)</h4>
+                <div class="scanner-container small">
+                    <switch-scanner
+                        theme="sketch"
+                        scan-mode="continuous"
+                        continuous-technique="eight-direction"
+                        compass-mode="fixed-8"
+                        grid-size="16">
+                    </switch-scanner>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <strong>Tip:</strong> Continuous scanning is highly timing-sensitive. If users miss targets, slow the scan rate or add an acceptance time buffer.
+        </div>
+    </section>
+
+    <!-- Chapter 17 -->
+    <section id="chapter-17">
+        <h2>Chapter 17: Critical Overscan</h2>
+
+        <p><strong>Critical overscan</strong> accelerates the first pass and slows down on demand. Users “catch” the target as it passes, then the system backs up or slows for precise selection.</p>
+
+        <h3>When It’s Useful</h3>
+        <ul>
+            <li>Very large linear lists</li>
+            <li>Users with fast reaction times</li>
+            <li>Situations where grouping adds too much cognitive load</li>
+        </ul>
+
+        <div class="figure-card">
+            <div class="figure-placeholder">Illustration Placeholder: Critical Overscan</div>
+            <div class="figure-caption">Figure 16. Fast forward scan with slow-back precision selection.</div>
+        </div>
+
+        <h3>Interactive Demo</h3>
+        <div class="demo-instructions">
+            🎮 <strong>Try it:</strong> Press when your target passes, then select precisely on the slow return.
+        </div>
+        <div class="scanner-container">
+            <switch-scanner
+                theme="sketch"
+                scan-pattern="linear"
+                critical-overscan-enabled="true"
+                critical-overscan-fast-rate="200"
+                critical-overscan-slow-rate="1200"
+                grid-size="36">
+            </switch-scanner>
+        </div>
+
+        <div class="info-box">
+            <strong>Design note:</strong> Consider limiting the number of slow-back passes before restarting the fast scan.
+        </div>
+    </section>
+
+    <!-- Chapter 18 -->
+    <section id="chapter-18">
+        <h2>Chapter 18: Directed Scanning</h2>
+
+        <p><strong>Directed scanning</strong> allows users to steer the highlight using directional switches (up/down/left/right or diagonals).</p>
+
+        <h3>Switch Configurations</h3>
+        <ul>
+            <li><strong>Full directional:</strong> One switch per direction (natural, direct).</li>
+            <li><strong>Reduced switch:</strong> Right + Down only, with wrap-around.</li>
+            <li><strong>Rotating arrow:</strong> Direction options rotate, user confirms direction.</li>
+        </ul>
+
+        <div class="figure-card">
+            <div class="figure-placeholder">Illustration Placeholder: Directed Scanning</div>
+            <div class="figure-caption">Figure 17. Directional steering models.</div>
+        </div>
+
+        <h3>Interactive Demos</h3>
+        <div class="demo-instructions">
+            🎮 <strong>Try it:</strong> Use arrow keys (or watch auto-steer) to move focus.
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+            <div>
+                <h4>Compass (Fixed-8)</h4>
+                <div class="scanner-container small">
+                    <switch-scanner
+                        theme="sketch"
+                        scan-mode="continuous"
+                        continuous-technique="eight-direction"
+                        compass-mode="fixed-8"
+                        grid-size="16">
+                    </switch-scanner>
+                </div>
+            </div>
+            <div>
+                <h4>Compass (Fluid)</h4>
+                <div class="scanner-container small">
+                    <switch-scanner
+                        theme="sketch"
+                        scan-mode="continuous"
+                        continuous-technique="eight-direction"
+                        compass-mode="continuous"
+                        grid-size="16">
+                    </switch-scanner>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chapter 19 -->
+    <section id="chapter-19">
+        <h2>Chapter 19: Error Recovery</h2>
+
+        <p>For switch users, errors can cost many seconds. Design for fast recovery.</p>
+
+        <h3>Recovery Tools</h3>
+        <ul>
+            <li><strong>Empty items:</strong> Selectable “do nothing” items that reset the scan.</li>
+            <li><strong>Cancel scan:</strong> A dedicated cancel action (button, long-hold, or special item).</li>
+            <li><strong>Undo/redo:</strong> Reverse the last character or action.</li>
+            <li><strong>Back navigation:</strong> Return to the previous page/group.</li>
+        </ul>
+
+        <div class="info-box">
+            <strong>Recommended:</strong> Offer a long-hold cancel and a visible back/undo in every grid.
+        </div>
+
+        <h3>Interactive Demo: Empty Item Reset</h3>
+        <div class="demo-instructions">
+            🎮 <strong>Try it:</strong> Select the “Reset” item. It performs no action and restarts the scan.
+        </div>
+        <div class="scanner-container small">
+            <switch-scanner
+                theme="sketch"
+                scan-pattern="linear"
+                scan-rate="1200"
+                grid-cols="4"
+                custom-items='[
+                    {"label":"YES", "id":"yes"},
+                    {"label":"NO", "id":"no"},
+                    {"label":"⟳ Reset", "id":"reset", "isEmpty": true, "backgroundColor":"#fff3cd"},
+                    {"label":"Undo", "id":"undo", "backgroundColor":"#e8f5e9"}
+                ]'>
+            </switch-scanner>
+        </div>
+
+        <h3>Interactive Demo: Long-Hold Cancel</h3>
+        <div class="demo-instructions">
+            🎮 <strong>Try it:</strong> Hold the switch for 1 second to cancel and reset the scan.
+        </div>
+        <div class="scanner-container small">
+            <switch-scanner
+                theme="sketch"
+                scan-pattern="row-column"
+                scan-technique="block"
+                scan-rate="1200"
+                cancel-method="long-hold"
+                long-hold-time="1000"
+                grid-size="16">
+            </switch-scanner>
+        </div>
+
+        <h3>Interactive Demo: Undo & Backspace</h3>
+        <div class="demo-instructions">
+            🎮 <strong>Try it:</strong> Enter a few letters, then use Backspace or Undo/Redo.
+        </div>
+        <div class="scanner-container small">
+            <switch-scanner
+                theme="sketch"
+                scan-pattern="linear"
+                scan-rate="900"
+                grid-cols="4"
+                custom-items='[
+                    {"label":"A", "id":"A"},
+                    {"label":"B", "id":"B"},
+                    {"label":"C", "id":"C"},
+                    {"label":"Space", "id":"Space"},
+                    {"label":"Backspace", "id":"Backspace", "backgroundColor":"#ffe0b2"},
+                    {"label":"Undo", "id":"Undo", "backgroundColor":"#e3f2fd"},
+                    {"label":"Redo", "id":"Redo", "backgroundColor":"#e3f2fd"},
+                    {"label":"Clear", "id":"Clear", "backgroundColor":"#ffcdd2"}
+                ]'>
+            </switch-scanner>
+        </div>
+    </section>
+
+    <!-- Chapter 20 -->
+    <section id="chapter-20">
+        <h2>Chapter 20: Feedback & Highlighting</h2>
+
+        <p>Effective feedback helps users track focus and avoid errors.</p>
+
+        <h3>Visual Feedback</h3>
+        <ul>
+            <li>Color shift or border glow on focus</li>
+            <li>Scale-up or pulse animation</li>
+            <li>Dim non-focused items</li>
+        </ul>
+
+        <h3>Auditory & Tactile Feedback</h3>
+        <ul>
+            <li>Tick or beep per highlight</li>
+            <li>Voice output of item labels</li>
+            <li>Haptic click or vibration (if available)</li>
+        </ul>
+
+        <div class="info-box">
+            <strong>Clinical tip:</strong> Pair a visual highlight with a short, consistent sound to reduce cognitive load.
+        </div>
+    </section>
+
+    <!-- Chapter 21 -->
+    <section id="chapter-21">
+        <h2>Chapter 21: User Profiles</h2>
+
+        <p>Different users need different configurations. Start with a profile, then tune.</p>
+
+        <h3>Example Profiles</h3>
+        <ul>
+            <li><strong>Athetosis:</strong> Long acceptance time, debounce filters, slower scan.</li>
+            <li><strong>Degenerative conditions:</strong> Adjustable speeds + fatigue-aware presets.</li>
+            <li><strong>Low vision:</strong> High contrast, thick borders, large scale.</li>
+            <li><strong>Cognitive load:</strong> Small grids, clear grouping, short scan loops.</li>
+        </ul>
+    </section>
+
+    <!-- Chapter 22 -->
+    <section id="chapter-22">
+        <h2>Chapter 22: Implementing Scanners</h2>
+
+        <p>For developers: keep scanning logic deterministic and configuration-driven.</p>
+
+        <h3>Settings Optimization (Koester & Simpson 2014)</h3>
+        <p>This method uses a structured decision tree to improve text entry rate (TER). A key rule is the <strong>25% scanning error threshold</strong>: if errors exceed 25% of correct selections, focus on reducing errors before optimizing efficiency.</p>
+
+        <div class="figure-card">
+            <img src="/figures/koester-simpson-2014-flowchart.svg" alt="Koester and Simpson 2014 settings optimization flowchart" style="width: 100%; height: auto; display: block;">
+            <div class="figure-caption">Figure 19. Decision tree for identifying revised scanning settings (Koester &amp; Simpson, 2014).</div>
+        </div>
+
+        <div class="info-box">
+            <strong>Summary:</strong> Fix switch consistency → measure scanning errors → if &gt;25% focus on timing and initiation; if &lt;=25% focus on reducing dead time, improving prediction use, and optimizing layout.
+        </div>
+
+        <h3>Settings Advisor (Prototype)</h3>
+        <p>Enter measured data to get a suggested next step. This is a lightweight implementation of the 2014 decision tree for developers and clinicians.</p>
+
+        <div class="reaction-test" id="settingsAdvisor">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                <label>
+                    <strong>Performance OK?</strong><br>
+                    <select id="advisorPerformance" style="width: 100%; padding: 8px; margin-top: 6px;">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                </label>
+                <label>
+                    <strong>TER/Errors can improve?</strong><br>
+                    <select id="advisorImprove" style="width: 100%; padding: 8px; margin-top: 6px;">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                </label>
+                <label>
+                    <strong>Scanning Errors (%)</strong><br>
+                    <input id="advisorErrors" type="number" min="0" max="200" value="30" style="width: 100%; padding: 8px; margin-top: 6px;">
+                </label>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 12px;">
+                <label><input type="checkbox" id="advisorFirstLate"> First press too late</label>
+                <label><input type="checkbox" id="advisorNextLate"> Next press too late</label>
+                <label><input type="checkbox" id="advisorUnintentional"> Unintentional presses</label>
+                <label><input type="checkbox" id="advisorMissingRow"> Missing first-row selections</label>
+                <label><input type="checkbox" id="advisorDeadTime"> Too much dead time</label>
+                <label><input type="checkbox" id="advisorWordPred"> Inefficient word prediction</label>
+                <label><input type="checkbox" id="advisorLayout"> Inefficient layout/pattern</label>
+            </div>
+            <div class="button-row" style="margin-top: 12px;">
+                <button id="advisorRun">Get Recommendations</button>
+            </div>
+            <p><strong>Summary:</strong> <span id="advisorSummary">—</span></p>
+            <div id="advisorResults"></div>
+        </div>
+
+        <h3>Implementation Checklist</h3>
+        <ul>
+            <li>Separate <strong>scan state</strong> from <strong>rendering</strong>.</li>
+            <li>Support <strong>pause/resume</strong> and <strong>restart</strong> modes.</li>
+            <li>Allow <strong>manual start</strong> vs <strong>auto-start</strong> behavior.</li>
+            <li>Expose timing parameters: scan rate, acceptance time, initial pause.</li>
+            <li>Allow configurable grouping and ordering.</li>
+        </ul>
+
+        <div class="figure-card">
+            <div class="figure-placeholder">Illustration Placeholder: Scanner Architecture</div>
+            <div class="figure-caption">Figure 18. Suggested scanner architecture (state machine + renderer).</div>
+        </div>
+    </section>
+
+    <!-- Chapter 23 -->
+    <section id="chapter-23">
+        <h2>Chapter 23: Accessibility Testing</h2>
+
+        <h3>Testing Modes</h3>
+        <ul>
+            <li><strong>Single-switch simulation:</strong> Use Space only.</li>
+            <li><strong>Timing sweeps:</strong> Test at slow/medium/fast rates.</li>
+            <li><strong>Error drills:</strong> Practice undo, cancel, and recovery.</li>
+            <li><strong>Fatigue runs:</strong> 20-30 minutes sustained use.</li>
+        </ul>
+
+        <div class="warning-box">
+            <strong>Red flag:</strong> If it takes more than 2 scan cycles to recover from a mistake, users will abandon the system.
+        </div>
+    </section>
+
+    <!-- Chapter 24 -->
+    <section id="chapter-24">
+        <h2>Chapter 24: Design Patterns</h2>
+
+        <h3>Patterns That Work</h3>
+        <ul>
+            <li><strong>Progressive disclosure:</strong> Show only what’s needed now.</li>
+            <li><strong>Most recently used (MRU):</strong> Prioritize recent items.</li>
+            <li><strong>Predictive order:</strong> Frequency-based layouts.</li>
+            <li><strong>Context-aware grids:</strong> Change set based on task state.</li>
+        </ul>
+
+        <div class="info-box">
+            <strong>Reminder:</strong> Efficiency gains reduce fatigue, which matters as much as speed.
+        </div>
+    </section>
+
+    <!-- Appendix B -->
+    <section id="appendix-glossary">
+        <h2>Appendix B: Glossary</h2>
+
+        <div class="glossary-term" id="glossary-term-acceptance-time">
+            <strong>Acceptance Time</strong>: The time a switch must be held before a selection is confirmed.
+        </div>
+        <div class="glossary-term" id="glossary-term-auto-scan">
+            <strong>Auto-Scan</strong>: The system automatically advances the highlight at a set rate.
+        </div>
+        <div class="glossary-term" id="glossary-term-continuous-scan">
+            <strong>Continuous Scanning</strong>: Focus moves smoothly rather than stepping item-by-item.
+        </div>
+        <div class="glossary-term" id="glossary-term-critical-overscan">
+            <strong>Critical Overscan</strong>: Fast forward scan with slow-back precision selection.
+        </div>
+        <div class="glossary-term" id="glossary-term-directed-scan">
+            <strong>Directed Scanning</strong>: User steers the highlight using directional switches.
+        </div>
+        <div class="glossary-term" id="glossary-term-dwell-time">
+            <strong>Dwell Time</strong>: Auto-select when the highlight stays on an item for a threshold duration.
+        </div>
+        <div class="glossary-term" id="glossary-term-elimination-scan">
+            <strong>Elimination Scanning</strong>: Repeatedly split the set until the target remains.
+        </div>
+        <div class="glossary-term" id="glossary-term-group-scan">
+            <strong>Group Scan</strong>: Select a group first, then scan within that group.
+        </div>
+        <div class="glossary-term" id="glossary-term-input-bandwidth">
+            <strong>Input Bandwidth</strong>: The amount of information a user can transmit per unit time.
+        </div>
+        <div class="glossary-term" id="glossary-term-row-column">
+            <strong>Row-Column Scanning</strong>: Scan rows, then scan items in the selected row.
+        </div>
+        <div class="glossary-term" id="glossary-term-scan-rate">
+            <strong>Scan Rate</strong>: Time each item stays highlighted.
+        </div>
+        <div class="glossary-term" id="glossary-term-selection-set">
+            <strong>Selection Set</strong>: All the items available for selection at a given time.
+        </div>
+        <div class="glossary-term" id="glossary-term-step-scan">
+            <strong>Step Scan</strong>: User controls movement and selection.
+        </div>
+        <div class="glossary-term" id="glossary-term-switch">
+            <strong>Switch</strong>: A binary input device (on/off).
+        </div>
+    </section>
+
     <!-- Feedback Element -->
     <div id="feedback"></div>
 
@@ -2166,6 +2764,326 @@ Does user have low vision?
                 target.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
         });
+
+        // Reaction time test (.65 rule)
+        const reactionDisplay = document.getElementById('reactionDisplay');
+        const reactionStart = document.getElementById('reactionStart');
+        const reactionReset = document.getElementById('reactionReset');
+        const reactionTrial = document.getElementById('reactionTrial');
+        const reactionLast = document.getElementById('reactionLast');
+        const reactionAvg = document.getElementById('reactionAvg');
+        const reactionRate = document.getElementById('reactionRate');
+
+        const reactionState = {
+            trial: 0,
+            times: [],
+            waiting: false,
+            startTime: 0,
+            timer: null,
+            audioCtx: null
+        };
+
+        const updateReactionDisplay = () => {
+            reactionTrial.textContent = reactionState.trial;
+            const last = reactionState.times[reactionState.times.length - 1];
+            reactionLast.textContent = last ? `${last.toFixed(0)} ms` : '—';
+            if (reactionState.times.length) {
+                const avg = reactionState.times.reduce((a, b) => a + b, 0) / reactionState.times.length;
+                reactionAvg.textContent = `${avg.toFixed(0)} ms`;
+                const recommended = avg / 0.65;
+                reactionRate.textContent = `${recommended.toFixed(0)} ms per item`;
+            } else {
+                reactionAvg.textContent = '—';
+                reactionRate.textContent = '—';
+            }
+        };
+
+        const playBeep = () => {
+            try {
+                if (!reactionState.audioCtx) {
+                    reactionState.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                const ctx = reactionState.audioCtx;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = 880;
+                gain.gain.value = 0.08;
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                setTimeout(() => osc.stop(), 120);
+            } catch (err) {
+                // Audio not available; silent fallback.
+            }
+        };
+
+        const scheduleCue = () => {
+            reactionState.waiting = false;
+            reactionDisplay.textContent = '⏳ Wait...';
+            const delay = 1000 + Math.random() * 2000;
+            reactionState.timer = setTimeout(() => {
+                reactionState.timer = null;
+                reactionDisplay.textContent = '🙂 Ding!';
+                playBeep();
+                reactionState.startTime = performance.now();
+                reactionState.waiting = true;
+            }, delay);
+        };
+
+        const startReactionTest = () => {
+            if (reactionState.trial >= 3 || reactionState.timer || reactionState.waiting) return;
+            reactionState.trial += 1;
+            updateReactionDisplay();
+            scheduleCue();
+        };
+
+        const resetReactionTest = () => {
+            reactionState.trial = 0;
+            reactionState.times = [];
+            reactionState.waiting = false;
+            if (reactionState.timer) {
+                clearTimeout(reactionState.timer);
+            }
+            reactionState.timer = null;
+            reactionDisplay.textContent = '🙂 Ready?';
+            updateReactionDisplay();
+        };
+
+        const registerHit = () => {
+            if (!reactionState.waiting) return;
+            reactionState.waiting = false;
+            const now = performance.now();
+            const elapsed = now - reactionState.startTime;
+            reactionState.times.push(elapsed);
+            updateReactionDisplay();
+            if (reactionState.trial < 3) {
+                scheduleCue();
+            } else {
+                reactionDisplay.textContent = '✅ Done!';
+            }
+        };
+
+        if (reactionStart) {
+            reactionStart.addEventListener('click', startReactionTest);
+        }
+        if (reactionReset) {
+            reactionReset.addEventListener('click', resetReactionTest);
+        }
+
+        // Scan time estimator
+        const estimateScanRate = document.getElementById('estimateScanRate');
+        const estimateGridSize = document.getElementById('estimateGridSize');
+        const estimatePattern = document.getElementById('estimatePattern');
+        const estimateSwitches = document.getElementById('estimateSwitches');
+        const estimatePresses = document.getElementById('estimatePresses');
+        const estimateTime = document.getElementById('estimateTime');
+        const estimateUseReaction = document.getElementById('estimateUseReaction');
+        const estimateReset = document.getElementById('estimateReset');
+
+        const calcAveragePresses = () => {
+            const n = Math.max(1, parseInt(estimateGridSize.value, 10) || 1);
+            const pattern = estimatePattern.value;
+            if (pattern === 'linear') {
+                return (n + 1) / 2;
+            }
+            if (pattern === 'row-column') {
+                const rows = Math.ceil(Math.sqrt(n));
+                const cols = Math.ceil(n / rows);
+                return (rows + 1) / 2 + (cols + 1) / 2;
+            }
+            const switches = Math.max(2, parseInt(estimateSwitches.value, 10) || 2);
+            return Math.max(1, Math.log(n) / Math.log(switches));
+        };
+
+        const updateEstimator = () => {
+            const rate = Math.max(100, parseInt(estimateScanRate.value, 10) || 1000);
+            const presses = calcAveragePresses();
+            const timeMs = presses * rate;
+            estimatePresses.textContent = `${presses.toFixed(2)} presses`;
+            estimateTime.textContent = `${(timeMs / 1000).toFixed(2)} seconds`;
+        };
+
+        if (estimateUseReaction) {
+            estimateUseReaction.addEventListener('click', () => {
+                if (reactionState.times.length) {
+                    const avg = reactionState.times.reduce((a, b) => a + b, 0) / reactionState.times.length;
+                    estimateScanRate.value = Math.round(avg / 0.65);
+                    updateEstimator();
+                }
+            });
+        }
+
+        if (estimateReset) {
+            estimateReset.addEventListener('click', () => {
+                estimateScanRate.value = 1000;
+                estimateGridSize.value = 36;
+                estimatePattern.value = 'row-column';
+                estimateSwitches.value = 4;
+                updateEstimator();
+            });
+        }
+
+        [estimateScanRate, estimateGridSize, estimatePattern, estimateSwitches].forEach((el) => {
+            if (!el) return;
+            el.addEventListener('input', updateEstimator);
+            el.addEventListener('change', updateEstimator);
+        });
+
+        updateEstimator();
+
+        // Settings advisor (Koester & Simpson 2014)
+        const advisorRun = document.getElementById('advisorRun');
+        const advisorSummary = document.getElementById('advisorSummary');
+        const advisorResults = document.getElementById('advisorResults');
+
+        const readAdvisorInput = () => {
+            return {
+                performanceOk: document.getElementById('advisorPerformance').value === 'yes',
+                terCanImprove: document.getElementById('advisorImprove').value === 'yes',
+                scanningErrorsPct: parseFloat(document.getElementById('advisorErrors').value || '0'),
+                firstPressLate: document.getElementById('advisorFirstLate').checked,
+                nextPressLate: document.getElementById('advisorNextLate').checked,
+                unintentionalPresses: document.getElementById('advisorUnintentional').checked,
+                missingFirstRow: document.getElementById('advisorMissingRow').checked,
+                deadTime: document.getElementById('advisorDeadTime').checked,
+                inefficientWordPrediction: document.getElementById('advisorWordPred').checked,
+                inefficientLayout: document.getElementById('advisorLayout').checked
+            };
+        };
+
+        const renderAdvisor = () => {
+            const advisor = window.ScanSettingsAdvisor;
+            if (!advisor || typeof advisor.adviseSettings !== 'function') {
+                return;
+            }
+            const result = advisor.adviseSettings(readAdvisorInput());
+            advisorSummary.textContent = result.summary || '—';
+            if (!result.recommendations || result.recommendations.length === 0) {
+                advisorResults.innerHTML = '<p>No recommendations.</p>';
+                return;
+            }
+            advisorResults.innerHTML = result.recommendations.map((rec) => {
+                const actions = rec.actions.map((a) => `<li>${a}</li>`).join('');
+                const note = rec.note ? `<p style="margin: 6px 0 0; color: var(--ink-soft);"><em>${rec.note}</em></p>` : '';
+                return `
+                    <div class="glossary-term">
+                        <strong>${rec.category}</strong>
+                        <ul style="margin: 8px 0 0; padding-left: 18px;">${actions}</ul>
+                        ${note}
+                    </div>
+                `;
+            }).join('');
+        };
+
+        if (advisorRun) {
+            advisorRun.addEventListener('click', renderAdvisor);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                const active = document.activeElement;
+                if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
+                    return;
+                }
+                if (reactionState.trial > 0) {
+                    registerHit();
+                }
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'reactionDisplay') {
+                registerHit();
+            }
+        });
+
+        // Glossary auto-linking
+        const glossaryTerms = [
+            { id: 'glossary-term-acceptance-time', terms: ['acceptance time'] },
+            { id: 'glossary-term-auto-scan', terms: ['auto-scan', 'auto scan', 'autoscan'] },
+            { id: 'glossary-term-continuous-scan', terms: ['continuous scanning', 'continuous scan'] },
+            { id: 'glossary-term-critical-overscan', terms: ['critical overscan'] },
+            { id: 'glossary-term-directed-scan', terms: ['directed scanning', 'directed scan'] },
+            { id: 'glossary-term-dwell-time', terms: ['dwell time'] },
+            { id: 'glossary-term-elimination-scan', terms: ['elimination scanning', 'elimination scan'] },
+            { id: 'glossary-term-group-scan', terms: ['group scan', 'group scanning'] },
+            { id: 'glossary-term-input-bandwidth', terms: ['input bandwidth'] },
+            { id: 'glossary-term-row-column', terms: ['row-column scanning', 'row column scanning', 'row-column', 'row column'] },
+            { id: 'glossary-term-scan-rate', terms: ['scan rate'] },
+            { id: 'glossary-term-selection-set', terms: ['selection set'] },
+            { id: 'glossary-term-step-scan', terms: ['step scan', 'step scanning'] }
+        ];
+
+        const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const skipTags = new Set(['A', 'CODE', 'PRE', 'SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'BUTTON', 'SUMMARY', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
+
+        const linkGlossaryTerms = (root) => {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+                acceptNode: (node) => {
+                    if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+                    const parent = node.parentElement;
+                    if (!parent) return NodeFilter.FILTER_REJECT;
+                    if (skipTags.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
+                    if (parent.closest('#appendix-glossary')) return NodeFilter.FILTER_REJECT;
+                    return NodeFilter.FILTER_ACCEPT;
+                }
+            });
+
+            const nodes = [];
+            while (walker.nextNode()) nodes.push(walker.currentNode);
+
+            nodes.forEach((node) => {
+                const text = node.nodeValue;
+                let cursor = 0;
+                const fragment = document.createDocumentFragment();
+                let replaced = false;
+
+                while (cursor < text.length) {
+                    let bestMatch = null;
+                    glossaryTerms.forEach((entry) => {
+                        entry.terms.forEach((term) => {
+                            const regex = new RegExp(`\\b${escapeRegExp(term)}\\b`, 'i');
+                            const match = regex.exec(text.slice(cursor));
+                            if (match) {
+                                const index = cursor + match.index;
+                                if (!bestMatch || index < bestMatch.index) {
+                                    bestMatch = {
+                                        index,
+                                        length: match[0].length,
+                                        text: match[0],
+                                        id: entry.id
+                                    };
+                                }
+                            }
+                        });
+                    });
+
+                    if (!bestMatch) {
+                        fragment.appendChild(document.createTextNode(text.slice(cursor)));
+                        break;
+                    }
+
+                    if (bestMatch.index > cursor) {
+                        fragment.appendChild(document.createTextNode(text.slice(cursor, bestMatch.index)));
+                    }
+
+                    const link = document.createElement('a');
+                    link.href = `#${bestMatch.id}`;
+                    link.className = 'glossary-link';
+                    link.textContent = bestMatch.text;
+                    fragment.appendChild(link);
+                    cursor = bestMatch.index + bestMatch.length;
+                    replaced = true;
+                }
+
+                if (replaced) {
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        };
+
+        linkGlossaryTerms(document.body);
 
         // Efficiency Calculator - Enhanced
         const ALPHABETICAL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -2308,12 +3226,23 @@ Does user have low vision?
             'Two Switch Scanning',
             'Why Group?',
             'Row-Column Scanning',
-            'Elimination Scanning',
+            'Progressive Segmenting & Elimination',
             'Pattern Comparison',
             'Efficiency Calculator',
-            'Timing & Optimization',
+            'Patterns & Modes Hub',
+            'Timing & Optimization (.65 Rule)',
             'Visualization Options',
-            'Block vs Point'
+            'Block vs Point',
+            'Continuous Scanning',
+            'Critical Overscan',
+            'Directed Scanning',
+            'Error Recovery',
+            'Feedback & Highlighting',
+            'User Profiles',
+            'Implementing Scanners',
+            'Accessibility Testing',
+            'Design Patterns',
+            'Appendix: Glossary'
         ];
 
         chapters.forEach((chapter, index) => {
@@ -2371,28 +3300,5 @@ Does user have low vision?
         });
     </script>
 
-    <!-- Initialize Mermaid with Sketch Theme -->
-    <script>
-        // Configure mermaid with sketch-friendly settings
-        mermaid.initialize({
-            startOnLoad: true,
-            theme: 'base',
-            themeVariables: {
-                primaryColor: '#fff',
-                primaryTextColor: '#333',
-                primaryBorderColor: '#333',
-                lineColor: '#333',
-                secondaryColor: '#f0f0f0',
-                tertiaryColor: '#fffdf9',
-                fontFamily: 'Patrick Hand',
-                fontSize: '16px'
-            },
-            flowchart: {
-                useMaxWidth: false,
-                htmlLabels: true,
-                curve: 'basis' // Curved lines look more hand-drawn
-            }
-        });
-    </script>
 </body>
 </html>

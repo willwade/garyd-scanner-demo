@@ -1,0 +1,40 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 5: Single Switch Scanning"
+prevHref: "/book/chapter-4"
+prevLabel: "Chapter 4: Selection Sets"
+nextHref: "/book/chapter-6"
+nextLabel: "Chapter 6: Two Switch Scanning"
+---
+
+# Chapter 5: Single Switch Scanning
+
+**Single Switch Scanning (Auto-Scan)** is the most common scanning method.
+
+## How it works
+
+1. System automatically highlights items in sequence
+2. User waits for desired item to be highlighted
+3. User presses switch to select
+4. System activates item and restarts scan
+
+## Timing tips
+
+- **Too fast** → missed selections
+- **Too slow** → frustration and low TER
+- **Just right** → user feels in control
+
+## Variants You’ll See in Real Devices
+
+- **Auto-while-held:** The highlight moves only while the switch is held down.
+- **Auto-restart modes:** Restart from the first item or continue from last.
+- **Initial item pause:** Extra time on the first item to help users get ready.
+
+## Demo
+
+<div class="demo-instructions">
+  🎮 Try selecting the number 7.
+</div>
+<div class="scanner-container">
+  <switch-scanner theme="sketch" scan-pattern="linear" scan-technique="point" scan-rate="1000" grid-size="9"></switch-scanner>
+</div>

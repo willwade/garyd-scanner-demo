@@ -1,0 +1,37 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 21: User Profiles"
+prevHref: "/book/chapter-20"
+prevLabel: "Chapter 20: Feedback & Highlighting"
+nextHref: "/book/chapter-22"
+nextLabel: "Chapter 22: Implementing Scanners"
+---
+
+# Chapter 21: User Profiles
+
+Different users need different configurations. Treat profiles as stable baselines that can be tuned, not as fixed diagnoses.
+
+## What a Profile Should Capture
+
+- **Input capability**: mean switch press time, variability, and acceptance delay needs.
+- **Visual preferences**: highlight size, contrast, animation speed, and symbol size.
+- **Cognitive load**: grid size, scan pattern complexity, and prediction usage.
+- **Fatigue**: how settings should shift over time or after prolonged use.
+- **Environment**: lighting, noise, and seated vs. reclined positioning.
+
+## Example Profiles
+
+- **Athetosis**: longer acceptance delay, slightly slower scan, higher tolerance for missed first-row selections.
+- **Degenerative conditions**: “fresh” vs. “fatigued” presets with different scan delays and prediction lists.
+- **Low vision**: high contrast, thicker borders, larger highlight area, fewer items per row.
+- **High cognitive load**: smaller grids, fewer modes, predictable scan order.
+
+## Practical Tips for Teams
+
+- Always keep a “safe” fallback profile that is slow and forgiving.
+- Version profiles and log when changes are applied.
+- Use short tests to validate profile changes before daily use.
+
+<div class="warning-box">
+  Always validate settings with real use. Lab performance rarely matches daily life.
+</div>

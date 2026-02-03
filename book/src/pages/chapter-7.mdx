@@ -1,0 +1,28 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 7: Why Group?"
+prevHref: "/book/chapter-6"
+prevLabel: "Chapter 6: Two Switch Scanning"
+nextHref: "/book/chapter-8"
+nextLabel: "Chapter 8: Row-Column Scanning"
+---
+
+# Chapter 7: Why Group?
+
+Linear scanning of large sets is painfully slow. Grouping reduces scan cost dramatically.
+
+## Scan Cost
+
+For **N** items in linear scan:
+
+- Average cost to select any item = **N/2**
+- Cost to select last item = **N**
+
+<div class="highlight-box">
+  Grouping items into rows or groups can cut scan cost by 50% or more.
+</div>
+
+## Example: 36 items (6×6)
+
+- Linear average cost: 18 presses
+- Row-column average cost: 9 presses

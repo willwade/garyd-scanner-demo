@@ -1,0 +1,44 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 20: Feedback & Highlighting"
+prevHref: "/book/chapter-19"
+prevLabel: "Chapter 19: Error Recovery"
+nextHref: "/book/chapter-21"
+nextLabel: "Chapter 21: User Profiles"
+---
+
+# Chapter 20: Feedback & Highlighting
+
+Effective feedback reduces errors and builds trust. Make the active item obvious, and make selection feel intentional.
+
+## Design Goals
+
+- **Clarity**: the active item should be unambiguous from 1–2 meters away.
+- **Consistency**: the same signal should mean the same thing everywhere.
+- **Low cognitive load**: feedback should not compete with reading or comprehension.
+
+## Visual feedback
+
+- Clear border or color highlight
+- Optional scale or pulse on the active item
+- Dim non-highlighted items to reduce scan noise
+
+Avoid ambiguous color pairs (red/green) and ensure highlights pass contrast checks on light and dark backgrounds.
+
+## Auditory & tactile feedback
+
+- Short beep per highlight
+- Distinct selection sound
+- Tactile click or vibration (if available)
+
+Keep highlight sounds short and uniform. Selection sounds can be slightly longer to confirm action without slowing timing.
+
+## Timing and Motion
+
+- Animations should finish well within the scan delay.
+- Keep transitions subtle to avoid “tracking” the animation instead of the item.
+- Allow a “no motion” setting for users who are distracted by animation.
+
+<div class="info-box">
+  Pair a visible highlight with a short, consistent sound to reduce cognitive load.
+</div>

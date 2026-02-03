@@ -1,0 +1,221 @@
+---
+const { frontmatter = {} } = Astro.props;
+const {
+  title = 'Switch Scanning Book',
+  prevHref,
+  prevLabel,
+  nextHref,
+  nextLabel
+} = frontmatter;
+const base = import.meta.env.BASE_URL;
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --paper: #fffdf9;
+        --ink: #2f2f2f;
+        --ink-soft: #4b4b4b;
+        --accent: #2f7dbb;
+        --line: #d6d6d6;
+        --shadow: rgba(47, 125, 187, 0.08);
+        --card: #ffffff;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: 'Atkinson Hyperlegible', sans-serif;
+        line-height: 1.75;
+        background: var(--paper);
+        color: var(--ink);
+      }
+      h1, h2, h3 { font-family: 'Patrick Hand', cursive; font-weight: normal; }
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 36px 18px 120px 18px;
+      }
+      .hero {
+        background: linear-gradient(135deg, #fff7e6, #eef5fb);
+        border: 2px dashed var(--line);
+        border-radius: 20px;
+        padding: 24px;
+        margin: 20px 0 30px;
+        box-shadow: 6px 6px 0px var(--shadow);
+      }
+      .card {
+        border: 2px dashed var(--line);
+        border-radius: 18px;
+        background: var(--card);
+        box-shadow: 6px 6px 0px var(--shadow);
+        padding: 28px;
+        margin: 20px 0 70px;
+      }
+      .highlight-box {
+        background: #d5f4e6;
+        border-left: 4px solid #27ae60;
+        padding: 15px;
+        margin: 15px 0;
+      }
+      .warning-box {
+        background: #ffeaa7;
+        border-left: 4px solid #fdcb6e;
+        padding: 15px;
+        margin: 15px 0;
+      }
+      .info-box {
+        background: #e5f1ff;
+        border-left: 4px solid #3c7dd9;
+        padding: 15px;
+        margin: 15px 0;
+        color: var(--ink);
+      }
+      .figure-card {
+        border: 2px dashed var(--line);
+        border-radius: 16px;
+        padding: 16px;
+        background: #fffaf0;
+        margin: 16px 0;
+      }
+      .figure-placeholder {
+        border: 2px dashed var(--accent);
+        border-radius: 14px;
+        background: repeating-linear-gradient(
+          -45deg,
+          #fdfdfd,
+          #fdfdfd 10px,
+          #f1f1f1 10px,
+          #f1f1f1 20px
+        );
+        height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #5f6b76;
+        font-family: 'Patrick Hand', cursive;
+      }
+      .figure-caption {
+        margin-top: 10px;
+        font-size: 0.95rem;
+        color: var(--ink-soft);
+      }
+      .demo-instructions {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 10px 15px;
+        margin: 10px 0;
+        font-size: 0.95em;
+      }
+      .scanner-container {
+        min-height: 220px;
+        max-height: 60vh;
+        margin: 16px 0;
+        border: 2px solid var(--accent);
+        border-radius: 8px;
+        overflow: hidden;
+        background: #f8f9fa;
+      }
+      .scanner-container.small {
+        min-height: 180px;
+        max-height: 40vh;
+      }
+      .reaction-test {
+        border: 2px dashed var(--line);
+        border-radius: 16px;
+        padding: 16px;
+        background: #f9fbff;
+        margin: 16px 0;
+      }
+      .reaction-display {
+        height: 120px;
+        border: 2px dashed var(--accent);
+        border-radius: 14px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-bottom: 12px;
+        font-family: 'Patrick Hand', cursive;
+      }
+      .button-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .button-row button {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-family: 'Patrick Hand', cursive;
+        font-size: 1rem;
+      }
+      .button-row button.secondary {
+        background: #6c7a89;
+      }
+      .glossary-link {
+        color: var(--accent);
+        text-decoration: underline;
+        text-decoration-style: dotted;
+      }
+      .nav-links {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 40px 0 0;
+        border-top: 2px dashed var(--line);
+        padding-top: 16px;
+      }
+      .nav-links a {
+        text-decoration: none;
+        color: #fff;
+        background: var(--accent);
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-family: 'Patrick Hand', cursive;
+      }
+      .nav-links .spacer {
+        flex: 1;
+      }
+    </style>
+  </head>
+  <body data-base={base}>
+    <main>
+      <slot />
+      <div class="nav-links">
+        {prevHref ? <a href={prevHref}>← {prevLabel}</a> : <span class="spacer"></span>}
+        {nextHref ? <a href={nextHref}>{nextLabel} →</a> : <span class="spacer"></span>}
+      </div>
+    </main>
+    <script is:inline>
+      const rawBase = document.body.dataset.base || '/';
+      const base = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
+      window.SWITCH_SCANNER_ASSET_BASE = base;
+    </script>
+    <script type="module" src={`${base}components/switch-scanner.js`}></script>
+    <script type="module">
+      const rawBase = document.body.dataset.base || '/';
+      const base = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
+      const init = async () => {
+        const [{ initReactionTest }, { initScanEstimator }, { initSettingsAdvisor }] = await Promise.all([
+          import(`${base}scripts/reaction.js`),
+          import(`${base}scripts/estimator.js`),
+          import(`${base}scripts/advisor.js`),
+          import(`${base}scripts/glossary.js`)
+        ]);
+        initReactionTest();
+        initScanEstimator();
+        initSettingsAdvisor();
+      };
+      window.addEventListener('DOMContentLoaded', init);
+    </script>
+  </body>
+</html>

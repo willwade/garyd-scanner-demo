@@ -1,0 +1,38 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 12: Patterns & Modes Hub"
+prevHref: "/book/chapter-11"
+prevLabel: "Chapter 11: Efficiency Calculator"
+nextHref: "/book/chapter-13"
+nextLabel: "Chapter 13: Timing & Optimization (.65 Rule)"
+---
+
+# Chapter 12: Patterns & Modes Hub
+
+This is the one-stop reference for **patterns** (structure) and **modes** (behavior).
+
+## Patterns (Structure)
+
+- **Linear:** Item-by-item scan.
+- **Row-Column:** Rows first, then items within a row.
+- **Progressive Segmenting / Elimination:** Repeatedly split until target remains.
+
+## Modes (Behavior)
+
+- **Continuous:** Smooth, mouse-like movement.
+- **Probability (PPM):** Items scan by likelihood, not position.
+- **Cause-Effect:** Single-item training mode.
+- **Group-Row-Column:** Explicit group stage before rows/columns.
+
+## Probability (PPM) Demo
+
+<div class="demo-instructions">
+  🎮 Watch how the scan prioritizes likely items first.
+</div>
+<div class="scanner-container small">
+  <switch-scanner theme="sketch" scan-mode="probability" grid-size="26"></switch-scanner>
+</div>
+
+<div class="highlight-box">
+  PPM is especially useful for AAC where words and letters have strong usage frequency. Use this demo as the reference point for “predictive scanning.”
+</div>

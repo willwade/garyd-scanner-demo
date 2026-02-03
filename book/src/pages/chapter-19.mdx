@@ -1,0 +1,84 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 19: Error Recovery"
+prevHref: "/book/chapter-18"
+prevLabel: "Chapter 18: Directed Scanning"
+nextHref: "/book/chapter-20"
+nextLabel: "Chapter 20: Feedback & Highlighting"
+---
+
+# Chapter 19: Error Recovery
+
+Errors are expensive for switch users. Provide recovery tools that are always available.
+
+## Recovery methods
+
+- **Empty items:** Selectable items that reset the scan without output
+- **Cancel scan:** Dedicated cancel action (button, long-hold, or special item)
+- **Undo/redo:** Reverse last character or operation
+- **Back navigation:** Return to previous group/page
+
+<div class="warning-box">
+  Without recovery, a single mistake can cost 30+ seconds. This is the most common reason users abandon scanning systems.
+</div>
+
+## Empty Item Reset Demo
+
+<div class="demo-instructions">
+  🎮 Try it: select “Reset” to restart the scan without output.
+</div>
+<div class="scanner-container small">
+  <switch-scanner
+    theme="sketch"
+    scan-pattern="linear"
+    scan-rate="1200"
+    grid-cols="4"
+    custom-items='[
+      {"label":"YES","id":"yes"},
+      {"label":"NO","id":"no"},
+      {"label":"⟳ Reset","id":"reset","isEmpty":true,"backgroundColor":"#fff3cd"},
+      {"label":"Undo","id":"undo","backgroundColor":"#e8f5e9"}
+    ]'>
+  </switch-scanner>
+</div>
+
+## Long-Hold Cancel Demo
+
+<div class="demo-instructions">
+  🎮 Hold the switch for 1 second to cancel and reset the scan.
+</div>
+<div class="scanner-container small">
+  <switch-scanner
+    theme="sketch"
+    scan-pattern="row-column"
+    scan-technique="block"
+    scan-rate="1200"
+    cancel-method="long-hold"
+    long-hold-time="1000"
+    grid-size="16">
+  </switch-scanner>
+</div>
+
+## Undo & Backspace Demo
+
+<div class="demo-instructions">
+  🎮 Enter a few letters, then use Backspace or Undo/Redo.
+</div>
+<div class="scanner-container small">
+  <switch-scanner
+    theme="sketch"
+    scan-pattern="linear"
+    scan-rate="900"
+    grid-cols="4"
+    custom-items='[
+      {"label":"A","id":"A"},
+      {"label":"B","id":"B"},
+      {"label":"C","id":"C"},
+      {"label":"Space","id":"Space"},
+      {"label":"Backspace","id":"Backspace","backgroundColor":"#ffe0b2"},
+      {"label":"Undo","id":"Undo","backgroundColor":"#e3f2fd"},
+      {"label":"Redo","id":"Redo","backgroundColor":"#e3f2fd"},
+      {"label":"Clear","id":"Clear","backgroundColor":"#ffcdd2"}
+    ]'>
+  </switch-scanner>
+</div>

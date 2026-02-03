@@ -1,0 +1,42 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 17: Critical Overscan"
+prevHref: "/book/chapter-16"
+prevLabel: "Chapter 16: Continuous Scanning"
+nextHref: "/book/chapter-18"
+nextLabel: "Chapter 18: Directed Scanning"
+---
+
+# Chapter 17: Critical Overscan
+
+Critical overscan scans fast, then slows down on demand for precise selection.
+
+Think of it as “fast sweep + careful return.” This is useful when users can identify a target quickly but need more time to press accurately.
+
+## When it helps
+
+- Very large linear lists
+- Fast reaction times
+- Avoiding complex grouping
+
+## Design Notes
+
+- Keep the fast phase short enough to avoid fatigue.
+- Slow phase should be long enough to allow accurate presses (often 2–3× slower).
+- Provide a clear “return” cue so users know the slow pass is active.
+
+## Demo
+
+<div class="demo-instructions">
+  🎮 Try it: press when your target passes, then select on the slow return.
+</div>
+<div class="scanner-container">
+  <switch-scanner
+    theme="sketch"
+    scan-pattern="linear"
+    critical-overscan-enabled="true"
+    critical-overscan-fast-rate="200"
+    critical-overscan-slow-rate="1200"
+    grid-size="36">
+  </switch-scanner>
+</div>

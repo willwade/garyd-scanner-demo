@@ -16,22 +16,18 @@ import { ContinuousScanner } from './scanners/ContinuousScanner';
 import { ProbabilityScanner } from './scanners/ProbabilityScanner';
 import { CauseEffectScanner } from './scanners/CauseEffectScanner';
 
-// Import switch button images - Vite will handle path resolution for dev/prod
-import switchBlueUrl from '/switches/switch-blue.png';
-import switchBlueDepressedUrl from '/switches/switch-blue-depressed.png';
-import switchGreenUrl from '/switches/switch-green.png';
-import switchGreenDepressedUrl from '/switches/switch-green-depressed.png';
-import switchRedUrl from '/switches/switch-red.png';
-import switchRedDepressedUrl from '/switches/switch-red-depressed.png';
-import switchYellowUrl from '/switches/switch-yellow.png';
-import switchYellowDepressedUrl from '/switches/switch-yellow-depressed.png';
+function getAssetBase(): string {
+  const globalBase = (window as unknown as { SWITCH_SCANNER_ASSET_BASE?: string }).SWITCH_SCANNER_ASSET_BASE;
+  const base = globalBase && globalBase.length > 0 ? globalBase : '/';
+  return base.endsWith('/') ? base : `${base}/`;
+}
 
 // Map image URLs by color for easy lookup
 const SWITCH_IMAGES = {
-  blue: { normal: switchBlueUrl, depressed: switchBlueDepressedUrl },
-  green: { normal: switchGreenUrl, depressed: switchGreenDepressedUrl },
-  red: { normal: switchRedUrl, depressed: switchRedDepressedUrl },
-  yellow: { normal: switchYellowUrl, depressed: switchYellowDepressedUrl },
+  blue: { normal: `${getAssetBase()}switches/switch-blue.png`, depressed: `${getAssetBase()}switches/switch-blue-depressed.png` },
+  green: { normal: `${getAssetBase()}switches/switch-green.png`, depressed: `${getAssetBase()}switches/switch-green-depressed.png` },
+  red: { normal: `${getAssetBase()}switches/switch-red.png`, depressed: `${getAssetBase()}switches/switch-red-depressed.png` },
+  yellow: { normal: `${getAssetBase()}switches/switch-yellow.png`, depressed: `${getAssetBase()}switches/switch-yellow-depressed.png` },
 } as const;
 
 export class SwitchScannerElement extends HTMLElement {
@@ -46,6 +42,8 @@ export class SwitchScannerElement extends HTMLElement {
   private baseItems: GridItem[] = [];
   private customItems: GridItem[] | null = null;
   private forcedGridCols: number | null = null;
+  private outputHistory: string[] = [];
+  private redoStack: string[] = [];
 
   private dwellTimer: number | null = null;
   private currentDwellTarget: HTMLElement | null = null;
@@ -109,7 +107,7 @@ export class SwitchScannerElement extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['scan-strategy', 'scan-pattern', 'scan-technique', 'scan-mode', 'scan-input-mode', 'continuous-technique', 'compass-mode', 'grid-content', 'grid-size', 'language', 'scan-rate', 'acceptance-time', 'dwell-time', 'elimination-switch-count', 'custom-items', 'grid-cols', 'theme'];
+    return ['scan-strategy', 'scan-pattern', 'scan-technique', 'scan-mode', 'scan-input-mode', 'continuous-technique', 'compass-mode', 'grid-content', 'grid-size', 'language', 'scan-rate', 'acceptance-time', 'dwell-time', 'elimination-switch-count', 'custom-items', 'grid-cols', 'theme', 'cancel-method', 'long-hold-time'];
   }
 
   attributeChangedCallback(name: string, oldValue: string, newValue: string) {
@@ -180,6 +178,12 @@ export class SwitchScannerElement extends HTMLElement {
             break;
         case 'elimination-switch-count':
             updates.eliminationSwitchCount = parseInt(newValue, 10) as AppConfig['eliminationSwitchCount'];
+            break;
+        case 'cancel-method':
+            updates.cancelMethod = newValue as AppConfig['cancelMethod'];
+            break;
+        case 'long-hold-time':
+            updates.longHoldTime = parseInt(newValue, 10);
             break;
     }
     this.configManager.update(updates);
@@ -255,6 +259,12 @@ export class SwitchScannerElement extends HTMLElement {
 
     const elimSwitchCount = this.getAttribute('elimination-switch-count');
     if (elimSwitchCount) overrides.eliminationSwitchCount = parseInt(elimSwitchCount, 10) as AppConfig['eliminationSwitchCount'];
+
+    const cancelMethod = this.getAttribute('cancel-method');
+    if (cancelMethod) overrides.cancelMethod = cancelMethod as AppConfig['cancelMethod'];
+
+    const longHold = this.getAttribute('long-hold-time');
+    if (longHold) overrides.longHoldTime = parseInt(longHold, 10);
 
     // Custom items and columns are handled separately, not in AppConfig directly
     const customItems = this.getAttribute('custom-items');
@@ -1013,17 +1023,38 @@ export class SwitchScannerElement extends HTMLElement {
         const output = this.shadowRoot!.querySelector('.output-text');
         if (output) {
              const label = item.label;
+             const current = output.textContent || '';
+
+             if (label === 'Undo') {
+                  if (this.outputHistory.length > 0) {
+                      this.redoStack.push(current);
+                      output.textContent = this.outputHistory.pop() || '';
+                  }
+                  return;
+             }
+
+             if (label === 'Redo') {
+                  if (this.redoStack.length > 0) {
+                      this.outputHistory.push(current);
+                      output.textContent = this.redoStack.pop() || '';
+                  }
+                  return;
+             }
+
+             // For any normal edit, track history and clear redo
+             this.outputHistory.push(current);
+             this.redoStack = [];
 
              if (label === 'Backspace') {
-                  output.textContent = output.textContent?.slice(0, -1) || '';
+                  output.textContent = current.slice(0, -1);
              } else if (label === 'Clear') {
                   output.textContent = '';
              } else if (label === 'Enter') {
-                  output.textContent += '\n';
+                  output.textContent = current + '\n';
              } else if (label === 'Space') {
-                  output.textContent += ' ';
+                  output.textContent = current + ' ';
              } else {
-                  output.textContent += label;
+                  output.textContent = current + label;
              }
         }
     });

@@ -1,0 +1,43 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 9: Progressive Segmenting & Elimination"
+prevHref: "/book/chapter-8"
+prevLabel: "Chapter 8: Row-Column Scanning"
+nextHref: "/book/chapter-10"
+nextLabel: "Chapter 10: Pattern Comparison"
+---
+
+# Chapter 9: Progressive Segmenting & Elimination
+
+**Progressive segmenting** repeatedly divides the set until the target remains. **Elimination scanning** is the most common form.
+
+## Common techniques
+
+- **Halving** (binary split)
+- **Quartering** (quadrants)
+- **Scan-direct** (many groups)
+
+## Example: 64 items with 4-switch elimination
+
+1. Select quadrant (16 items remain)
+2. Select sub-quadrant (4 items remain)
+3. Select item
+
+<div class="highlight-box">
+  Elimination scanning offers logarithmic efficiency: big grids become fast once learned.
+</div>
+
+## Demo
+
+<div class="demo-instructions">
+  🎮 Experience elimination scanning speed with a 64-item grid.
+</div>
+<div class="scanner-container">
+  <switch-scanner
+    theme="sketch"
+    scan-pattern="elimination"
+    elimination-switch-count="4"
+    scan-rate="1500"
+    grid-size="64">
+  </switch-scanner>
+</div>

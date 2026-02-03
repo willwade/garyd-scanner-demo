@@ -1,0 +1,44 @@
+---
+import BookLayout from '../layouts/BookLayout.astro';
+const chapters = [
+  { href: '/book/chapter-1', label: 'Chapter 1: What is a Switch?' },
+  { href: '/book/chapter-2', label: 'Chapter 2: The Bandwidth Problem' },
+  { href: '/book/chapter-3', label: 'Chapter 3: Cause & Effect' },
+  { href: '/book/chapter-4', label: 'Chapter 4: Selection Sets' },
+  { href: '/book/chapter-5', label: 'Chapter 5: Single Switch Scanning' },
+  { href: '/book/chapter-6', label: 'Chapter 6: Two Switch Scanning' },
+  { href: '/book/chapter-7', label: 'Chapter 7: Why Group?' },
+  { href: '/book/chapter-8', label: 'Chapter 8: Row-Column Scanning' },
+  { href: '/book/chapter-9', label: 'Chapter 9: Progressive Segmenting & Elimination' },
+  { href: '/book/chapter-10', label: 'Chapter 10: Pattern Comparison' },
+  { href: '/book/chapter-11', label: 'Chapter 11: Efficiency Calculator' },
+  { href: '/book/chapter-12', label: 'Chapter 12: Patterns & Modes Hub' },
+  { href: '/book/chapter-13', label: 'Chapter 13: Timing & Optimization (.65 Rule)' },
+  { href: '/book/chapter-14', label: 'Chapter 14: Visualization Options' },
+  { href: '/book/chapter-15', label: 'Chapter 15: Block vs Point Technique' },
+  { href: '/book/chapter-16', label: 'Chapter 16: Continuous Scanning' },
+  { href: '/book/chapter-17', label: 'Chapter 17: Critical Overscan' },
+  { href: '/book/chapter-18', label: 'Chapter 18: Directed Scanning' },
+  { href: '/book/chapter-19', label: 'Chapter 19: Error Recovery' },
+  { href: '/book/chapter-20', label: 'Chapter 20: Feedback & Highlighting' },
+  { href: '/book/chapter-21', label: 'Chapter 21: User Profiles' },
+  { href: '/book/chapter-22', label: 'Chapter 22: Implementing Scanners' },
+  { href: '/book/chapter-23', label: 'Chapter 23: Accessibility Testing' },
+  { href: '/book/chapter-24', label: 'Chapter 24: Design Patterns' },
+  { href: '/book/glossary', label: 'Glossary' }
+];
+---
+<BookLayout title="Switch Scanning Book" nextHref="/book/chapter-1" nextLabel="Chapter 1: What is a Switch?">
+  <div class="hero">
+    <h1>Switch Scanning: The Interactive Book</h1>
+    <p><strong>Developer + clinician-friendly guide to switch access, scanning patterns, and optimization.</strong></p>
+  </div>
+  <div class="card">
+    <h2>Chapters</h2>
+    <ul>
+      {chapters.map((c) => (
+        <li><a href={c.href}>{c.label}</a></li>
+      ))}
+    </ul>
+  </div>
+</BookLayout>

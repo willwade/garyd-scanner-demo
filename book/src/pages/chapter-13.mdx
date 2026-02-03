@@ -1,0 +1,87 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 13: Timing & Optimization (.65 Rule)"
+prevHref: "/book/chapter-12"
+prevLabel: "Chapter 12: Patterns & Modes Hub"
+nextHref: "/book/chapter-14"
+nextLabel: "Chapter 14: Visualization Options"
+---
+
+# Chapter 13: Timing & Optimization (.65 Rule)
+
+The **scan rate** is the most important timing parameter. A research-based starting point is the **.65 rule**:
+
+`Scan Rate ≈ Mean Reaction Time ÷ 0.65`
+
+If press times are highly variable, increase scan rate or add acceptance time.
+
+## Acceptance Time & Selection Confirmation
+
+Acceptance time adds a delay before confirming a press, reducing accidental triggers.
+
+- **Short (150–300ms):** advanced users
+- **Medium (300–600ms):** default
+- **Long (600–1000ms):** tremor control
+
+## Timing Guidelines by User Profile
+
+| User Profile | Recommended Rate | Reason |
+| --- | --- | --- |
+| Beginner | 1500–2000ms | Learning curve, building confidence |
+| Intermediate | 1000–1500ms | Balance of speed and accuracy |
+| Advanced | 500–1000ms | Maximum efficiency |
+| Motor impairment (tremors) | 1500ms + 500ms acceptance | Filter tremors |
+| Visual impairment | 1000–1500ms + audio | Time for feedback |
+| Cognitive impairment | 1500–2000ms | More thinking time |
+| Fatigue (MND/ALS) | Morning 1000ms / Afternoon 1500ms | Energy changes |
+
+<div class="info-box">
+  Practical takeaway: Use the .65 rule to get into the right neighborhood, then adjust based on accuracy, fatigue, and user preference.
+</div>
+
+## Reaction Time Quick Test
+
+<div class="reaction-test" id="reactionTest">
+  <div class="reaction-display" id="reactionDisplay">🙂 Ready?</div>
+  <div class="button-row">
+    <button id="reactionStart">Start Test</button>
+    <button class="secondary" id="reactionReset">Reset</button>
+  </div>
+  <p><strong>Trial:</strong> <span id="reactionTrial">0</span> / 3</p>
+  <p><strong>Last Reaction Time:</strong> <span id="reactionLast">—</span></p>
+  <p><strong>Average Reaction Time:</strong> <span id="reactionAvg">—</span></p>
+  <p><strong>Recommended Scan Rate (.65 rule):</strong> <span id="reactionRate">—</span></p>
+</div>
+
+## Scan Time Estimator
+
+<div class="reaction-test" id="scanEstimator">
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+    <label>
+      <strong>Scan Rate (ms)</strong><br />
+      <input id="estimateScanRate" type="number" min="200" max="5000" value="1000" style="width: 100%; padding: 8px; margin-top: 6px;" />
+    </label>
+    <label>
+      <strong>Grid Size (items)</strong><br />
+      <input id="estimateGridSize" type="number" min="4" max="200" value="36" style="width: 100%; padding: 8px; margin-top: 6px;" />
+    </label>
+    <label>
+      <strong>Pattern</strong><br />
+      <select id="estimatePattern" style="width: 100%; padding: 8px; margin-top: 6px;">
+        <option value="linear">Linear</option>
+        <option value="row-column">Row-Column</option>
+        <option value="elimination">Elimination</option>
+      </select>
+    </label>
+    <label>
+      <strong>Elimination Switches</strong><br />
+      <input id="estimateSwitches" type="number" min="2" max="8" value="4" style="width: 100%; padding: 8px; margin-top: 6px;" />
+    </label>
+  </div>
+  <div class="button-row" style="margin-top: 12px;">
+    <button id="estimateUseReaction">Use Reaction Avg</button>
+    <button class="secondary" id="estimateReset">Reset</button>
+  </div>
+  <p><strong>Estimated Avg Presses:</strong> <span id="estimatePresses">—</span></p>
+  <p><strong>Estimated Time per Selection:</strong> <span id="estimateTime">—</span></p>
+</div>

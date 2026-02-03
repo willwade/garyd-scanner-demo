@@ -1,0 +1,43 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 18: Directed Scanning"
+prevHref: "/book/chapter-17"
+prevLabel: "Chapter 17: Critical Overscan"
+nextHref: "/book/chapter-19"
+nextLabel: "Chapter 19: Error Recovery"
+---
+
+# Chapter 18: Directed Scanning
+
+Directed scanning lets users steer focus with directional switches.
+
+It works best when users have reliable control in 2+ directions and can interpret spatial movement. It can reduce waiting time, but increases cognitive load.
+
+## Switch configurations
+
+- Full directional (4+ switches)
+- Reduced directional (right + down with wrap)
+- Rotating arrow selection
+
+## Design Notes
+
+- Make the current focus obvious (crosshair, halo, or block highlight).
+- Use consistent wrap rules (end-of-row/column behavior).
+- Provide a simple “undo” path to avoid dead ends.
+
+## Demo
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+  <div>
+    <h4>Compass (Fixed-8)</h4>
+    <div class="scanner-container small">
+      <switch-scanner theme="sketch" scan-mode="continuous" continuous-technique="eight-direction" compass-mode="fixed-8" grid-size="16"></switch-scanner>
+    </div>
+  </div>
+  <div>
+    <h4>Compass (Fluid)</h4>
+    <div class="scanner-container small">
+      <switch-scanner theme="sketch" scan-mode="continuous" continuous-technique="eight-direction" compass-mode="continuous" grid-size="16"></switch-scanner>
+    </div>
+  </div>
+</div>

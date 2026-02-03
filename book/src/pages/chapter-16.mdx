@@ -1,0 +1,43 @@
+---
+layout: ../layouts/BookLayout.astro
+title: "Chapter 16: Continuous Scanning"
+prevHref: "/book/chapter-15"
+prevLabel: "Chapter 15: Block vs Point Technique"
+nextHref: "/book/chapter-17"
+nextLabel: "Chapter 17: Critical Overscan"
+---
+
+# Chapter 16: Continuous Scanning
+
+Continuous scanning moves focus smoothly rather than stepping item-by-item.
+
+- Gliding cursor
+- Crosshair
+- Compass (8-direction)
+
+<div class="info-box">
+  Continuous scanning is timing-sensitive. If users miss targets, slow scan rate or add acceptance time.
+</div>
+
+## Demo
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+  <div>
+    <h4>Gliding Cursor</h4>
+    <div class="scanner-container small">
+      <switch-scanner theme="sketch" scan-mode="continuous" continuous-technique="gliding" grid-size="16"></switch-scanner>
+    </div>
+  </div>
+  <div>
+    <h4>Crosshair</h4>
+    <div class="scanner-container small">
+      <switch-scanner theme="sketch" scan-mode="continuous" continuous-technique="crosshair" grid-size="16"></switch-scanner>
+    </div>
+  </div>
+  <div>
+    <h4>Compass (Fixed-8)</h4>
+    <div class="scanner-container small">
+      <switch-scanner theme="sketch" scan-mode="continuous" continuous-technique="eight-direction" compass-mode="fixed-8" grid-size="16"></switch-scanner>
+    </div>
+  </div>
+</div>
