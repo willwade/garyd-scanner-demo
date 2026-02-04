@@ -61,6 +61,85 @@ The simulator includes visualization modes to help analyze the efficiency of dif
 4.  Adjust **Heatmap Max Cost** to change the color scale sensitivity. Default is 20.
     *   *Tip:* If the grid is large, increase this value to see a smoother gradient.
 
+## Packages (npm)
+
+This repo publishes two packages that can be used independently in other apps:
+
+1. `scan-engine` — headless scanning engine (strategies, timing, selection).
+2. `scan-engine-dom` — DOM helpers for continuous scanning overlays + hit testing.
+
+### Install
+
+```bash
+npm install scan-engine scan-engine-dom
+```
+
+### Headless Scanning (scan-engine)
+
+```ts
+import { LinearScanner } from 'scan-engine';
+
+const surface = {
+  getItemsCount: () => items.length,
+  getColumns: () => 8,
+  setFocus: (indices: number[]) => highlight(indices),
+  setSelected: (index: number) => flash(index),
+};
+
+const configProvider = {
+  get: () => ({
+    scanRate: 800,
+    scanInputMode: 'auto',
+    scanDirection: 'circular',
+    scanPattern: 'linear',
+    scanTechnique: 'point',
+    scanMode: null,
+    continuousTechnique: 'crosshair',
+    compassMode: 'continuous',
+    eliminationSwitchCount: 4,
+    allowEmptyItems: false,
+    initialItemPause: 0,
+    scanLoops: 0,
+    criticalOverscan: { enabled: false, fastRate: 100, slowRate: 1000 },
+    colorCode: { errorRate: 0.1, selectThreshold: 0.95 },
+  })
+};
+
+const scanner = new LinearScanner(surface, configProvider, {
+  onSelect: (index: number) => console.log('Selected', index),
+});
+
+scanner.start();
+```
+
+### Continuous Scanning (scan-engine + scan-engine-dom)
+
+```ts
+import { ContinuousScanner } from 'scan-engine';
+import { ContinuousOverlay, resolveIndexAtPoint } from 'scan-engine-dom';
+
+const container = document.querySelector('.grid') as HTMLElement;
+const overlay = new ContinuousOverlay(container);
+
+const surface = {
+  getItemsCount: () => items.length,
+  getColumns: () => cols,
+  setFocus: (indices: number[]) => highlight(indices),
+  setSelected: (index: number) => flash(index),
+  resolveIndexAtPoint: (x: number, y: number) => resolveIndexAtPoint(container, x, y),
+};
+
+const scanner = new ContinuousScanner(surface, configProvider, {
+  onContinuousUpdate: (state) => overlay.update(state),
+  onSelect: (index: number) => console.log('Selected', index),
+});
+
+scanner.start();
+
+// Cleanup when switching modes:
+overlay.destroy();
+```
+
 ## Developer Documentation
 
 ### Prerequisites
