@@ -33,21 +33,27 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Build scan-engine
-        run: npm --prefix packages/switch-scanner-engine run build
+        run: npm run build
+        working-directory: packages/switch-scanner-engine
 
       - name: Prepare scan-engine version
-        run: npm --prefix packages/switch-scanner-engine version "${{ steps.version.outputs.version }}" --no-git-tag-version
+        run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version
+        working-directory: packages/switch-scanner-engine
 
       - name: Publish scan-engine
-        run: npm --prefix packages/switch-scanner-engine publish --access public
+        run: npm publish --access public
+        working-directory: packages/switch-scanner-engine
 
       - name: Build scan-engine-dom
-        run: npm --prefix packages/scan-engine-dom run build
+        run: npm run build
+        working-directory: packages/scan-engine-dom
 
       - name: Prepare scan-engine-dom version
         run: |
-          npm --prefix packages/scan-engine-dom version "${{ steps.version.outputs.version }}" --no-git-tag-version
-          npm --prefix packages/scan-engine-dom pkg set dependencies.scan-engine="^${{ steps.version.outputs.version }}"
+          npm version "${{ steps.version.outputs.version }}" --no-git-tag-version
+          npm pkg set dependencies.scan-engine="^${{ steps.version.outputs.version }}"
+        working-directory: packages/scan-engine-dom
 
       - name: Publish scan-engine-dom
-        run: npm --prefix packages/scan-engine-dom publish --access public
+        run: npm publish --access public
+        working-directory: packages/scan-engine-dom
