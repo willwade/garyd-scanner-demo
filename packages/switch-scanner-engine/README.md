@@ -47,6 +47,30 @@ const scanner = new LinearScanner(surface, config, {
 scanner.start();
 ```
 
+## Continuous Scanning UI Hooks
+
+Continuous scanning is headless. Provide optional hooks for UI:
+
+```ts
+import type { ContinuousUpdate, ScanSurface, ScanCallbacks } from 'scan-engine';
+
+const surface: ScanSurface = {
+  getItemsCount: () => items.length,
+  getColumns: () => 8,
+  setFocus: (indices) => highlight(indices),
+  setSelected: (index) => flash(index),
+  resolveIndexAtPoint: (xPercent, yPercent) => resolveIndex(xPercent, yPercent)
+};
+
+const callbacks: ScanCallbacks = {
+  onContinuousUpdate: (state: ContinuousUpdate) => {
+    renderContinuousOverlay(state);
+  }
+};
+```
+
+If you are using a DOM grid, the companion package `scan-engine-dom` provides an overlay renderer and hit-testing helper.
+
 ## Strategies
 
 - Row/Column

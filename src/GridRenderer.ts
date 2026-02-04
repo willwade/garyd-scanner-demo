@@ -116,7 +116,7 @@ export class GridRenderer {
       scanPattern?: string;
       scanRate?: number;
     },
-    _meta?: Record<string, unknown>
+    _meta?: import('scan-engine').FocusMeta
   ) {
     const effectiveConfig = config ?? this.highlightConfig ?? undefined;
     // Update styles if config provided

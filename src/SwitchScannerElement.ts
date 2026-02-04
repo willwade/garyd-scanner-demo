@@ -20,6 +20,7 @@ import {
   type ScanSurface,
   type ScanCallbacks
 } from 'scan-engine';
+import { ContinuousOverlay, resolveIndexAtPoint } from 'scan-engine-dom';
 import { loadAACFile, getBrowserExtensions } from 'aac-board-viewer';
 import type { AACTree, AACPage, AACButton } from 'aac-board-viewer';
 
@@ -48,6 +49,7 @@ export class SwitchScannerElement extends HTMLElement {
   private scanCallbacks!: ScanCallbacks;
 
   private currentScanner: Scanner | null = null;
+  private continuousOverlay: ContinuousOverlay | null = null;
   private baseItems: GridItem[] = [];
   private customItems: GridItem[] | null = null;
   private forcedGridCols: number | null = null;
@@ -116,7 +118,8 @@ export class SwitchScannerElement extends HTMLElement {
           el.style.opacity = '';
         });
       },
-      getContainerElement: () => this.gridRenderer.getContainer()
+      getContainerElement: () => this.gridRenderer.getContainer(),
+      resolveIndexAtPoint: (xPercent, yPercent) => resolveIndexAtPoint(this.gridRenderer.getContainer(), xPercent, yPercent)
     };
 
     this.scanCallbacks = {
@@ -138,6 +141,11 @@ export class SwitchScannerElement extends HTMLElement {
           composed: true
         });
         this.gridRenderer.getContainer().dispatchEvent(event);
+      },
+      onContinuousUpdate: (state) => {
+        if (this.continuousOverlay) {
+          this.continuousOverlay.update(state);
+        }
       }
     };
 
@@ -154,6 +162,7 @@ export class SwitchScannerElement extends HTMLElement {
     await this.initBoardIfNeeded();
 
     await this.updateGrid(initialConfig, true);
+    this.updateContinuousOverlay(initialConfig);
 
     this.currentScanner.start();
 
@@ -1686,6 +1695,7 @@ export class SwitchScannerElement extends HTMLElement {
               scanPattern: config.scanPattern,
               scanRate: config.scanRate
           });
+          this.updateContinuousOverlay(config);
           return;
       }
 
@@ -1734,6 +1744,7 @@ export class SwitchScannerElement extends HTMLElement {
           scanPattern: config.scanPattern,
           scanRate: config.scanRate
       });
+      this.updateContinuousOverlay(config);
   }
 
   private createScanner(config: AppConfig): Scanner {
@@ -1785,6 +1796,7 @@ export class SwitchScannerElement extends HTMLElement {
     }
 
     this.currentScanner = this.createScanner(config);
+    this.updateContinuousOverlay(config);
 
     // Update highlight styles when config changes
     this.gridRenderer.updateHighlightStyles({
@@ -1801,5 +1813,19 @@ export class SwitchScannerElement extends HTMLElement {
 
     console.log('[SwitchScannerElement] Starting new scanner:', this.currentScanner.constructor.name);
     this.currentScanner.start();
+  }
+
+  private updateContinuousOverlay(config: AppConfig) {
+    if (config.scanMode === 'continuous') {
+      if (!this.continuousOverlay) {
+        this.continuousOverlay = new ContinuousOverlay(this.gridRenderer.getContainer());
+      }
+      return;
+    }
+
+    if (this.continuousOverlay) {
+      this.continuousOverlay.destroy();
+      this.continuousOverlay = null;
+    }
   }
 }

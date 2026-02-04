@@ -1,15 +1,7 @@
 import { Scanner } from '../Scanner';
-import type { SwitchAction } from '../types';
+import type { ContinuousUpdate, SwitchAction } from '../types';
 
 export class ContinuousScanner extends Scanner {
-  private overlay: HTMLElement | null = null;
-  private hBar: HTMLElement | null = null; // Horizontal bar (crosshair)
-  private vBar: HTMLElement | null = null; // Vertical bar (crosshair)
-  private bufferZone: HTMLElement | null = null; // Moving buffer (gliding)
-  private lockedXBar: HTMLElement | null = null; // Green line showing locked X position
-  private directionIndicator: HTMLElement | null = null; // Arrow/compass for eight-direction mode
-  private directionLine: HTMLElement | null = null; // Line showing path for eight-direction mode
-
   // States differ by technique:
   // Crosshair: 'x-scan' → 'y-scan' → 'processing' (waits for switch)
   // Gliding: 'x-scanning' → 'x-capturing' → 'y-scanning' → 'y-capturing' → 'processing' (continuous movement)
@@ -69,10 +61,6 @@ export class ContinuousScanner extends Scanner {
         totalItems
       });
 
-      console.log('[ContinuousScanner] About to create overlay...');
-      this.createOverlay();
-      console.log('[ContinuousScanner] Overlay created successfully');
-
       // Set initial state based on technique
       if (this.technique === 'gliding') {
         this.state = 'x-scanning';
@@ -92,6 +80,7 @@ export class ContinuousScanner extends Scanner {
 
       console.log('[ContinuousScanner] Initial state:', this.state);
 
+      this.emitUpdate();
       super.start();
     } catch (error) {
       console.error('[ContinuousScanner] ERROR in start():', error);
@@ -105,7 +94,6 @@ export class ContinuousScanner extends Scanner {
       window.clearTimeout(this.pauseTimer);
       this.pauseTimer = null;
     }
-    this.removeOverlay();
   }
 
   protected reset() {
@@ -136,12 +124,7 @@ export class ContinuousScanner extends Scanner {
     this.directionStepCounter = 0;
     this.surface.setFocus([]);
 
-    // Hide all overlays
-    if (this.lockedXBar) this.lockedXBar.style.display = 'none';
-    if (this.directionIndicator) this.directionIndicator.style.display = 'none';
-    if (this.directionLine) this.directionLine.style.display = 'none';
-
-    this.updateOverlay();
+    this.emitUpdate();
   }
 
   protected step() {
@@ -283,40 +266,7 @@ export class ContinuousScanner extends Scanner {
       });
     }
 
-    this.updateOverlay();
-  }
-
-  private calculateLineLength(x: number, y: number, dx: number, dy: number): number {
-    // Calculate the distance from current position to the edge of the screen
-    // in the given direction (dx, dy), as a percentage
-
-    if (dx === 0 && dy === -1) {
-      // North - distance to top edge
-      return y;
-    } else if (dx === 1 && dy === -1) {
-      // Northeast - distance to top or right edge, whichever is closer
-      return Math.min(100 - x, y) * Math.SQRT2;
-    } else if (dx === 1 && dy === 0) {
-      // East - distance to right edge
-      return 100 - x;
-    } else if (dx === 1 && dy === 1) {
-      // Southeast - distance to bottom or right edge, whichever is closer
-      return Math.min(100 - x, 100 - y) * Math.SQRT2;
-    } else if (dx === 0 && dy === 1) {
-      // South - distance to bottom edge
-      return 100 - y;
-    } else if (dx === -1 && dy === 1) {
-      // Southwest - distance to bottom or left edge, whichever is closer
-      return Math.min(x, 100 - y) * Math.SQRT2;
-    } else if (dx === -1 && dy === 0) {
-      // West - distance to left edge
-      return x;
-    } else if (dx === -1 && dy === -1) {
-      // Northwest - distance to top or left edge, whichever is closer
-      return Math.min(x, y) * Math.SQRT2;
-    }
-
-    return 50; // Default fallback
+    this.emitUpdate();
   }
 
   private getDirectionFromAngle(angle: number): { dx: number; dy: number; name: string } {
@@ -352,120 +302,6 @@ export class ContinuousScanner extends Scanner {
         this.step();
         this.scheduleNextStep();
     }, delay);
-  }
-
-  private createOverlay() {
-    if (this.overlay) return;
-
-    console.log('[ContinuousScanner] Creating overlay...');
-
-    const container = this.surface.getContainerElement?.();
-    console.log('[ContinuousScanner] Container:', container);
-
-    if (!container) {
-      console.error('[ContinuousScanner] ERROR: Container is null/undefined!');
-      return;
-    }
-
-    this.overlay = document.createElement('div');
-    this.overlay.style.position = 'absolute';
-    this.overlay.style.top = '0';
-    this.overlay.style.left = '0';
-    this.overlay.style.width = '100%';
-    this.overlay.style.height = '100%';
-    this.overlay.style.pointerEvents = 'none'; // click through
-    this.overlay.style.zIndex = '1000'; // High z-index to ensure overlay is above everything
-
-    // Buffer Zone (for gliding cursor) - grey semi-transparent overlay
-    this.bufferZone = document.createElement('div');
-    this.bufferZone.style.position = 'absolute';
-    this.bufferZone.style.top = '0';
-    this.bufferZone.style.height = '100%';
-    this.bufferZone.style.backgroundColor = 'rgba(128, 128, 128, 0.4)'; // Grey semi-transparent
-    this.bufferZone.style.borderLeft = '2px solid rgba(128, 128, 128, 0.8)';
-    this.bufferZone.style.borderRight = '2px solid rgba(128, 128, 128, 0.8)';
-    this.bufferZone.style.pointerEvents = 'none';
-    this.bufferZone.style.display = 'none'; // Hidden initially
-    this.overlay.appendChild(this.bufferZone);
-
-    // Vertical Bar (for crosshair technique)
-    this.vBar = document.createElement('div');
-    this.vBar.style.position = 'absolute';
-    this.vBar.style.top = '0';
-    this.vBar.style.width = '4px';
-    this.vBar.style.height = '100%';
-    this.vBar.style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
-    this.vBar.style.borderLeft = '1px solid red';
-    this.vBar.style.borderRight = '1px solid red';
-    this.vBar.style.display = 'none'; // Hidden initially
-    this.overlay.appendChild(this.vBar);
-
-    // Horizontal Bar (for crosshair technique)
-    this.hBar = document.createElement('div');
-    this.hBar.style.position = 'absolute';
-    this.hBar.style.left = '0';
-    this.hBar.style.width = '100%';
-    this.hBar.style.height = '4px';
-    this.hBar.style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
-    this.hBar.style.borderTop = '1px solid red';
-    this.hBar.style.borderBottom = '1px solid red';
-    this.hBar.style.display = 'none'; // Hidden initially
-    this.overlay.appendChild(this.hBar);
-
-    // Locked X Bar (green line showing locked X position during Y stages)
-    this.lockedXBar = document.createElement('div');
-    this.lockedXBar.style.position = 'absolute';
-    this.lockedXBar.style.top = '0';
-    this.lockedXBar.style.width = '3px';
-    this.lockedXBar.style.height = '100%';
-    this.lockedXBar.style.backgroundColor = 'rgba(0, 255, 0, 0.7)';
-    this.lockedXBar.style.borderLeft = '1px solid green';
-    this.lockedXBar.style.borderRight = '1px solid green';
-    this.lockedXBar.style.display = 'none'; // Hidden initially
-    this.overlay.appendChild(this.lockedXBar);
-
-    // Direction Indicator (for eight-direction mode) - shows an arrow pointing in current direction
-    this.directionIndicator = document.createElement('div');
-    this.directionIndicator.style.position = 'absolute';
-    this.directionIndicator.style.top = '10px';
-    this.directionIndicator.style.right = '10px';
-    this.directionIndicator.style.width = '80px';
-    this.directionIndicator.style.height = '80px';
-    this.directionIndicator.style.borderRadius = '50%';
-    this.directionIndicator.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-    this.directionIndicator.style.border = '3px solid #333';
-    this.directionIndicator.style.display = 'none'; // Hidden initially
-    this.directionIndicator.style.pointerEvents = 'none';
-    this.overlay.appendChild(this.directionIndicator);
-
-    // Direction Line (for eight-direction mode) - shows the path the cursor will take
-    this.directionLine = document.createElement('div');
-    this.directionLine.style.position = 'absolute';
-    this.directionLine.style.height = '2px';
-    this.directionLine.style.backgroundColor = 'rgba(33, 150, 243, 0.6)';
-    this.directionLine.style.transformOrigin = '0 50%';
-    this.directionLine.style.display = 'none'; // Hidden initially
-    this.directionLine.style.pointerEvents = 'none';
-    this.directionLine.style.zIndex = '5';
-    this.overlay.appendChild(this.directionLine);
-
-    // Append to the renderer's container (inside Shadow DOM)
-    container.appendChild(this.overlay);
-
-    console.log('[ContinuousScanner] Overlay created and appended');
-  }
-
-  private removeOverlay() {
-    if (this.overlay && this.overlay.parentNode) {
-      this.overlay.parentNode.removeChild(this.overlay);
-    }
-    this.overlay = null;
-    this.hBar = null;
-    this.vBar = null;
-    this.bufferZone = null;
-    this.lockedXBar = null;
-    this.directionIndicator = null;
-    this.directionLine = null;
   }
 
   public handleAction(action: SwitchAction) {
@@ -542,285 +378,66 @@ export class ContinuousScanner extends Scanner {
   }
 
   private selectFocusedItem() {
-    // For eight-direction and gliding cursor: select item at current position
-    if (!this.overlay) return;
-
-    const rect = this.overlay.getBoundingClientRect();
-    let clientX, clientY;
-
     if (this.technique === 'eight-direction') {
-      // Use current cursor position
-      clientX = rect.left + (this.xPos / 100) * rect.width;
-      clientY = rect.top + (this.yPos / 100) * rect.height;
-    } else {
-      // Gliding cursor: Use locked X position and fine Y position
-      const actualYPos = this.bufferTop + (this.fineYPos / 100) * (this.bufferBottom - this.bufferTop);
-      clientX = rect.left + (this.lockedXPosition / 100) * rect.width;
-      clientY = rect.top + (actualYPos / 100) * rect.height;
-    }
-
-    // Temporarily hide overlay so elementFromPoint works
-    this.overlay.style.display = 'none';
-
-    const container = this.surface.getContainerElement?.();
-    if (!container) return;
-    const root = container.getRootNode() as Document | ShadowRoot;
-    const element = root.elementFromPoint ? root.elementFromPoint(clientX, clientY) : document.elementFromPoint(clientX, clientY);
-
-    this.overlay.style.display = 'block';
-
-    if (element) {
-      const gridCell = element.closest('.grid-cell') as HTMLElement;
-      if (gridCell && gridCell.dataset.index) {
-        const index = parseInt(gridCell.dataset.index, 10);
-        if (index >= 0) {
-          this.triggerSelection(index);
-        }
-      }
-    }
-
-    this.reset();
-  }
-
-  private updateOverlay() {
-    if (!this.hBar || !this.vBar || !this.bufferZone || !this.lockedXBar || !this.directionIndicator || !this.directionLine) {
-      console.error('[ContinuousScanner] updateOverlay: Missing elements!', {
-        hBar: !!this.hBar,
-        vBar: !!this.vBar,
-        bufferZone: !!this.bufferZone,
-        lockedXBar: !!this.lockedXBar,
-        directionIndicator: !!this.directionIndicator,
-        directionLine: !!this.directionLine,
-        overlay: !!this.overlay
-      });
+      this.selectAtPercent(this.xPos, this.yPos);
       return;
     }
 
-    console.log('[ContinuousScanner] updateOverlay:', {
+    const actualYPos = this.bufferTop + (this.fineYPos / 100) * (this.bufferBottom - this.bufferTop);
+    this.selectAtPercent(this.lockedXPosition, actualYPos);
+  }
+
+  private selectAtPoint() {
+    this.selectAtPercent(this.xPos, this.yPos);
+  }
+
+  private selectAtPercent(xPercent: number, yPercent: number) {
+    let index: number | null = null;
+    if (this.surface.resolveIndexAtPoint) {
+      index = this.surface.resolveIndexAtPoint(xPercent, yPercent);
+    } else {
+      index = this.estimateIndexAtPercent(xPercent, yPercent);
+    }
+
+    if (index !== null && index >= 0) {
+      this.triggerSelection(index);
+    }
+    this.reset();
+  }
+
+  private estimateIndexAtPercent(xPercent: number, yPercent: number): number | null {
+    const totalItems = this.surface.getItemsCount();
+    if (!totalItems) return null;
+    const cols = Math.max(1, this.surface.getColumns());
+    const rows = Math.max(1, Math.ceil(totalItems / cols));
+    const col = Math.min(cols - 1, Math.max(0, Math.floor((xPercent / 100) * cols)));
+    const row = Math.min(rows - 1, Math.max(0, Math.floor((yPercent / 100) * rows)));
+    const index = row * cols + col;
+    if (index >= totalItems) return totalItems - 1;
+    return index;
+  }
+
+  private emitUpdate() {
+    const dirInfo = this.getDirectionFromAngle(this.compassAngle);
+    const update: ContinuousUpdate = {
       technique: this.technique,
       state: this.state,
       xPos: this.xPos,
       yPos: this.yPos,
-      currentDirection: this.currentDirection
-    });
-
-    if (this.technique === 'eight-direction') {
-      // Eight-direction mode: Show compass/arrow indicator + directional line
-      this.vBar.style.display = 'none';
-      this.hBar.style.display = 'none';
-      this.bufferZone.style.display = 'none';
-      this.lockedXBar.style.display = 'none';
-
-      this.directionIndicator.style.display = 'block';
-      this.directionLine.style.display = 'block';
-
-      // Get current direction info
-      const angle = this.compassAngle;
-      const dirInfo = this.getDirectionFromAngle(angle);
-
-      // Update the compass display
-      this.directionIndicator.innerHTML = `
-        <div style="
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%) rotate(${angle}deg);
-          font-size: 24px;
-          font-weight: bold;
-          color: #2196F3;
-        ">↑</div>
-        <div style="
-          position: absolute;
-          top: 5px;
-          left: 50%;
-          transform: translateX(-50%);
-          font-size: 12px;
-          font-weight: bold;
-        ">N</div>
-        <div style="
-          position: absolute;
-          bottom: 5px;
-          left: 50%;
-          transform: translateX(-50%);
-          font-size: 12px;
-          font-weight: bold;
-        ">S</div>
-        <div style="
-          position: absolute;
-          left: 5px;
-          top: 50%;
-          transform: translateY(-50%);
-          font-size: 12px;
-          font-weight: bold;
-        ">W</div>
-        <div style="
-          position: absolute;
-          right: 5px;
-          top: 50%;
-          transform: translateY(-50%);
-          font-size: 12px;
-          font-weight: bold;
-        ">E</div>
-        <div style="
-          position: absolute;
-          bottom: 20px;
-          left: 50%;
-          transform: translateX(-50%);
-          font-size: 10px;
-          color: #666;
-        ">${dirInfo.name} (${Math.round(angle)}°)</div>
-      `;
-
-      // Draw directional line from current position to screen edge
-      // Position at cursor center
-      this.directionLine.style.left = `${this.xPos}%`;
-      this.directionLine.style.top = `${this.yPos}%`;
-
-      // Calculate line length and angle
-      const lineLength = this.calculateLineLength(this.xPos, this.yPos, dirInfo.dx, dirInfo.dy);
-      this.directionLine.style.width = `${lineLength}%`;
-      // Fix: The line should rotate around its starting point (left center)
-      this.directionLine.style.transformOrigin = '0 50%';
-      this.directionLine.style.transform = `rotate(${angle}deg)`;
-
-      // Add a cursor dot at current position
-      this.vBar.style.display = 'block';
-      this.vBar.style.width = '12px';
-      this.vBar.style.height = '12px';
-      this.vBar.style.borderRadius = '50%';
-      this.vBar.style.backgroundColor = this.state === 'moving' ? '#FF5722' : '#2196F3';
-      this.vBar.style.border = '2px solid white';
-      this.vBar.style.zIndex = '10';
-      this.vBar.style.left = `calc(${this.xPos}% - 6px)`;
-      this.vBar.style.top = `calc(${this.yPos}% - 6px)`;
-    } else if (this.technique === 'gliding') {
-      // Gliding: Four-stage selection
-      if (this.state === 'x-scanning') {
-        // Stage 1: X coarse positioning - show vertical buffer zone
-        this.vBar.style.display = 'none';
-        this.hBar.style.display = 'none';
-        if (this.lockedXBar) this.lockedXBar.style.display = 'none';
-        if (this.directionIndicator) this.directionIndicator.style.display = 'none';
-        if (this.directionLine) this.directionLine.style.display = 'none';
-
-        const bufferLeft = Math.max(0, this.xPos - this.bufferWidth / 2);
-        const bufferRight = Math.min(100, this.xPos + this.bufferWidth / 2);
-        const actualWidth = bufferRight - bufferLeft;
-
-        this.bufferZone.style.left = `${bufferLeft}%`;
-        this.bufferZone.style.width = `${actualWidth}%`;
-        this.bufferZone.style.height = '100%';
-        this.bufferZone.style.top = '0';
-        this.bufferZone.style.display = 'block';
-      } else if (this.state === 'x-capturing') {
-        // Stage 2: X fine positioning - keep buffer zone, add fine vertical line
-        this.hBar.style.display = 'none';
-        if (this.lockedXBar) this.lockedXBar.style.display = 'none';
-        if (this.directionIndicator) this.directionIndicator.style.display = 'none';
-        if (this.directionLine) this.directionLine.style.display = 'none';
-
-        const actualWidth = this.bufferRight - this.bufferLeft;
-        this.bufferZone.style.left = `${this.bufferLeft}%`;
-        this.bufferZone.style.width = `${actualWidth}%`;
-        this.bufferZone.style.height = '100%';
-        this.bufferZone.style.top = '0';
-        this.bufferZone.style.display = 'block';
-
-        const actualXPos = this.bufferLeft + (this.fineXPos / 100) * (this.bufferRight - this.bufferLeft);
-        this.vBar.style.display = 'block';
-        this.vBar.style.left = `${actualXPos}%`;
-      } else if (this.state === 'y-scanning') {
-        // Stage 3: Y coarse positioning - show horizontal buffer zone + locked X line
-        this.vBar.style.display = 'none';
-        this.hBar.style.display = 'none';
-        if (this.directionIndicator) this.directionIndicator.style.display = 'none';
-        if (this.directionLine) this.directionLine.style.display = 'none';
-
-        // Show green locked X line
-        this.lockedXBar.style.display = 'block';
-        this.lockedXBar.style.left = `${this.lockedXPosition}%`;
-
-        const bufferTop = Math.max(0, this.yPos - this.bufferWidth / 2);
-        const bufferBottom = Math.min(100, this.yPos + this.bufferWidth / 2);
-        const actualHeight = bufferBottom - bufferTop;
-
-        this.bufferZone.style.left = '0';
-        this.bufferZone.style.width = '100%';
-        this.bufferZone.style.top = `${bufferTop}%`;
-        this.bufferZone.style.height = `${actualHeight}%`;
-        this.bufferZone.style.display = 'block';
-      } else if (this.state === 'y-capturing') {
-        // Stage 4: Y fine positioning - keep buffer zone, add fine horizontal line + locked X line
-        this.vBar.style.display = 'none';
-        if (this.directionIndicator) this.directionIndicator.style.display = 'none';
-        if (this.directionLine) this.directionLine.style.display = 'none';
-
-        // Show green locked X line
-        this.lockedXBar.style.display = 'block';
-        this.lockedXBar.style.left = `${this.lockedXPosition}%`;
-
-        const actualHeight = this.bufferBottom - this.bufferTop;
-        this.bufferZone.style.left = '0';
-        this.bufferZone.style.width = '100%';
-        this.bufferZone.style.top = `${this.bufferTop}%`;
-        this.bufferZone.style.height = `${actualHeight}%`;
-        this.bufferZone.style.display = 'block';
-
-        const actualYPos = this.bufferTop + (this.fineYPos / 100) * (this.bufferBottom - this.bufferTop);
-        this.hBar.style.display = 'block';
-        this.hBar.style.top = `${actualYPos}%`;
-      }
-    } else {
-      // Crosshair: Show X-Y bars only (no cell highlighting)
-      this.bufferZone.style.display = 'none';
-      if (this.lockedXBar) this.lockedXBar.style.display = 'none';
-      if (this.directionIndicator) this.directionIndicator.style.display = 'none';
-      if (this.directionLine) this.directionLine.style.display = 'none';
-
-      // xPos and yPos are now 0-100%, direct percentage values
-      if (this.state === 'x-scan') {
-        this.vBar.style.display = 'block';
-        this.vBar.style.left = `${this.xPos}%`;
-        this.hBar.style.display = 'none';
-      } else if (this.state === 'y-scan') {
-        this.vBar.style.display = 'block';
-        this.vBar.style.left = `${this.xPos}%`;
-        this.hBar.style.display = 'block';
-        this.hBar.style.top = `${this.yPos}%`;
-      }
-    }
-  }
-
-  private selectAtPoint() {
-    // For crosshair technique: select item at intersection
-    if (!this.overlay) return;
-
-    const rect = this.overlay.getBoundingClientRect();
-    // xPos and yPos are already 0-100% values
-    const clientX = rect.left + (this.xPos / 100) * rect.width;
-    const clientY = rect.top + (this.yPos / 100) * rect.height;
-
-    // Temporarily hide overlay so elementFromPoint works
-    this.overlay.style.display = 'none';
-
-    const container = this.surface.getContainerElement?.();
-    if (!container) return;
-    const root = container.getRootNode() as Document | ShadowRoot;
-    const element = root.elementFromPoint ? root.elementFromPoint(clientX, clientY) : document.elementFromPoint(clientX, clientY);
-
-    this.overlay.style.display = 'block';
-
-    if (element) {
-      const gridCell = element.closest('.grid-cell') as HTMLElement;
-      if (gridCell && gridCell.dataset.index) {
-        const index = parseInt(gridCell.dataset.index, 10);
-        if (index >= 0) {
-          this.triggerSelection(index);
-        }
-      }
-    }
-
-    this.reset();
+      bufferLeft: this.bufferLeft,
+      bufferRight: this.bufferRight,
+      bufferTop: this.bufferTop,
+      bufferBottom: this.bufferBottom,
+      fineXPos: this.fineXPos,
+      fineYPos: this.fineYPos,
+      lockedXPosition: this.lockedXPosition,
+      compassAngle: this.compassAngle,
+      currentDirection: this.currentDirection,
+      directionName: dirInfo.name,
+      directionDx: dirInfo.dx,
+      directionDy: dirInfo.dy
+    };
+    this.callbacks.onContinuousUpdate?.(update);
   }
 
   public getCost(itemIndex: number): number {

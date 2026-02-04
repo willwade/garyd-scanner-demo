@@ -5,7 +5,11 @@ export type {
   ScanItemData,
   ScanItemStyle,
   ScanCallbacks,
-  SwitchAction
+  SwitchAction,
+  ContinuousUpdate,
+  ContinuousTechnique,
+  ContinuousState,
+  FocusMeta
 } from './types';
 
 export { OverscanState, Scanner } from './Scanner';

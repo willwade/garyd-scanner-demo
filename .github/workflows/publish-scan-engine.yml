@@ -1,4 +1,4 @@
-name: Publish scan-engine
+name: Publish scan-engine packages
 
 on:
   workflow_dispatch: {}
@@ -12,9 +12,6 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/switch-scanner-engine
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,8 +26,28 @@ jobs:
         run: npm install
         working-directory: ${{ github.workspace }}
 
-      - name: Build package
-        run: npm run build
+      - name: Resolve version from tag
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Publish
-        run: npm publish --access public
+      - name: Build scan-engine
+        run: npm --prefix packages/switch-scanner-engine run build
+
+      - name: Prepare scan-engine version
+        run: npm --prefix packages/switch-scanner-engine version "${{ steps.version.outputs.version }}" --no-git-tag-version
+
+      - name: Publish scan-engine
+        run: npm --prefix packages/switch-scanner-engine publish --access public
+
+      - name: Build scan-engine-dom
+        run: npm --prefix packages/scan-engine-dom run build
+
+      - name: Prepare scan-engine-dom version
+        run: |
+          npm --prefix packages/scan-engine-dom version "${{ steps.version.outputs.version }}" --no-git-tag-version
+          npm --prefix packages/scan-engine-dom pkg set dependencies.scan-engine="^${{ steps.version.outputs.version }}"
+
+      - name: Publish scan-engine-dom
+        run: npm --prefix packages/scan-engine-dom publish --access public

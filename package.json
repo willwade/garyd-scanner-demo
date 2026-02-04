@@ -10,6 +10,7 @@
     "build:book": "npm run build:component && cd book && ASTRO_BASE=/garyd-scanner-demo/book/ ASTRO_TELEMETRY_DISABLED=1 npm run build",
     "build:gh": "npm run build && npm run build:book && rm -rf dist/book && mkdir -p dist/book && cp -R book/dist/* dist/book/",
     "build:engine": "npm --prefix packages/switch-scanner-engine run build",
+    "build:engine-dom": "npm --prefix packages/scan-engine-dom run build",
     "publish:engine": "npm --prefix packages/switch-scanner-engine publish --access public",
     "preview": "vite preview",
     "test:engine": "npm --prefix packages/switch-scanner-engine run test",
@@ -32,6 +33,7 @@
     "@willwade/ppmpredictor": "^0.0.12",
     "aac-board-viewer": "^0.2.8",
     "scan-engine": "file:./packages/switch-scanner-engine",
+    "scan-engine-dom": "file:./packages/scan-engine-dom",
     "worldalphabets": "^0.0.33"
   }
 }
