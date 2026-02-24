@@ -67,12 +67,54 @@ This repo publishes two packages that can be used independently in other apps:
 
 1. `scan-engine` — headless scanning engine (strategies, timing, selection).
 2. `scan-engine-dom` — DOM helpers for continuous scanning overlays + hit testing.
+3. `react-scan-engine` — tiny React wrapper (`<Scanner>` + `<Scannable>`) for `scan-engine`.
 
 ### Install
 
 ```bash
 npm install scan-engine scan-engine-dom
 ```
+
+For React compatibility-style usage:
+
+```bash
+npm install react-scan-engine scan-engine
+```
+
+### React Wrapper (react-scan-engine)
+
+`react-scan-engine` intentionally mirrors the familiar `react-scannable` component shape:
+
+```tsx
+import React from 'react';
+import { Scannable, Scanner } from 'react-scan-engine';
+
+class Example extends React.Component {
+  state = {
+    isActive: true,
+  };
+
+  render() {
+    return (
+      <Scanner
+        active={this.state.isActive}
+        config={{ scanPattern: 'row-column', scanTechnique: 'block', scanRate: 900 }}
+      >
+        <Scannable>
+          <button>CLICK</button>
+        </Scannable>
+      </Scanner>
+    );
+  }
+}
+```
+
+Compatibility details:
+
+- `active` maps to engine start/stop.
+- `Scannable` children are scanned in DOM order.
+- Defaults: `Enter`/`Space` select, `ArrowRight`/`ArrowDown` step, `Backspace` reset, `Escape` cancel.
+- You can pass advanced engine config via the `config` prop.
 
 ### Headless Scanning (scan-engine)
 

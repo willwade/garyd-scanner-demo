@@ -1,0 +1,33 @@
+{
+  "name": "react-scan-engine",
+  "version": "0.1.0",
+  "description": "Tiny React wrapper for scan-engine with react-scannable-like Scanner/Scannable components.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup src/index.tsx --format esm --dts --external react"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "dependencies": {
+    "scan-engine": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18",
+    "tsup": "^8.0.2",
+    "typescript": "^5.2.2"
+  }
+}
