@@ -1,4 +1,4 @@
-# garyd-scanner-demo
+# scan-engine-lab (aka Gary Derwent Scanning Demo!)
 
 A client-side switch scanning simulator built with TypeScript and Vite.
 
