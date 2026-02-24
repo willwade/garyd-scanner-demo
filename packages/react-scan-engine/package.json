@@ -1,6 +1,6 @@
 {
   "name": "react-scan-engine",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Tiny React wrapper for scan-engine with react-scannable-like Scanner/Scannable components.",
   "type": "module",
   "main": "./dist/index.js",
@@ -23,7 +23,7 @@
     "react": ">=18"
   },
   "dependencies": {
-    "scan-engine": "^0.1.0"
+    "scan-engine": "^0.1.1"
   },
   "devDependencies": {
     "@types/react": "^18.3.18",

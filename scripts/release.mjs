@@ -72,9 +72,9 @@ function prepare(versionArg) {
 }
 
 function publish() {
-  run('npm', ['--prefix', 'packages/switch-scanner-engine', 'publish', '--access', 'public']);
-  run('npm', ['--prefix', 'packages/scan-engine-dom', 'publish', '--access', 'public']);
-  run('npm', ['--prefix', 'packages/react-scan-engine', 'publish', '--access', 'public']);
+  run('npm', ['publish', '--access', 'public'], PACKAGES.engine);
+  run('npm', ['publish', '--access', 'public'], PACKAGES.dom);
+  run('npm', ['publish', '--access', 'public'], PACKAGES.react);
 }
 
 function full(versionArg) {

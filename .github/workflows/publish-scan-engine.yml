@@ -12,6 +12,7 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: npm
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,11 +20,14 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           registry-url: https://registry.npmjs.org
 
+      - name: Ensure npm supports trusted publishing
+        run: npm install -g npm@^11.5.1
+
       - name: Install root dependencies
-        run: npm install
+        run: npm ci
         working-directory: ${{ github.workspace }}
 
       - name: Resolve version from tag
@@ -57,3 +61,17 @@ jobs:
       - name: Publish scan-engine-dom
         run: npm publish --access public
         working-directory: packages/scan-engine-dom
+
+      - name: Build react-scan-engine
+        run: npm run build
+        working-directory: packages/react-scan-engine
+
+      - name: Prepare react-scan-engine version
+        run: |
+          npm version "${{ steps.version.outputs.version }}" --no-git-tag-version
+          npm pkg set dependencies.scan-engine="^${{ steps.version.outputs.version }}"
+        working-directory: packages/react-scan-engine
+
+      - name: Publish react-scan-engine
+        run: npm publish --access public
+        working-directory: packages/react-scan-engine

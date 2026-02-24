@@ -1,6 +1,6 @@
 {
   "name": "scan-engine",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Headless scan engine for switch scanning interfaces",
   "exports": {
@@ -11,7 +11,10 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts",
     "test": "vitest --config vitest.config.ts"
