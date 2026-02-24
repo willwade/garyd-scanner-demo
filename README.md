@@ -195,7 +195,7 @@ Clone the repository and install dependencies:
 
 ```bash
 git clone <repository-url>
-cd garyd-scanner-demo
+cd scan-engine-lab
 npm install
 ```
 
