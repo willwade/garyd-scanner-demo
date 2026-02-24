@@ -1,5 +1,5 @@
 {
-  "name": "garyd-scanner-demo",
+  "name": "scan-engine-lab",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -13,6 +13,9 @@
     "build:engine-dom": "npm --prefix packages/scan-engine-dom run build",
     "build:react": "npm --prefix packages/react-scan-engine run build",
     "publish:engine": "npm --prefix packages/switch-scanner-engine publish --access public",
+    "release:prepare": "node ./scripts/release.mjs prepare",
+    "release:publish": "node ./scripts/release.mjs publish",
+    "release:full": "node ./scripts/release.mjs full",
     "preview": "vite preview",
     "test:engine": "npm --prefix packages/switch-scanner-engine run test",
     "test": "vitest",

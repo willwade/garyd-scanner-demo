@@ -219,6 +219,37 @@ npm run build
 
 This generates the static assets in the `dist/` directory.
 
+### Releasing npm packages
+
+This repo publishes:
+
+1. `scan-engine`
+2. `scan-engine-dom`
+3. `react-scan-engine`
+
+Recommended release flow:
+
+1. Prepare versions and build artifacts:
+
+```bash
+npm run release:prepare -- patch
+```
+
+Use `patch`, `minor`, `major`, or an explicit version (for example `0.2.0`).
+
+2. Commit the version changes and create a git tag.
+3. Publish all packages in dependency order:
+
+```bash
+npm run release:publish
+```
+
+If you want one command for everything (prepare + publish):
+
+```bash
+npm run release:full -- patch
+```
+
 ### Tech Stack
 
 *   **Language:** [TypeScript](https://www.typescriptlang.org/)
