@@ -27,6 +27,11 @@ export class EliminationScanner extends Scanner {
     this.rangeEnd = this.surface.getItemsCount();
     this.partitionHistory = [];
     super.start();
+
+    // In manual mode there is no timer-driven stepping, so render an initial state.
+    if (config.scanInputMode === 'manual') {
+      this.highlightCurrentBlock();
+    }
   }
 
   protected reset() {
@@ -115,6 +120,7 @@ export class EliminationScanner extends Scanner {
     // Check if it's a switch action (switch-1 through switch-8)
     if (action.toString().startsWith('switch-')) {
       const switchNum = parseInt(action.toString().split('-')[1]) - 1;
+      const isManualMode = this.config.get().scanInputMode === 'manual';
 
       if (switchNum >= this.numSwitches) {
         // Ignore switches beyond our count
@@ -133,8 +139,13 @@ export class EliminationScanner extends Scanner {
         return;
       }
 
-      // Check if this is the correct block for current round
-      if (switchNum === this.currentBlock) {
+      // In manual mode, switch-N directly selects partition N.
+      // In auto mode, user must match the currently highlighted block.
+      if (isManualMode || switchNum === this.currentBlock) {
+        if (isManualMode) {
+          this.currentBlock = switchNum;
+        }
+
         // Select this block and drill down
         const partitions = this.calculatePartitions(this.rangeStart, this.rangeEnd, this.numSwitches);
         const selectedBlock = partitions[switchNum];
@@ -165,6 +176,9 @@ export class EliminationScanner extends Scanner {
         }
 
         this.restartTimer();
+        if (isManualMode && this.rangeEnd - this.rangeStart > 1) {
+          this.highlightCurrentBlock();
+        }
       }
       return;
     }
@@ -181,6 +195,9 @@ export class EliminationScanner extends Scanner {
         this.reset();
       }
       this.restartTimer();
+      if (this.config.get().scanInputMode === 'manual') {
+        this.highlightCurrentBlock();
+      }
     }
   }
 
