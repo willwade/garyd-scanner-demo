@@ -30,7 +30,7 @@ export class EliminationScanner extends Scanner {
 
     // In manual mode there is no timer-driven stepping, so render an initial state.
     if (config.scanInputMode === 'manual') {
-      this.highlightCurrentBlock();
+      this.highlightAllBlocksManual();
     }
   }
 
@@ -49,6 +49,29 @@ export class EliminationScanner extends Scanner {
     }
   }
 
+  private highlightAllBlocksManual() {
+    this.clearHighlights();
+
+    const partitions = this.calculatePartitions(this.rangeStart, this.rangeEnd, this.numSwitches);
+    for (let block = 0; block < partitions.length; block++) {
+      const partition = partitions[block];
+      if (!partition || partition.start >= partition.end) continue;
+
+      const switchAction = this.getSwitchAction(block);
+      const color = SWITCH_COLORS[switchAction];
+
+      for (let i = partition.start; i < partition.end; i++) {
+        this.surface.setItemStyle?.(i, {
+          backgroundColor: color,
+          opacity: 0.35,
+          borderColor: color,
+          borderWidth: 2,
+          boxShadow: `inset 0 0 0 2px ${color}`
+        });
+      }
+    }
+  }
+
   protected step() {
     // Cycle through blocks
     this.currentBlock = (this.currentBlock + 1) % this.numSwitches;
@@ -56,6 +79,11 @@ export class EliminationScanner extends Scanner {
   }
 
   private highlightCurrentBlock() {
+    if (this.config.get().scanInputMode === 'manual') {
+      this.highlightAllBlocksManual();
+      return;
+    }
+
     this.clearHighlights();
 
     const partitions = this.calculatePartitions(this.rangeStart, this.rangeEnd, this.numSwitches);
@@ -177,7 +205,7 @@ export class EliminationScanner extends Scanner {
 
         this.restartTimer();
         if (isManualMode && this.rangeEnd - this.rangeStart > 1) {
-          this.highlightCurrentBlock();
+          this.highlightAllBlocksManual();
         }
       }
       return;
@@ -196,7 +224,7 @@ export class EliminationScanner extends Scanner {
       }
       this.restartTimer();
       if (this.config.get().scanInputMode === 'manual') {
-        this.highlightCurrentBlock();
+        this.highlightAllBlocksManual();
       }
     }
   }
