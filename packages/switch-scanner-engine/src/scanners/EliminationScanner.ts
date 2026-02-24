@@ -39,7 +39,11 @@ export class EliminationScanner extends Scanner {
     this.rangeEnd = this.surface.getItemsCount();
     this.currentBlock = 0;
     this.partitionHistory = [];
-    this.clearHighlights();
+    if (this.config.get().scanInputMode === 'manual') {
+      this.highlightAllBlocksManual();
+    } else {
+      this.clearHighlights();
+    }
   }
 
   private clearHighlights() {
