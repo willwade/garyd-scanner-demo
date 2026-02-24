@@ -2,6 +2,10 @@
   "name": "scan-engine-dom",
   "version": "0.1.1",
   "description": "DOM helpers for scan-engine (continuous scan overlays and hit-testing).",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/willwade/scan-engine-lab"
+  },
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
