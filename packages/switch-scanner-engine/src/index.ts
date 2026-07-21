@@ -52,6 +52,7 @@ export {
   colorCode,
   createScanner,
   isScanMethod,
+  methodFromConfig,
   methodToConfigOverrides,
 } from './methods';
 

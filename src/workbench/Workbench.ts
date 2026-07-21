@@ -13,6 +13,12 @@ import {
   type ScanMethod,
   type SwitchAction,
 } from 'scan-engine';
+import {
+  GestureEngine,
+  KeyboardAdapter,
+  connectToScanner,
+  type GestureEvent,
+} from 'switch-input';
 
 type StrategyId = ScanConfig['scanPattern'];
 
@@ -82,10 +88,17 @@ export class Workbench {
   private readonly cells: HTMLElement[] = [];
   private readonly events: Array<{ at: number; text: string; kind: string }> = [];
   private readonly config = mutableConfig(DEFAULT_CONFIG);
+  /** gesture events mirrored into the workbench event log */
+  private readonly gestureLog: GestureEvent[] = [];
 
   private scanner: Scanner | null = null;
   private unsubscribeSnapshot: (() => void) | null = null;
   private unsubscribeEvents: (() => void) | null = null;
+
+  /** switch-input wiring (engine + keyboard adapter + scanner bridge) */
+  private input: GestureEngine | null = null;
+  private keyboard: KeyboardAdapter | null = null;
+  private disconnectBridge: (() => void) | null = null;
 
   private statusEl: HTMLElement | null = null;
   private positionEl: HTMLElement | null = null;
@@ -131,6 +144,12 @@ export class Workbench {
               <button data-cmd="select">Select</button>
               <button data-cmd="reset">Reset</button>
             </div>
+            <p class="wb-hint">
+              Keyboard via <code>switch-input</code>:
+              <kbd>Space</kbd> tap=select / hold=cancel,
+              <kbd>Enter</kbd>=step,
+              <kbd>R</kbd>=reset.
+            </p>
             <dl class="wb-state">
               <div><dt>Status</dt><dd data-state="status">idle</dd></div>
               <div><dt>Highlight</dt><dd data-state="highlight">—</dd></div>
@@ -344,6 +363,54 @@ export class Workbench {
     this.events.length = 0;
     this.renderEventLog();
     this.scanner.start();
+    this.attachInput();
+  }
+
+  /**
+   * Wire keyboard input through the switch-input package: Space as primary
+   * (tap=select, hold=cancel), Enter as secondary (tap=step). Demonstrates
+   * the gesture layer on top of the engine.
+   */
+  private attachInput() {
+    this.detachInput();
+    this.input = new GestureEngine({ tapWindowMs: 250, holdThresholdMs: 450 });
+    this.input.on('hold', (e) => this.recordGesture(e));
+    this.input.on('tap', (e) => this.recordGesture(e));
+    this.input.on('stuck', (e) => this.recordGesture(e));
+    this.input.on('quarantine', (e) => this.recordGesture(e));
+
+    this.disconnectBridge = connectToScanner(this.input, this.scanner!, {
+      primary: { tap: 'select', hold: 'cancel' },
+      secondary: 'step',
+      tertiary: 'reset',
+    });
+
+    this.keyboard = new KeyboardAdapter(window, this.input, {
+      Space: 'primary',
+      Enter: 'secondary',
+      KeyR: 'tertiary',
+    });
+  }
+
+  private detachInput() {
+    this.disconnectBridge?.();
+    this.keyboard?.detach();
+    this.input?.dispose();
+    this.disconnectBridge = null;
+    this.keyboard = null;
+    this.input = null;
+  }
+
+  private recordGesture(event: GestureEvent) {
+    const detail =
+      event.type === 'tap' ? `Tap ${event.switchId}`
+      : event.type === 'hold' ? `Hold ${event.switchId}`
+      : event.type === 'stuck' ? `Stuck ${event.switchId} (force-released)`
+      : event.type === 'quarantine' ? `Quarantined ${event.switchId} from ${event.sourceId}`
+      : event.type;
+    this.events.unshift({ at: event.at, kind: `gesture.${event.type}`, text: detail });
+    if (this.events.length > 50) this.events.length = 50;
+    this.renderEventLog();
   }
 
   private renderSnapshot(snapshot: ScannerSnapshot) {

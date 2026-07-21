@@ -14,16 +14,8 @@ import React, {
   forwardRef,
 } from 'react';
 import {
-  CauseEffectScanner,
-  ColorCodeScanner,
-  ContinuousScanner,
-  EliminationScanner,
-  GroupScanner,
-  LinearScanner,
-  ProbabilityScanner,
-  QuadrantScanner,
-  RowColumnScanner,
-  SnakeScanner,
+  createScanner as createEngineScanner,
+  methodFromConfig,
   type ScanConfig,
   type ScanConfigProvider,
   type ScanSurface,
@@ -106,33 +98,21 @@ function mergeConfig(config?: PartialScanConfig): ScanConfig {
   };
 }
 
-function createScanner(
+function buildScanner(
   surface: ScanSurface,
   configProvider: ScanConfigProvider,
   callbacks: { onSelect?: (index: number) => void },
 ): EngineScanner {
-  const config = configProvider.get();
-
-  if (config.scanMode === 'cause-effect') return new CauseEffectScanner(surface, configProvider, callbacks);
-  if (config.scanMode === 'group-row-column') return new GroupScanner(surface, configProvider, callbacks);
-  if (config.scanMode === 'continuous') return new ContinuousScanner(surface, configProvider, callbacks);
-  if (config.scanMode === 'probability') return new ProbabilityScanner(surface, configProvider, callbacks);
-  if (config.scanMode === 'color-code') return new ColorCodeScanner(surface, configProvider, callbacks);
-
-  switch (config.scanPattern) {
-    case 'linear':
-      return new LinearScanner(surface, configProvider, callbacks);
-    case 'snake':
-      return new SnakeScanner(surface, configProvider, callbacks);
-    case 'quadrant':
-      return new QuadrantScanner(surface, configProvider, callbacks);
-    case 'elimination':
-      return new EliminationScanner(surface, configProvider, callbacks);
-    case 'row-column':
-    case 'column-row':
-    default:
-      return new RowColumnScanner(surface, configProvider, callbacks);
-  }
+  // Defer to the engine's createScanner so there is a single source of truth
+  // for "which class for which strategy". The React wrapper still owns the
+  // config (caller may mutate it live); methodFromConfig just maps the
+  // scanMode/scanPattern pair onto a method descriptor.
+  return createEngineScanner({
+    method: methodFromConfig(configProvider.get()),
+    surface,
+    config: configProvider,
+    callbacks,
+  });
 }
 
 function orderedItems(items: Set<HTMLElement>): HTMLElement[] {
@@ -233,7 +213,7 @@ export function Scanner({
       get: () => configRef.current,
     };
 
-    const next = createScanner(surface, configProvider, {
+    const next = buildScanner(surface, configProvider, {
       onSelect: (index) => {
         const element = currentItems()[index] ?? null;
         if (element) element.click();

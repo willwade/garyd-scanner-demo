@@ -286,6 +286,35 @@ export function isScanMethod(value: unknown): value is ScanMethod {
   return (METHOD_KINDS as readonly string[]).includes(kind as string);
 }
 
+/**
+ * Derive a {@link ScanMethod} from a legacy `ScanConfig`. Used by callers
+ * (notably `react-scan-engine`) that still describe strategy via the
+ * `scanMode` + `scanPattern` pair so they can hand off to {@link createScanner}
+ * instead of maintaining their own switch statement.
+ *
+ * @throws if the config names an unknown strategy.
+ */
+export function methodFromConfig(config: ScanConfig): ScanMethod {
+  if (config.scanMode) {
+    switch (config.scanMode) {
+      case 'group-row-column': return groupRowColumn();
+      case 'continuous':       return continuous({ technique: config.continuousTechnique });
+      case 'probability':      return probability();
+      case 'cause-effect':     return causeEffect();
+      case 'color-code':       return colorCode();
+    }
+  }
+  switch (config.scanPattern) {
+    case 'row-column': return rowColumn();
+    case 'column-row': return columnRow();
+    case 'linear':     return linear();
+    case 'snake':      return snake();
+    case 'quadrant':   return quadrant();
+    case 'elimination':return elimination({ switches: config.eliminationSwitchCount });
+  }
+  throw new Error(`methodFromConfig: unrecognised strategy (scanMode=${config.scanMode}, scanPattern=${config.scanPattern})`);
+}
+
 export interface CreateScannerOptions {
   /** Strategy descriptor from one of the method factories. */
   method: ScanMethod;

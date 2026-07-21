@@ -109,6 +109,28 @@
 
 .wb-buttons button:hover { background: #f3f3ef; }
 
+.wb-hint {
+  font-size: 0.8rem;
+  color: #555;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.4;
+}
+
+.wb-hint code,
+.wb-hint kbd {
+  background: #eee;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.85em;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.wb-hint kbd {
+  background: #fff;
+  border: 1px solid var(--wb-cell-border);
+  border-bottom-width: 2px;
+}
+
 .wb-state {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
