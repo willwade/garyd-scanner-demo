@@ -1,24 +1,26 @@
 import {
-  LinearScanner,
-  RowColumnScanner,
-  SnakeScanner,
-  QuadrantScanner,
+  createScanner,
+  linear,
+  rowColumn,
+  snake,
+  quadrant,
   type ScanConfig,
   type ScanConfigProvider,
   type ScanSurface,
   type Scanner,
   type ScannerEvent,
   type ScannerSnapshot,
+  type ScanMethod,
   type SwitchAction,
 } from 'scan-engine';
 
 type StrategyId = ScanConfig['scanPattern'];
 
-const STRATEGIES: Array<{ id: StrategyId; label: string; note: string }> = [
-  { id: 'row-column', label: 'Row–Column', note: 'Highlight each row, then each item in the chosen row.' },
-  { id: 'linear', label: 'Linear', note: 'Move through items one at a time, top-left to bottom-right.' },
-  { id: 'snake', label: 'Snake', note: 'Boustrophedon: alternate row direction each row.' },
-  { id: 'quadrant', label: 'Quadrant', note: 'Split the grid into regions, then narrow down.' },
+const STRATEGIES: Array<{ id: StrategyId; label: string; note: string; method: ScanMethod }> = [
+  { id: 'row-column', label: 'Row–Column', note: 'Highlight each row, then each item in the chosen row.', method: rowColumn() },
+  { id: 'linear', label: 'Linear', note: 'Move through items one at a time, top-left to bottom-right.', method: linear() },
+  { id: 'snake', label: 'Snake', note: 'Boustrophedon: alternate row direction each row.', method: snake() },
+  { id: 'quadrant', label: 'Quadrant', note: 'Split the grid into regions, then narrow down.', method: quadrant() },
 ];
 
 const DEFAULT_CONFIG: ScanConfig = {
@@ -62,18 +64,17 @@ function mutableConfig(initial: ScanConfig) {
 }
 
 function buildScanner(
-  strategy: StrategyId,
+  method: ScanMethod,
   surface: ScanSurface,
   configProvider: ScanConfigProvider,
   callbacks: { onSelect?: (index: number) => void },
 ): Scanner {
-  switch (strategy) {
-    case 'linear':   return new LinearScanner(surface, configProvider, callbacks);
-    case 'snake':    return new SnakeScanner(surface, configProvider, callbacks);
-    case 'quadrant': return new QuadrantScanner(surface, configProvider, callbacks);
-    case 'row-column':
-    default:         return new RowColumnScanner(surface, configProvider, callbacks);
-  }
+  return createScanner({
+    method,
+    surface,
+    config: configProvider,
+    callbacks,
+  });
 }
 
 export class Workbench {
@@ -100,7 +101,7 @@ export class Workbench {
     this.host.innerHTML = this.template();
     this.cacheRefs();
     this.bindControls();
-    this.rebuildScanner(this.config.get().scanPattern);
+    this.rebuildScanner(this.config.get().scanPattern as StrategyId);
   }
 
   private template(): string {
@@ -254,7 +255,7 @@ export class Workbench {
         this.updateStrategyHighlight(id);
       });
     }
-    this.updateStrategyHighlight(this.config.get().scanPattern);
+    this.updateStrategyHighlight(this.config.get().scanPattern as StrategyId);
 
     // Pace & traversal — live reconfig, no rebuild.
     const onChange = (e: Event) => {
@@ -305,6 +306,7 @@ export class Workbench {
   }
 
   private rebuildScanner(strategy: StrategyId) {
+    const strategyDef = STRATEGIES.find((s) => s.id === strategy) ?? STRATEGIES[0];
     if (this.unsubscribeSnapshot) this.unsubscribeSnapshot();
     if (this.unsubscribeEvents) this.unsubscribeEvents();
     this.scanner?.stop();
@@ -330,7 +332,7 @@ export class Workbench {
       },
     };
 
-    this.scanner = buildScanner(strategy, surface, this.config.provider, {
+    this.scanner = buildScanner(strategyDef.method, surface, this.config.provider, {
       onSelect: (index) => {
         // Surface already flashed the cell; nothing else to do here.
         void index;

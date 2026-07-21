@@ -1,0 +1,119 @@
+/*
+ * Optional accessible highlight stylesheet for scan-engine consumers.
+ *
+ *   import "scan-engine/styles.css";
+ *
+ * The React wrapper writes `data-scan-focused`, `data-scan-selected`, and
+ * `data-scannable` attributes onto DOM nodes; this stylesheet turns those
+ * into visible focus + selection affordances. Drop it in once and override
+ * the custom properties below to brand it:
+ *
+ *   :root {
+ *     --scan-focus-color: oklch(0.55 0.2 250);
+ *     --scan-focus-width: 4px;
+ *     --scan-selected-bg: oklch(0.7 0.18 50);
+ *   }
+ *
+ * Honors:
+ *   - `@media (forced-colors: active)` — uses system Highlight colors.
+ *   - `@media (prefers-reduced-motion: reduce)` — disables the selection flash.
+ *
+ * The engine writes no CSS itself. If you don't import this file, none of
+ * these styles apply.
+ */
+
+:root {
+  --scan-focus-color: #2a6df4;
+  --scan-focus-width: 3px;
+  --scan-focus-style: solid;
+  --scan-focus-offset: 2px;
+  --scan-focus-halo: rgba(42, 109, 244, 0.18);
+
+  --scan-selected-bg: #f59e0b;
+  --scan-selected-fg: #ffffff;
+  --scan-selected-duration: 200ms;
+
+  --scan-empty-opacity: 0.4;
+}
+
+/*
+ * Highlight
+ *
+ * `:where()` keeps the selector specificity at 0,0,0 so an app's own styles
+ * always win. The outline is the primary affordance; the halo is a soft
+ * box-shadow that keeps the highlight legible over any background.
+ */
+:where([data-scan-focused]) {
+  outline: var(--scan-focus-width) var(--scan-focus-style) var(--scan-focus-color);
+  outline-offset: var(--scan-focus-offset);
+  box-shadow: 0 0 0 calc(var(--scan-focus-width) + 2px) var(--scan-focus-halo);
+  transition: outline-offset 60ms ease-out;
+}
+
+/* Empty/skipped targets — purely a hint, the engine still owns the logic. */
+:where([data-scannable][aria-disabled="true"]),
+:where([data-scannable][data-scan-empty="true"]) {
+  opacity: var(--scan-empty-opacity);
+}
+
+/*
+ * Selection flash
+ *
+ * The wrapper writes `data-scan-selected` for ~120ms after a successful
+ * selection. The animation cross-fades the background from the brand color
+ * back to whatever it was, so the flash doesn't linger.
+ */
+:where([data-scan-selected]) {
+  background-color: var(--scan-selected-bg);
+  color: var(--scan-selected-fg);
+}
+
+@keyframes scan-engine-selection-fade {
+  0% {
+    background-color: var(--scan-selected-bg);
+    color: var(--scan-selected-fg);
+  }
+  100% {
+    background-color: inherit;
+    color: inherit;
+  }
+}
+
+:where([data-scan-selected]) {
+  animation: scan-engine-selection-fade var(--scan-selected-duration) ease-out;
+}
+
+/*
+ * Forced-colors mode (Windows High Contrast, some AT browswers).
+ * Replace the brand color with the system Highlight pair so the user's
+ * chosen palette wins.
+ */
+@media (forced-colors: active) {
+  :where([data-scan-focused]) {
+    outline: Highlight solid var(--scan-focus-width);
+    outline-offset: var(--scan-focus-offset);
+    background-color: Highlight;
+    color: HighlightText;
+    box-shadow: none;
+  }
+
+  :where([data-scan-selected]) {
+    background-color: SelectedItem;
+    color: SelectedItemText;
+    animation: none;
+  }
+}
+
+/*
+ * Reduced motion. Disable the selection animation entirely; the color swap
+ * still happens, just without the fade.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :where([data-scan-selected]) {
+    animation: none;
+    transition: none;
+  }
+  :where([data-scan-focused]) {
+    transition: none;
+  }
+}

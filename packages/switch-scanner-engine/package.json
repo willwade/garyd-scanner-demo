@@ -19,13 +19,19 @@
     "./testing": {
       "types": "./dist/testing/index.d.ts",
       "import": "./dist/testing/index.js"
-    }
+    },
+    "./styles.css": "./styles.css",
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
+    "styles.css",
     "README.md"
+  ],
+  "sideEffects": [
+    "*.css"
   ],
   "scripts": {
     "build": "tsup --format esm --dts",

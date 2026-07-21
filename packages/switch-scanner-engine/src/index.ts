@@ -20,6 +20,41 @@ export type {
   Unsubscribe,
 } from './events';
 
+export type {
+  ScanMethod,
+  MethodKind,
+  RowColumnMethod,
+  ColumnRowMethod,
+  LinearMethod,
+  SnakeMethod,
+  QuadrantMethod,
+  GroupRowColumnMethod,
+  EliminationMethod,
+  ContinuousMethod,
+  ProbabilityMethod,
+  CauseEffectMethod,
+  ColorCodeMethod,
+  EliminationSwitchCount,
+  CreateScannerOptions,
+} from './methods';
+export {
+  METHOD_KINDS,
+  rowColumn,
+  columnRow,
+  linear,
+  snake,
+  quadrant,
+  groupRowColumn,
+  elimination,
+  continuous,
+  probability,
+  causeEffect,
+  colorCode,
+  createScanner,
+  isScanMethod,
+  methodToConfigOverrides,
+} from './methods';
+
 export { OverscanState, Scanner } from './Scanner';
 
 export { RowColumnScanner } from './scanners/RowColumnScanner';
