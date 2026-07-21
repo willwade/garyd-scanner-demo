@@ -248,7 +248,10 @@ export class EliminationScanner extends Scanner {
   }
 
   private restartTimer() {
-    if (this.timer) clearTimeout(this.timer);
+    if (this.timer) {
+      this.timer();
+      this.timer = null;
+    }
     this.scheduleNextStep();
   }
 
@@ -290,10 +293,10 @@ export class EliminationScanner extends Scanner {
       return;
     }
 
-    if (this.timer) clearTimeout(this.timer);
+    this.cancelTimer();
 
     const rate = this.config.get().scanRate;
-    this.timer = window.setTimeout(() => {
+    this.timer = this.scheduler.schedule(() => {
       this.step();
       this.scheduleNextStep();
     }, rate);

@@ -12,6 +12,14 @@ export type {
   FocusMeta
 } from './types';
 
+export type {
+  ScannerEvent,
+  ScannerEventListener,
+  ScannerSnapshot,
+  SnapshotListener,
+  Unsubscribe,
+} from './events';
+
 export { OverscanState, Scanner } from './Scanner';
 
 export { RowColumnScanner } from './scanners/RowColumnScanner';
@@ -26,3 +34,11 @@ export { CauseEffectScanner } from './scanners/CauseEffectScanner';
 export { ColorCodeScanner } from './scanners/ColorCodeScanner';
 
 export { PredictorManager } from './PredictorManager';
+
+export {
+  systemScheduler,
+  manualScheduler,
+  type Scheduler,
+  type ManualScheduler,
+  type Cancel,
+} from './scheduler';

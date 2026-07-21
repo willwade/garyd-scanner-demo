@@ -1,0 +1,269 @@
+:root {
+  --wb-bg: #fafaf7;
+  --wb-fg: #1a1a1a;
+  --wb-rule: #e3e3dd;
+  --wb-accent: #2a6df4;
+  --wb-cell-bg: #ffffff;
+  --wb-cell-border: #d8d8d2;
+  --wb-focus: #2a6df4;
+  --wb-focus-soft: rgba(42, 109, 244, 0.15);
+  --wb-selected: #f59e0b;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.wb-header h1 {
+  font-size: 1.4rem;
+  margin: 0 0 0.25rem 0;
+}
+
+.wb-subtitle {
+  margin: 0 0 1.5rem 0;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.wb-subtitle code {
+  background: #eee;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+.wb-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .wb-main { grid-template-columns: 1fr; }
+}
+
+.wb-panel {
+  background: #fff;
+  border: 1px solid var(--wb-rule);
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.wb-panel h2 {
+  margin: 0 0 1rem 0;
+  font-size: 1.05rem;
+}
+
+/* Preview */
+
+.wb-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 1.25rem;
+}
+
+.wb-cell {
+  background: var(--wb-cell-bg);
+  border: 1px solid var(--wb-cell-border);
+  border-radius: 6px;
+  padding: 1rem 0.5rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: outline-color 60ms, background 60ms;
+  outline: 3px solid transparent;
+  outline-offset: 2px;
+}
+
+.wb-cell.wb-is-focused {
+  outline-color: var(--wb-focus);
+  background: var(--wb-focus-soft);
+}
+
+.wb-cell.wb-is-selected {
+  background: var(--wb-selected);
+  color: #fff;
+  border-color: var(--wb-selected);
+}
+
+/* Runtime controls */
+
+.wb-runtime {
+  border-top: 1px solid var(--wb-rule);
+  padding-top: 1rem;
+}
+
+.wb-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 1rem;
+}
+
+.wb-buttons button {
+  padding: 6px 12px;
+  border: 1px solid var(--wb-cell-border);
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.wb-buttons button:hover { background: #f3f3ef; }
+
+.wb-state {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem 1rem;
+  margin: 0;
+}
+
+.wb-state dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #777;
+}
+
+.wb-state dd {
+  margin: 0 0 0.5rem 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+/* Controls */
+
+.wb-fieldset {
+  border: 1px solid var(--wb-rule);
+  border-radius: 6px;
+  padding: 0.75rem 1rem 1rem;
+  margin: 0 0 1rem 0;
+}
+
+.wb-fieldset legend {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #555;
+  padding: 0 0.4rem;
+}
+
+.wb-field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 12px;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.wb-field span { grid-column: 1 / -1; color: #444; }
+
+.wb-field input[type="range"] { grid-column: 1 / 2; width: 100%; }
+
+.wb-field output,
+.wb-field select {
+  grid-column: 2 / 3;
+  min-width: 3.5rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.wb-field select { text-align: left; }
+
+.wb-checkbox {
+  grid-template-columns: auto 1fr;
+}
+
+.wb-checkbox input { grid-column: 1; }
+
+.wb-checkbox span {
+  grid-column: 2;
+  color: #1a1a1a;
+}
+
+.wb-strategies {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.wb-strategy {
+  text-align: left;
+  background: #fff;
+  border: 1px solid var(--wb-cell-border);
+  border-radius: 4px;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wb-strategy.is-active {
+  border-color: var(--wb-accent);
+  background: #eef3ff;
+}
+
+.wb-strategy-name { font-weight: 600; font-size: 0.9rem; }
+
+.wb-strategy-note {
+  font-size: 0.75rem;
+  color: #666;
+  line-height: 1.2;
+}
+
+/* Event log */
+
+.wb-event-log {
+  border-top: 1px solid var(--wb-rule);
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.wb-event-log summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.wb-event-log summary span {
+  display: inline-block;
+  background: #eee;
+  border-radius: 10px;
+  padding: 0 8px;
+  font-size: 0.75rem;
+  margin-left: 6px;
+}
+
+.wb-event-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--wb-rule);
+  border-radius: 4px;
+}
+
+.wb-event {
+  display: grid;
+  grid-template-columns: 6rem 1fr;
+  gap: 6px;
+  padding: 4px 8px;
+  border-bottom: 1px solid #f0f0ec;
+  font-size: 0.82rem;
+}
+
+.wb-event:last-child { border-bottom: none; }
+
+.wb-event-time {
+  color: #888;
+  font-variant-numeric: tabular-nums;
+}
+
+.wb-event--scan-started,
+.wb-event--scan-stopped { font-weight: 600; }
+
+.wb-event--item-selected { color: #b45309; font-weight: 600; }
+
+.wb-event--overscan-transition { color: #6d28d9; }

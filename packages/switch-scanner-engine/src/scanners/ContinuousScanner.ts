@@ -1,4 +1,5 @@
 import { Scanner } from '../Scanner';
+import type { Cancel } from '../scheduler';
 import type { ContinuousUpdate, SwitchAction } from '../types';
 
 export class ContinuousScanner extends Scanner {
@@ -18,7 +19,7 @@ export class ContinuousScanner extends Scanner {
   // For gliding cursor
   private bufferWidth: number = 15; // % of screen width for buffer zone
   private direction: 1 | -1 = 1; // 1 = right/down, -1 = left/up
-  private pauseTimer: number | null = null; // For pause before reversing
+  private pauseTimer: Cancel | null = null; // For pause before reversing
   private bufferLeft: number = 0; // Left edge of buffer zone (%)
   private bufferRight: number = 0; // Right edge of buffer zone (%)
   private bufferTop: number = 0; // Top edge of buffer zone (%)
@@ -91,7 +92,7 @@ export class ContinuousScanner extends Scanner {
   public stop() {
     super.stop();
     if (this.pauseTimer) {
-      window.clearTimeout(this.pauseTimer);
+      this.pauseTimer();
       this.pauseTimer = null;
     }
   }
@@ -166,7 +167,7 @@ export class ContinuousScanner extends Scanner {
         if (this.xPos >= 100) {
           this.xPos = 100;
           if (!this.pauseTimer) {
-            this.pauseTimer = window.setTimeout(() => {
+            this.pauseTimer = this.scheduler.schedule(() => {
               this.direction = -1;
               this.pauseTimer = null;
             }, 100);
@@ -175,7 +176,7 @@ export class ContinuousScanner extends Scanner {
         } else if (this.xPos <= 0) {
           this.xPos = 0;
           if (!this.pauseTimer) {
-            this.pauseTimer = window.setTimeout(() => {
+            this.pauseTimer = this.scheduler.schedule(() => {
               this.direction = 1;
               this.pauseTimer = null;
             }, 100);
@@ -206,7 +207,7 @@ export class ContinuousScanner extends Scanner {
         if (this.yPos >= 100) {
           this.yPos = 100;
           if (!this.pauseTimer) {
-            this.pauseTimer = window.setTimeout(() => {
+            this.pauseTimer = this.scheduler.schedule(() => {
               this.direction = -1;
               this.pauseTimer = null;
             }, 100);
@@ -215,7 +216,7 @@ export class ContinuousScanner extends Scanner {
         } else if (this.yPos <= 0) {
           this.yPos = 0;
           if (!this.pauseTimer) {
-            this.pauseTimer = window.setTimeout(() => {
+            this.pauseTimer = this.scheduler.schedule(() => {
               this.direction = 1;
               this.pauseTimer = null;
             }, 100);
@@ -293,12 +294,12 @@ export class ContinuousScanner extends Scanner {
       return;
     }
 
-    if (this.timer) clearTimeout(this.timer);
+    this.cancelTimer();
 
     // Use faster refresh rate for smoother animation
     const delay = 20; // 20ms = 50fps for smooth movement
 
-    this.timer = window.setTimeout(() => {
+    this.timer = this.scheduler.schedule(() => {
         this.step();
         this.scheduleNextStep();
     }, delay);

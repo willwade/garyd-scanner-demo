@@ -163,7 +163,7 @@ export class RowColumnScanner extends Scanner {
         this.level = 'rows';
         this.currentCol = -1;
         this.highlightMajor(this.currentRow);
-        if (this.timer) clearTimeout(this.timer);
+        this.cancelTimer();
         this.scheduleNextStep();
       } else {
         this.reset();
@@ -180,7 +180,7 @@ export class RowColumnScanner extends Scanner {
         this.level = 'cells';
         this.currentCol = -1;
         this.surface.setSelected(-1);
-        if (this.timer) clearTimeout(this.timer);
+        this.cancelTimer();
         this.scheduleNextStep();
       }
     } else {
@@ -208,7 +208,7 @@ export class RowColumnScanner extends Scanner {
       if (index >= 0) {
         this.triggerSelection(index);
         this.reset();
-        if (this.timer) clearTimeout(this.timer);
+        this.cancelTimer();
         this.scheduleNextStep();
       }
     }

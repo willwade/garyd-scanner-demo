@@ -179,7 +179,7 @@ export class QuadrantScanner extends Scanner {
   }
 
   private restartTimer() {
-      if (this.timer) clearTimeout(this.timer);
+      this.cancelTimer();
       this.scheduleNextStep();
   }
 
