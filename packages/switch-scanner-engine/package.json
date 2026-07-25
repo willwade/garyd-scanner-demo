@@ -11,16 +11,30 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./scheduler": {
+      "types": "./dist/scheduler.d.ts",
+      "import": "./dist/scheduler.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "import": "./dist/testing/index.js"
+    },
+    "./styles.css": "./styles.css",
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
+    "styles.css",
     "README.md"
   ],
+  "sideEffects": [
+    "*.css"
+  ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts",
+    "build": "tsup --format esm --dts",
     "test": "vitest --config vitest.config.ts"
   },
   "devDependencies": {

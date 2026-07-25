@@ -93,7 +93,7 @@ export class LinearScanner extends Scanner {
   public handleAction(action: SwitchAction) {
     if (action === 'step') {
       // Manually step
-      if (this.timer) clearTimeout(this.timer); // Pause auto-scan if stepping manually?
+      this.cancelTimer(); // Pause auto-scan if stepping manually?
       this.step();
       this.callbacks.onScanStep?.();
       // Resume auto-scan? Or stay paused? Depends on mode.
@@ -112,7 +112,7 @@ export class LinearScanner extends Scanner {
         // Restart scan from 0 or stay? Usually restart.
         this.reset();
         // Reset timer
-        if (this.timer) clearTimeout(this.timer);
+        this.cancelTimer();
         this.scheduleNextStep();
       }
     }

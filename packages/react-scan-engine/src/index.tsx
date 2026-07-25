@@ -5,6 +5,8 @@ import React, {
   useEffect,
   useMemo,
   useRef,
+  useState,
+  useSyncExternalStore,
   type HTMLAttributes,
   type KeyboardEvent,
   type ReactElement,
@@ -12,20 +14,15 @@ import React, {
   forwardRef,
 } from 'react';
 import {
-  CauseEffectScanner,
-  ColorCodeScanner,
-  ContinuousScanner,
-  EliminationScanner,
-  GroupScanner,
-  LinearScanner,
-  ProbabilityScanner,
-  QuadrantScanner,
-  RowColumnScanner,
-  SnakeScanner,
+  createScanner as createEngineScanner,
+  methodFromConfig,
   type ScanConfig,
   type ScanConfigProvider,
   type ScanSurface,
   type Scanner as EngineScanner,
+  type ScannerEvent,
+  type ScannerEventListener,
+  type ScannerSnapshot,
   type SwitchAction,
 } from 'scan-engine';
 
@@ -53,6 +50,8 @@ type ScannableProps = {
 type ScannerContextValue = {
   register: (element: HTMLElement) => void;
   unregister: (element: HTMLElement) => void;
+  /** The current scanner, or null before the effect runs. */
+  scanner: EngineScanner | null;
 };
 
 const ScannerContext = createContext<ScannerContextValue | null>(null);
@@ -99,33 +98,21 @@ function mergeConfig(config?: PartialScanConfig): ScanConfig {
   };
 }
 
-function createScanner(
+function buildScanner(
   surface: ScanSurface,
   configProvider: ScanConfigProvider,
   callbacks: { onSelect?: (index: number) => void },
 ): EngineScanner {
-  const config = configProvider.get();
-
-  if (config.scanMode === 'cause-effect') return new CauseEffectScanner(surface, configProvider, callbacks);
-  if (config.scanMode === 'group-row-column') return new GroupScanner(surface, configProvider, callbacks);
-  if (config.scanMode === 'continuous') return new ContinuousScanner(surface, configProvider, callbacks);
-  if (config.scanMode === 'probability') return new ProbabilityScanner(surface, configProvider, callbacks);
-  if (config.scanMode === 'color-code') return new ColorCodeScanner(surface, configProvider, callbacks);
-
-  switch (config.scanPattern) {
-    case 'linear':
-      return new LinearScanner(surface, configProvider, callbacks);
-    case 'snake':
-      return new SnakeScanner(surface, configProvider, callbacks);
-    case 'quadrant':
-      return new QuadrantScanner(surface, configProvider, callbacks);
-    case 'elimination':
-      return new EliminationScanner(surface, configProvider, callbacks);
-    case 'row-column':
-    case 'column-row':
-    default:
-      return new RowColumnScanner(surface, configProvider, callbacks);
-  }
+  // Defer to the engine's createScanner so there is a single source of truth
+  // for "which class for which strategy". The React wrapper still owns the
+  // config (caller may mutate it live); methodFromConfig just maps the
+  // scanMode/scanPattern pair onto a method descriptor.
+  return createEngineScanner({
+    method: methodFromConfig(configProvider.get()),
+    surface,
+    config: configProvider,
+    callbacks,
+  });
 }
 
 function orderedItems(items: Set<HTMLElement>): HTMLElement[] {
@@ -183,6 +170,7 @@ export function Scanner({
 }: ScannerProps) {
   const itemsRef = useRef<Set<HTMLElement>>(new Set());
   const scannerRef = useRef<EngineScanner | null>(null);
+  const [scanner, setScanner] = useState<EngineScanner | null>(null);
   const runningRef = useRef(false);
 
   const mergedConfig = useMemo(() => mergeConfig(config), [config]);
@@ -198,8 +186,8 @@ export function Scanner({
   }, []);
 
   const contextValue = useMemo<ScannerContextValue>(
-    () => ({ register, unregister }),
-    [register, unregister],
+    () => ({ register, unregister, scanner }),
+    [register, unregister, scanner],
   );
 
   const currentItems = useCallback(() => orderedItems(itemsRef.current), []);
@@ -225,38 +213,40 @@ export function Scanner({
       get: () => configRef.current,
     };
 
-    scannerRef.current?.stop();
-    scannerRef.current = createScanner(surface, configProvider, {
+    const next = buildScanner(surface, configProvider, {
       onSelect: (index) => {
         const element = currentItems()[index] ?? null;
         if (element) element.click();
         onSelect?.(index, element);
       },
     });
-
-    if (active) {
-      scannerRef.current.start();
-      runningRef.current = true;
-    } else {
-      runningRef.current = false;
-    }
+    scannerRef.current = next;
+    setScanner(next);
 
     return () => {
-      scannerRef.current?.stop();
+      next.stop();
       runningRef.current = false;
+      if (scannerRef.current === next) {
+        scannerRef.current = null;
+        setScanner(null);
+      }
     };
-  }, [active, columns, currentItems, onSelect, mergedConfig.scanMode, mergedConfig.scanPattern]);
+  }, [columns, currentItems, onSelect, mergedConfig.scanMode, mergedConfig.scanPattern]);
 
+  // Start/stop is its own effect so child components (useScannerEvents etc.)
+  // re-subscribe to a freshly-created scanner before it starts emitting.
   useEffect(() => {
-    if (!scannerRef.current) return;
+    const current = scannerRef.current;
+    if (!current || !scanner) return;
+    if (scanner !== current) return;
     if (active && !runningRef.current) {
-      scannerRef.current.start();
+      current.start();
       runningRef.current = true;
     } else if (!active && runningRef.current) {
-      scannerRef.current.stop();
+      current.stop();
       runningRef.current = false;
     }
-  }, [active]);
+  }, [active, scanner]);
 
   const resolvedKeyMap = useMemo(() => ({ ...DEFAULT_KEY_MAP, ...keyMap }), [keyMap]);
 
@@ -313,3 +303,176 @@ export const Scannable = forwardRef<HTMLElement, ScannableProps>(function Scanna
     'data-scannable': 'true',
   } as any);
 });
+
+// ---------------------------------------------------------------------------
+// Hooks
+// ---------------------------------------------------------------------------
+
+export type ScanTargetProps = {
+  ref: (node: HTMLElement | null) => void;
+  'data-scannable': 'true';
+};
+
+export type UseScanTargetOptions = {
+  /** Disable this target. Disabled items are skipped during scanning. */
+  disabled?: boolean;
+};
+
+/**
+ * Register any element as a scan target. Returns props to spread on the
+ * element. No wrapper component is inserted, so portals, fragments, and
+ * third-party components all work.
+ *
+ * ```tsx
+ * const scan = useScanTarget();
+ * return <button {...scan} onClick={...}>Click</button>;
+ * ```
+ *
+ * To mirror the aria state of the element, also set `aria-disabled` when
+ * `disabled` is true — the engine reads that attribute to skip empty items.
+ */
+export function useScanTarget(options: UseScanTargetOptions = {}): ScanTargetProps {
+  const context = useContext(ScannerContext);
+  const localRef = useRef<HTMLElement | null>(null);
+
+  const ref = useCallback(
+    (node: HTMLElement | null) => {
+      // Re-register whenever the node changes.
+      if (context) {
+        if (localRef.current) context.unregister(localRef.current);
+        if (node) context.register(node);
+      }
+      localRef.current = node;
+    },
+    [context],
+  );
+
+  useEffect(() => {
+    const node = localRef.current;
+    if (!node) return;
+    if (options.disabled) node.setAttribute('aria-disabled', 'true');
+    else node.removeAttribute('aria-disabled');
+  }, [options.disabled]);
+
+  useEffect(() => {
+    return () => {
+      if (context && localRef.current) context.unregister(localRef.current);
+    };
+  }, [context]);
+
+  return { ref, 'data-scannable': 'true' };
+}
+
+function useResolvedScanner(): EngineScanner | null {
+  const context = useContext(ScannerContext);
+  return context?.scanner ?? null;
+}
+
+const noopSubscribe = () => () => {};
+const emptySnapshot: ScannerSnapshot = {
+  status: 'idle',
+  highlight: [],
+  stepCount: 0,
+  loopCount: 0,
+  overscanState: null,
+};
+const getEmptySnapshot = () => emptySnapshot;
+
+/**
+ * Subscribe to a slice of the scanner snapshot. The component re-renders only
+ * when the selected value changes (by reference for objects, by value for
+ * primitives). Uses `useSyncExternalStore` under the hood.
+ *
+ * ```tsx
+ * const status = useScannerSnapshot((s) => s.status);
+ * const highlight = useScannerSnapshot((s) => s.highlight);
+ * ```
+ */
+export function useScannerSnapshot<T>(
+  selector: (snapshot: ScannerSnapshot) => T,
+  isEqual: (a: T, b: T) => boolean = Object.is,
+): T | null {
+  const scanner = useResolvedScanner();
+  const selectorRef = useRef(selector);
+  selectorRef.current = selector;
+  const isEqualRef = useRef(isEqual);
+  isEqualRef.current = isEqual;
+
+  const cached = useRef<{ value: T | null; snapshot: ScannerSnapshot } | null>(null);
+
+  const getSnapshot = useCallback((): T => {
+    if (!scanner) {
+      const empty = selectorRef.current(emptySnapshot);
+      return empty;
+    }
+    const snapshot = scanner.getSnapshot();
+    if (cached.current && cached.current.snapshot === snapshot) {
+      return cached.current.value as T;
+    }
+    const next = selectorRef.current(snapshot);
+    if (cached.current && isEqualRef.current(cached.current.value as T, next)) {
+      cached.current.snapshot = snapshot;
+      return cached.current.value as T;
+    }
+    cached.current = { value: next, snapshot };
+    return next as T;
+  }, [scanner]);
+
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      if (!scanner) return noopSubscribe();
+      return scanner.subscribe(() => {
+        cached.current = null;
+        onChange();
+      });
+    },
+    [scanner],
+  );
+
+  return useSyncExternalStore(subscribe, getSnapshot, getEmptySnapshot as () => T);
+}
+
+/**
+ * Subscribe to the scanner event stream. The listener is stored in a ref so
+ * identity changes never re-subscribe.
+ *
+ * ```tsx
+ * useScannerEvents((event) => console.log(event));
+ * ```
+ */
+export function useScannerEvents(listener: ScannerEventListener): void {
+  const scanner = useResolvedScanner();
+  const listenerRef = useRef(listener);
+  listenerRef.current = listener;
+
+  useEffect(() => {
+    if (!scanner) return;
+    return scanner.observe((event) => listenerRef.current(event));
+  }, [scanner]);
+}
+
+export type ScannerCommands = {
+  start: () => void;
+  stop: () => void;
+  handleAction: (action: SwitchAction) => void;
+};
+
+/**
+ * Get imperative commands for the active scanner. Returns null if no scanner
+ * is in scope. The same shape is also exposed as
+ * `scanner.handleAction('select') | 'step' | 'reset' | 'cancel'` for input
+ * adapters.
+ */
+export function useScannerCommands(): ScannerCommands | null {
+  const scanner = useResolvedScanner();
+  return useMemo(() => {
+    if (!scanner) return null;
+    return {
+      start: () => scanner.start(),
+      stop: () => scanner.stop(),
+      handleAction: (action: SwitchAction) => scanner.handleAction(action),
+    };
+  }, [scanner]);
+}
+
+export type { ScannerEvent, ScannerSnapshot, ScannerEventListener };

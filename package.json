@@ -40,6 +40,7 @@
     "aac-board-viewer": "^0.2.8",
     "scan-engine": "file:./packages/switch-scanner-engine",
     "scan-engine-dom": "file:./packages/scan-engine-dom",
+    "switch-input": "file:./packages/switch-input",
     "worldalphabets": "^0.0.33"
   }
 }

@@ -1,4 +1,5 @@
 import { Scanner } from '../Scanner';
+import type { Cancel } from '../scheduler';
 import type { ContinuousUpdate, SwitchAction } from '../types';
 
 export class ContinuousScanner extends Scanner {
@@ -12,13 +13,11 @@ export class ContinuousScanner extends Scanner {
   private yPos: number = 0; // percentage 0-100
 
   private technique: 'gliding' | 'crosshair' | 'eight-direction' = 'crosshair';
-  private numCols: number = 0;
-  private numRows: number = 0;
 
   // For gliding cursor
   private bufferWidth: number = 15; // % of screen width for buffer zone
   private direction: 1 | -1 = 1; // 1 = right/down, -1 = left/up
-  private pauseTimer: number | null = null; // For pause before reversing
+  private pauseTimer: Cancel | null = null; // For pause before reversing
   private bufferLeft: number = 0; // Left edge of buffer zone (%)
   private bufferRight: number = 0; // Right edge of buffer zone (%)
   private bufferTop: number = 0; // Top edge of buffer zone (%)
@@ -45,53 +44,36 @@ export class ContinuousScanner extends Scanner {
   ];
 
   public start() {
-    try {
-      const config = this.config.get();
-      this.technique = config.continuousTechnique || 'crosshair';
+    const config = this.config.get();
+    this.technique = config.continuousTechnique || 'crosshair';
 
-      // Calculate grid dimensions
-      const totalItems = this.surface.getItemsCount();
-      this.numCols = this.surface.getColumns();
-      this.numRows = Math.ceil(totalItems / this.numCols);
+    // Grid dimensions are queried directly from the surface as needed.
 
-      console.log('[ContinuousScanner] Starting:', {
-        technique: this.technique,
-        numCols: this.numCols,
-        numRows: this.numRows,
-        totalItems
-      });
-
-      // Set initial state based on technique
-      if (this.technique === 'gliding') {
-        this.state = 'x-scanning';
-        this.xPos = 0;
-        this.yPos = 0;
-      } else if (this.technique === 'eight-direction') {
-        this.state = 'direction-scan';
-        this.xPos = 50; // Start in center for eight-direction mode
-        this.yPos = 50;
-        this.compassMode = config.compassMode || 'continuous';
-        this.compassAngle = 0;
-      } else {
-        this.state = 'x-scan';
-        this.xPos = 0;
-        this.yPos = 0;
-      }
-
-      console.log('[ContinuousScanner] Initial state:', this.state);
-
-      this.emitUpdate();
-      super.start();
-    } catch (error) {
-      console.error('[ContinuousScanner] ERROR in start():', error);
-      throw error;
+    // Set initial state based on technique
+    if (this.technique === 'gliding') {
+      this.state = 'x-scanning';
+      this.xPos = 0;
+      this.yPos = 0;
+    } else if (this.technique === 'eight-direction') {
+      this.state = 'direction-scan';
+      this.xPos = 50; // Start in center for eight-direction mode
+      this.yPos = 50;
+      this.compassMode = config.compassMode || 'continuous';
+      this.compassAngle = 0;
+    } else {
+      this.state = 'x-scan';
+      this.xPos = 0;
+      this.yPos = 0;
     }
+
+    this.emitUpdate();
+    super.start();
   }
 
   public stop() {
     super.stop();
     if (this.pauseTimer) {
-      window.clearTimeout(this.pauseTimer);
+      this.pauseTimer();
       this.pauseTimer = null;
     }
   }
@@ -166,7 +148,7 @@ export class ContinuousScanner extends Scanner {
         if (this.xPos >= 100) {
           this.xPos = 100;
           if (!this.pauseTimer) {
-            this.pauseTimer = window.setTimeout(() => {
+            this.pauseTimer = this.scheduler.schedule(() => {
               this.direction = -1;
               this.pauseTimer = null;
             }, 100);
@@ -175,7 +157,7 @@ export class ContinuousScanner extends Scanner {
         } else if (this.xPos <= 0) {
           this.xPos = 0;
           if (!this.pauseTimer) {
-            this.pauseTimer = window.setTimeout(() => {
+            this.pauseTimer = this.scheduler.schedule(() => {
               this.direction = 1;
               this.pauseTimer = null;
             }, 100);
@@ -206,7 +188,7 @@ export class ContinuousScanner extends Scanner {
         if (this.yPos >= 100) {
           this.yPos = 100;
           if (!this.pauseTimer) {
-            this.pauseTimer = window.setTimeout(() => {
+            this.pauseTimer = this.scheduler.schedule(() => {
               this.direction = -1;
               this.pauseTimer = null;
             }, 100);
@@ -215,7 +197,7 @@ export class ContinuousScanner extends Scanner {
         } else if (this.yPos <= 0) {
           this.yPos = 0;
           if (!this.pauseTimer) {
-            this.pauseTimer = window.setTimeout(() => {
+            this.pauseTimer = this.scheduler.schedule(() => {
               this.direction = 1;
               this.pauseTimer = null;
             }, 100);
@@ -250,22 +232,6 @@ export class ContinuousScanner extends Scanner {
       }
     }
 
-    // Log every 50th step to avoid spam
-    if (Math.floor(this.xPos * 2) % 50 === 0) {
-      console.log('[ContinuousScanner] Step:', {
-        state: this.state,
-        xPos: this.xPos,
-        yPos: this.yPos,
-        fineXPos: this.fineXPos,
-        fineYPos: this.fineYPos,
-        bufferLeft: this.bufferLeft,
-        bufferRight: this.bufferRight,
-        technique: this.technique,
-        direction: this.direction,
-        currentDirection: this.currentDirection
-      });
-    }
-
     this.emitUpdate();
   }
 
@@ -293,26 +259,19 @@ export class ContinuousScanner extends Scanner {
       return;
     }
 
-    if (this.timer) clearTimeout(this.timer);
+    this.cancelTimer();
 
     // Use faster refresh rate for smoother animation
     const delay = 20; // 20ms = 50fps for smooth movement
 
-    this.timer = window.setTimeout(() => {
+    this.timer = this.scheduler.schedule(() => {
         this.step();
         this.scheduleNextStep();
     }, delay);
   }
 
   public handleAction(action: SwitchAction) {
-    console.log('[ContinuousScanner] handleAction:', {
-      action,
-      state: this.state,
-      technique: this.technique
-    });
-
     if (action === 'cancel') {
-      console.log('[ContinuousScanner] Cancel - resetting');
       this.reset();
     } else {
       // Let base class handle select, reset, step, etc.
@@ -325,12 +284,9 @@ export class ContinuousScanner extends Scanner {
       // Eight-direction: direction selection → movement → selection
       if (this.state === 'direction-scan') {
         // First select: start moving in selected direction
-        const dirInfo = this.getDirectionFromAngle(this.compassAngle);
-        console.log('[ContinuousScanner] Transition: direction-scan -> moving, direction:', dirInfo.name, 'angle:', this.compassAngle);
         this.state = 'moving';
       } else if (this.state === 'moving') {
         // Second select: stop and select item at current position
-        console.log('[ContinuousScanner] Transition: moving -> processing');
         this.state = 'processing';
         this.selectFocusedItem();
       }
@@ -338,13 +294,11 @@ export class ContinuousScanner extends Scanner {
       // Gliding cursor: four-stage selection (X coarse, X fine, Y coarse, Y fine)
       if (this.state === 'x-scanning') {
         // First select: lock X buffer zone, start fine X scanning
-        console.log('[ContinuousScanner] Transition: x-scanning -> x-capturing');
         this.state = 'x-capturing';
         this.fineXPos = 0;
         this.direction = 1;
       } else if (this.state === 'x-capturing') {
         // Second select: lock X position, start Y buffer zone scanning
-        console.log('[ContinuousScanner] Transition: x-capturing -> y-scanning');
         this.state = 'y-scanning';
         // Store the actual locked X position
         this.lockedXPosition = this.bufferLeft + (this.fineXPos / 100) * (this.bufferRight - this.bufferLeft);
@@ -353,24 +307,20 @@ export class ContinuousScanner extends Scanner {
         this.direction = 1;
       } else if (this.state === 'y-scanning') {
         // Third select: lock Y buffer zone, start fine Y scanning
-        console.log('[ContinuousScanner] Transition: y-scanning -> y-capturing');
         this.state = 'y-capturing';
         this.fineYPos = 0;
         this.direction = 1;
       } else if (this.state === 'y-capturing') {
         // Fourth select: pick the item at the intersection
-        console.log('[ContinuousScanner] Transition: y-capturing -> processing');
         this.state = 'processing';
         this.selectFocusedItem();
       }
     } else {
       // Crosshair: stepping movement
       if (this.state === 'x-scan') {
-        console.log('[ContinuousScanner] Transition: x-scan -> y-scan');
         this.state = 'y-scan';
         this.yPos = 0;
       } else if (this.state === 'y-scan') {
-        console.log('[ContinuousScanner] Transition: y-scan -> processing');
         this.state = 'processing';
         this.selectAtPoint();
       }

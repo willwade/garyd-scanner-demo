@@ -3,7 +3,13 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   base: './', // Ensures assets are loaded correctly on GitHub Pages
   build: {
-    outDir: 'dist'
+    outDir: 'dist',
+    rollupOptions: {
+      input: {
+        main: 'index.html',
+        workbench: 'workbench.html',
+      },
+    },
   },
   optimizeDeps: {
     force: true // Force re-bundling of dependencies

@@ -1,0 +1,39 @@
+{
+  "name": "switch-input",
+  "version": "0.1.0",
+  "description": "Framework-agnostic switch input layer for scan-engine: gesture recognition (tap/hold), tremor filtering, repeat suppression, and stuck-switch quarantine.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/willwade/scan-engine-lab"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup --format esm --dts",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "scan-engine": ">=0.1.1"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "scan-engine": "file:../switch-scanner-engine",
+    "tsup": "^8.0.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  }
+}

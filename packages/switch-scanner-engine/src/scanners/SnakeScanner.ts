@@ -89,7 +89,7 @@ export class SnakeScanner extends Scanner {
     if (index >= 0) {
       this.triggerSelection(index);
       this.reset();
-      if (this.timer) clearTimeout(this.timer);
+      this.cancelTimer();
       this.scheduleNextStep();
     }
   }

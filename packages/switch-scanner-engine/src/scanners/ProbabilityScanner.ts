@@ -62,7 +62,7 @@ export class ProbabilityScanner extends Scanner {
         this.triggerRedraw();
 
         this.reset();
-        if (this.timer) clearTimeout(this.timer);
+        this.cancelTimer();
         this.scheduleNextStep();
       }
     }

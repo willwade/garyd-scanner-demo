@@ -12,6 +12,50 @@ export type {
   FocusMeta
 } from './types';
 
+export type {
+  ScannerEvent,
+  ScannerEventListener,
+  ScannerSnapshot,
+  SnapshotListener,
+  Unsubscribe,
+} from './events';
+
+export type {
+  ScanMethod,
+  MethodKind,
+  RowColumnMethod,
+  ColumnRowMethod,
+  LinearMethod,
+  SnakeMethod,
+  QuadrantMethod,
+  GroupRowColumnMethod,
+  EliminationMethod,
+  ContinuousMethod,
+  ProbabilityMethod,
+  CauseEffectMethod,
+  ColorCodeMethod,
+  EliminationSwitchCount,
+  CreateScannerOptions,
+} from './methods';
+export {
+  METHOD_KINDS,
+  rowColumn,
+  columnRow,
+  linear,
+  snake,
+  quadrant,
+  groupRowColumn,
+  elimination,
+  continuous,
+  probability,
+  causeEffect,
+  colorCode,
+  createScanner,
+  isScanMethod,
+  methodFromConfig,
+  methodToConfigOverrides,
+} from './methods';
+
 export { OverscanState, Scanner } from './Scanner';
 
 export { RowColumnScanner } from './scanners/RowColumnScanner';
@@ -26,3 +70,11 @@ export { CauseEffectScanner } from './scanners/CauseEffectScanner';
 export { ColorCodeScanner } from './scanners/ColorCodeScanner';
 
 export { PredictorManager } from './PredictorManager';
+
+export {
+  systemScheduler,
+  manualScheduler,
+  type Scheduler,
+  type ManualScheduler,
+  type Cancel,
+} from './scheduler';
