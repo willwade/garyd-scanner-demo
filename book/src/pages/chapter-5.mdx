@@ -9,69 +9,58 @@ nextLabel: "Chapter 6: Two Switch Scanning"
 
 # Chapter 5: Single Switch Scanning
 
-**Single Switch Scanning (Auto-Scan)** is the most common scanning method.
+**Single Switch Scanning (Auto-Scan)** is the most common scanning access method in assistive technology.
 
-## How it works
+## Core Operational Mechanics
 
-1. System automatically highlights items in sequence
-2. User waits for desired item to be highlighted
-3. User presses switch to select
-4. System activates item and restarts scan
+1. **Sequential Highlighting:** The software automatically moves a visual/auditory highlight across selectable items at a predetermined rate (*Scan Rate*, `T_scan`).
+2. **User Anticipation & Activation:** The user waits for their target item to be highlighted and depresses their single switch.
+3. **Selection Execution:** The system triggers the target action, provides confirmation feedback, and resets or advances the scan cycle.
 
-## Auto-Scan Flow (Mental Model)
-
-```text
-Start → Highlight Item → Wait → (Press?) → Select → Restart
-                    ↘ No press → Next item ↗
+```mermaid
+flowchart TD
+    A["Start Scan"] --> B["Highlight Active Item"]
+    B --> C{"Switch Pressed?"}
+    C -- "YES" --> D["Select Item & Reset"]
+    C -- "NO (Timer Expires)" --> E["Advance to Next Item"]
+    E --> B
 ```
 
-## Auto-Scan Variants
+## System-Paced Timing vs Motor Control
 
-- **Auto-while-held (user scan):** the highlight moves only while the switch is held down.
-- **Auto-restart:** restart from the first item or continue from last selected item.
-- **Initial item pause:** extra time on the first item to help users prepare.
-- **Scan loops:** stop after N passes (or infinite loops) to avoid endless waiting.
+In standard auto-scan, the system dictates the tempo. This introduces **timing pressure**: the user must anticipate the arriving highlight and execute their switch press within a narrow temporal window (Steriadis & Constantinou, 2003).
 
-## Timing tips
+- **Scan Rate Too Fast:** Results in late-press timing errors, missed items, and user anxiety.
+- **Scan Rate Too Slow:** Results in excessive dead time, low Text Entry Rate (TER), and visual search fatigue.
+- **Optimal Scan Rate:** Set using empirical guidelines such as the **.65 Rule** (`T_scan = RT / 0.65`; see Chapter 13).
 
-- **Too fast** → missed selections
-- **Too slow** → frustration and low TER
-- **Just right** → user feels in control
+## Key Auto-Scan Variations
 
-## Variants You’ll See in Real Devices
+Commercial AAC devices and access software incorporate specialized auto-scan behavior to match individual motor profiles:
 
-- **Auto-while-held:** The highlight moves only while the switch is held down.
-- **Auto-restart modes:** Restart from the first item or continue from last.
-- **Initial item pause:** Extra time on the first item to help users get ready.
+- **Standard Auto-Scan (Press-to-Select):** System moves highlight automatically; switch press selects the active item.
+- **Auto-While-Held (Inverse / User Scan):** The highlight moves *only* while the user holds the switch down. Releasing the switch selects the item.
+  - *Clinical Benefit:* Ideal for users who experience panic or freezing under timing pressure. If they release the switch, the scan stops immediately instead of continuing past the target.
+- **Initial Item Pause (1st-Item Delay):** Adds extra pause time (250–500 ms) on the first item of a scan loop to give the user time to orient visually before the scan accelerates.
+- **Scan Loop Limit:** Automatically stops the scan after multiple complete passes (typically 2–3 passes) to prevent endless background cycling when the user rests.
 
-## Why This Matters
+## Selection Trigger Methods
 
-For many users, auto-scan is the only feasible mode. The tradeoff is timing pressure: the user must anticipate the highlight and press at exactly the right moment. This makes scan rate, acceptance time, and error recovery critical (see Chapters 13 and 19).
+Beyond standard switch presses, auto-scanning can employ alternative trigger logic:
 
-## Selection Methods
+- **Press-to-Select:** Most common; immediate activation on switch closure.
+- **Dwell Selection:** Selection occurs automatically if the highlight remains on an item for a threshold duration without requiring any physical switch press (useful for low-force proximity switches or eye gaze).
+- **Encoded / Long-Hold Actions:** Holding the switch down beyond a threshold (e.g., 1000 ms) triggers secondary commands such as "Cancel Scan" or "Back to Main Menu" (see Chapter 19).
 
-- **Press-to-select:** most common, a switch press selects the highlighted item.
-- **Dwell selection:** selection occurs automatically after a set dwell time.
-- **Encoded selection:** patterns like double‑press or long‑hold trigger special actions.
-
-## Auto-While-Held (User Scan)
-
-In standard auto‑scan, the press stops the scan and selects. In **auto‑while‑held**, the logic reverses:
-
-- **Hold** the switch to move forward.
-- **Release** to stop and select (or dwell).
-
-This can feel safer for some users because letting go stops the movement.
-
-<div class="highlight-box">
-  <strong>Why use this?</strong> It gives the user direct control over movement. If they freeze or panic, releasing the switch stops the scan instead of missing the target as it flies by.
-</div>
-
-## Demo
+## Interactive Demo
 
 <div class="demo-instructions">
-  🎮 Try selecting the number 7.
+  🎮 Try it: Wait for item <strong>7</strong> to highlight, then press Space or click to select it!
 </div>
 <div class="scanner-container">
   <switch-scanner theme="sketch" scan-pattern="linear" scan-technique="point" scan-rate="1000" grid-size="9"></switch-scanner>
+</div>
+
+<div class="info-box">
+  <strong>Takeaway:</strong> Auto-scan requires zero motor movement beyond a single binary press, but places high demands on timing precision and visual search.
 </div>

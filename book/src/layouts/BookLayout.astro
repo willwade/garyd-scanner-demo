@@ -52,7 +52,8 @@ if (glossaryModule[0]) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
-    <style>
+    <script is:inline src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <style is:global>
       :root {
         --paper: #fffdf9;
         --ink: #2f2f2f;
@@ -72,9 +73,173 @@ if (glossaryModule[0]) {
       }
       h1, h2, h3 { font-family: 'Patrick Hand', cursive; font-weight: normal; }
       main {
-        max-width: 980px;
+        max-width: 1320px;
+        width: 94%;
         margin: 0 auto;
         padding: 36px 18px 120px 18px;
+      }
+      .zoom-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.85);
+        backdrop-filter: blur(8px);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+      }
+      .zoom-modal-backdrop.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .zoom-modal-content {
+        position: relative;
+        width: 92vw;
+        height: 88vh;
+        max-width: 1400px;
+        max-height: 90vh;
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        overflow: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .zoom-modal-close {
+        position: absolute;
+        top: 14px;
+        right: 18px;
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        font-size: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #334155;
+        transition: background 0.15s, transform 0.15s;
+        z-index: 10;
+      }
+      .zoom-modal-close:hover {
+        background: #e2e8f0;
+        transform: scale(1.05);
+      }
+      .zoomable-target {
+        cursor: zoom-in !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .zoomable-target:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(47, 125, 187, 0.2);
+      }
+      #zoomModalTarget {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #zoomModalTarget svg {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+      }
+      #zoomModalTarget img {
+        width: auto !important;
+        height: auto !important;
+        max-width: 90vw !important;
+        max-height: 80vh !important;
+        object-fit: contain !important;
+      }
+      .demo-card-relative {
+        position: relative !important;
+      }
+      .demo-expand-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #ffffff;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 4px 10px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #334155;
+        cursor: pointer;
+        z-index: 20;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .demo-expand-badge:hover {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #1d4ed8;
+        transform: translateY(-1px);
+      }
+      .in-modal-fullscreen {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        box-shadow: none !important;
+        border: none !important;
+        background: transparent !important;
+        margin: 0 !important;
+        overflow: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+      }
+      .in-modal-fullscreen .demo-expand-badge {
+        display: none !important;
+      }
+      .in-modal-fullscreen.scanner-container {
+        min-height: 75vh !important;
+        max-height: 85vh !important;
+        height: 80vh !important;
+      }
+      .in-modal-fullscreen switch-scanner {
+        height: 100% !important;
+        min-height: 70vh !important;
+        font-size: 1.5rem !important;
+      }
+      .in-modal-fullscreen .reaction-display-card {
+        height: 320px !important;
+      }
+      .in-modal-fullscreen .reaction-emoji {
+        font-size: 6rem !important;
+      }
+      .in-modal-fullscreen .reaction-label {
+        font-size: 2.6rem !important;
+      }
+      .in-modal-fullscreen .reaction-subtext {
+        font-size: 1.3rem !important;
+      }
+      .in-modal-fullscreen .trial-dot {
+        width: 22px !important;
+        height: 22px !important;
+      }
+      .in-modal-fullscreen.sushi-demo .sushi-restaurant {
+        height: 480px !important;
+        max-width: 100% !important;
+      }
+      .in-modal-fullscreen.sushi-demo .sushi-plate {
+        font-size: 64px !important;
+        width: 100px !important;
+        height: 100px !important;
       }
       .toc-wrap {
         position: sticky;
@@ -146,23 +311,102 @@ if (glossaryModule[0]) {
         margin: 20px 0 70px;
       }
       .highlight-box {
-        background: #d5f4e6;
-        border-left: 4px solid #27ae60;
-        padding: 15px;
-        margin: 15px 0;
+        background-color: #f0fdf4 !important;
+        border-left: 6px solid #16a34a !important;
+        border-radius: 14px !important;
+        padding: 20px 24px !important;
+        margin: 24px 0 !important;
+        color: #14532d !important;
+        box-shadow: 0 4px 16px rgba(22, 163, 74, 0.12) !important;
+        font-size: 1.05rem !important;
+        line-height: 1.7 !important;
+      }
+      .highlight-box strong {
+        color: #15803d !important;
+        font-weight: 700 !important;
       }
       .warning-box {
-        background: #ffeaa7;
-        border-left: 4px solid #fdcb6e;
-        padding: 15px;
-        margin: 15px 0;
+        background-color: #fef2f2 !important;
+        border-left: 6px solid #ef4444 !important;
+        border-radius: 14px !important;
+        padding: 20px 24px !important;
+        margin: 24px 0 !important;
+        color: #7f1d1d !important;
+        box-shadow: 0 4px 16px rgba(239, 68, 68, 0.12) !important;
+        font-size: 1.05rem !important;
+        line-height: 1.7 !important;
       }
       .info-box {
-        background: #e5f1ff;
-        border-left: 4px solid #3c7dd9;
-        padding: 15px;
-        margin: 15px 0;
-        color: var(--ink);
+        background-color: #fff8e7 !important;
+        border-left: 6px solid #f59e0b !important;
+        border-radius: 14px !important;
+        padding: 20px 24px !important;
+        margin: 24px 0 !important;
+        color: #78350f !important;
+        box-shadow: 0 4px 16px rgba(245, 158, 11, 0.15) !important;
+        font-size: 1.05rem !important;
+        line-height: 1.7 !important;
+      }
+      .info-box strong {
+        color: #92400e !important;
+        font-weight: 700 !important;
+      }
+      .heading-anchor {
+        margin-left: 8px;
+        opacity: 0.35;
+        font-size: 0.82em;
+        text-decoration: none;
+        color: var(--accent);
+        transition: opacity 0.15s ease;
+      }
+      h1:hover .heading-anchor, h2:hover .heading-anchor, h3:hover .heading-anchor, .heading-anchor:hover {
+        opacity: 1;
+      }
+      .wizard-container {
+        border: 2px solid var(--accent);
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 8px 24px rgba(47, 125, 187, 0.12);
+        padding: 24px;
+        margin: 28px 0;
+      }
+      .wizard-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 24px;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 12px;
+      }
+      .wizard-tab-btn {
+        background: #f1f5f9;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 10px 18px;
+        font-weight: 700;
+        font-size: 0.98rem;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .wizard-tab-btn.active {
+        background: #2f7dbb;
+        color: #ffffff;
+        border-color: #1e5c8e;
+        box-shadow: 0 4px 12px rgba(47, 125, 187, 0.25);
+      }
+      .wizard-step-pane {
+        display: none;
+      }
+      .wizard-step-pane.active {
+        display: block;
+        animation: wizardFadeIn 0.25s ease-in-out;
+      }
+      @keyframes wizardFadeIn {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
       }
       .figure-card {
         border: 2px dashed var(--line);
@@ -214,23 +458,92 @@ if (glossaryModule[0]) {
         max-height: 40vh;
       }
       .reaction-test {
-        border: 2px dashed var(--line);
-        border-radius: 16px;
-        padding: 16px;
-        background: #f9fbff;
-        margin: 16px 0;
+        border: 2px dashed #cbd5e1;
+        border-radius: 20px;
+        padding: 24px;
+        background: #ffffff;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+        margin: 24px 0;
       }
-      .reaction-display {
-        height: 120px;
-        border: 2px dashed var(--accent);
-        border-radius: 14px;
-        background: #fff;
+      .reaction-display-card {
+        height: 180px;
+        border: 3px dashed #cbd5e1;
+        border-radius: 16px;
+        background: #f8fafc;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        font-size: 2rem;
-        margin-bottom: 12px;
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.25s ease;
+        margin-bottom: 20px;
+      }
+      .reaction-display-card.state-idle {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+      }
+      .reaction-display-card.state-ready {
+        background: #fff7ed;
+        border-color: #f97316;
+        animation: pulse-border 1.2s infinite;
+      }
+      .reaction-display-card.state-active {
+        background: #dcfce7;
+        border-color: #22c55e;
+        box-shadow: 0 0 30px rgba(34, 197, 94, 0.3);
+      }
+      .reaction-display-card.state-early {
+        background: #fee2e2;
+        border-color: #ef4444;
+      }
+      .reaction-display-card.state-result {
+        background: #e0f2fe;
+        border-color: #0284c7;
+      }
+      .reaction-display-card.state-complete {
+        background: #f0fdf4;
+        border-color: #16a34a;
+      }
+      .reaction-emoji {
+        font-size: 3.5rem;
+        line-height: 1;
+        margin-bottom: 8px;
+      }
+      .reaction-label {
         font-family: 'Patrick Hand', cursive;
+        font-size: 1.7rem;
+        color: #1e293b;
+      }
+      .reaction-subtext {
+        font-size: 0.95rem;
+        color: #64748b;
+        margin-top: 4px;
+      }
+      .trial-progress-dots {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin: 16px 0;
+      }
+      .trial-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #cbd5e1;
+        transition: all 0.2s ease;
+      }
+      .trial-dot.active {
+        background: #3b82f6;
+        transform: scale(1.2);
+      }
+      .trial-dot.completed {
+        background: #22c55e;
+      }
+      @keyframes pulse-border {
+        0% { border-color: #f97316; }
+        50% { border-color: #fdba74; }
+        100% { border-color: #f97316; }
       }
       .button-row {
         display: flex;
@@ -522,19 +835,28 @@ if (glossaryModule[0]) {
       const rawBase = document.body.dataset.base || '/';
       const base = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
       const init = async () => {
-        const [{ initReactionTest }, { initScanEstimator }, { initSettingsAdvisor }, sushi] = await Promise.all([
-          import(`${base}scripts/reaction.js`),
-          import(`${base}scripts/estimator.js`),
-          import(`${base}scripts/advisor.js`),
-          import(`${base}scripts/sushi.js`),
-          import(`${base}scripts/glossary.js`)
-        ]);
-        initReactionTest();
-        initScanEstimator();
-        initSettingsAdvisor();
-        sushi.initSushiDemo?.();
+        try {
+          const [{ initReactionTest }, { initScanEstimator }, { initSettingsAdvisor }, sushi] = await Promise.all([
+            import(`${base}scripts/reaction.js`),
+            import(`${base}scripts/estimator.js`),
+            import(`${base}scripts/advisor.js`),
+            import(`${base}scripts/sushi.js`),
+            import(`${base}scripts/glossary.js`)
+          ]);
+          initReactionTest();
+          initScanEstimator();
+          initSettingsAdvisor();
+          sushi.initSushiDemo?.();
+        } catch (err) {
+          console.error('Failed to initialize interactive scripts:', err);
+        }
       };
-      window.addEventListener('DOMContentLoaded', init);
+
+      if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
     </script>
     <script type="module">
       const list = document.getElementById('tocList');
@@ -554,7 +876,208 @@ if (glossaryModule[0]) {
             const match = label.includes(q);
             link.parentElement?.toggleAttribute('hidden', !match);
           });
+        // Auto-add linkable anchor icons to headings
+        document.querySelectorAll('main h2, main h3').forEach((heading) => {
+          if (!heading.id) {
+            heading.id = heading.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+          }
+          if (!heading.querySelector('.heading-anchor')) {
+            const anchor = document.createElement('a');
+            anchor.className = 'heading-anchor';
+            anchor.href = '#' + heading.id;
+            anchor.innerHTML = '🔗';
+            anchor.title = 'Direct link to this section';
+            heading.appendChild(anchor);
+          }
         });
+      }
+    </script>
+    <script is:inline>
+      const renderMermaid = async () => {
+        if (!window.mermaid) return;
+        window.mermaid.initialize({
+          startOnLoad: false,
+          theme: 'neutral',
+          fontFamily: 'Atkinson Hyperlegible, sans-serif'
+        });
+
+        const selectors = [
+          'pre[data-language="mermaid"]',
+          'code[data-language="mermaid"]',
+          'pre.language-mermaid',
+          'code.language-mermaid',
+          'pre.mermaid',
+          'div.mermaid'
+        ];
+        
+        const candidateElements = Array.from(document.querySelectorAll(selectors.join(', ')));
+        
+        // Fallback: check all pre elements for mermaid keywords if not already matched
+        document.querySelectorAll('main pre').forEach((pre) => {
+          if (!candidateElements.includes(pre)) {
+            const text = (pre.innerText || pre.textContent || '').trim();
+            if (text.startsWith('flowchart') || text.startsWith('graph') || text.startsWith('sequenceDiagram') || text.startsWith('stateDiagram')) {
+              candidateElements.push(pre);
+            }
+          }
+        });
+
+        for (let i = 0; i < candidateElements.length; i++) {
+          const el = candidateElements[i];
+          const pre = el.tagName.toLowerCase() === 'pre' ? el : el.closest('pre') || el;
+          const graphDefinition = (pre.innerText || pre.textContent || '').trim();
+          if (!graphDefinition) continue;
+
+          const container = document.createElement('div');
+          container.className = 'mermaid-diagram-wrap';
+          container.style.display = 'flex';
+          container.style.justifyContent = 'center';
+          container.style.margin = '20px 0';
+          container.style.padding = '16px';
+          container.style.background = '#fffdf6';
+          container.style.border = '2px dashed #d6d6d6';
+          container.style.borderRadius = '14px';
+          container.style.overflowX = 'auto';
+
+          try {
+            const id = `mermaid-svg-${Date.now()}-${i}`;
+            const { svg } = await window.mermaid.render(id, graphDefinition);
+            container.innerHTML = svg;
+            if (pre && pre.parentNode) {
+              pre.parentNode.replaceChild(container, pre);
+            }
+          } catch (err) {
+            console.error('Mermaid render error:', err);
+          }
+        }
+      };
+
+      if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', renderMermaid);
+      } else {
+        renderMermaid();
+      }
+    </script>
+    <div id="diagramZoomModal" class="zoom-modal-backdrop" role="dialog" aria-modal="true" aria-label="Diagram Zoom View">
+      <div class="zoom-modal-content" id="zoomModalContent">
+        <button class="zoom-modal-close" id="zoomModalClose" aria-label="Close modal">✕</button>
+        <div id="zoomModalTarget"></div>
+      </div>
+    </div>
+    <script is:inline>
+      const initZoomModal = () => {
+        const modal = document.getElementById('diagramZoomModal');
+        const targetContainer = document.getElementById('zoomModalTarget');
+        const closeBtn = document.getElementById('zoomModalClose');
+        if (!modal || !targetContainer) return;
+
+        let activeReparent = null;
+
+        const openModal = (element, isInteractive = false) => {
+          if (activeReparent) closeModal();
+          targetContainer.innerHTML = '';
+
+          if (isInteractive) {
+            const placeholder = document.createElement('div');
+            placeholder.style.display = 'none';
+            element.parentNode.insertBefore(placeholder, element);
+
+            activeReparent = {
+              element: element,
+              placeholder: placeholder
+            };
+
+            element.classList.add('in-modal-fullscreen');
+            targetContainer.appendChild(element);
+          } else {
+            let toClone = element;
+            if (element.classList.contains('figure-card')) {
+              const innerImgOrSvg = element.querySelector('img, svg');
+              if (innerImgOrSvg) toClone = innerImgOrSvg;
+            }
+            const clone = toClone.cloneNode(true);
+            clone.style.cursor = 'default';
+            clone.style.margin = '0';
+            clone.style.padding = '0';
+            clone.style.maxWidth = '100%';
+            clone.style.maxHeight = '100%';
+            clone.style.width = 'auto';
+            clone.style.height = 'auto';
+            targetContainer.appendChild(clone);
+          }
+
+          modal.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        };
+
+        const closeModal = () => {
+          if (activeReparent) {
+            const { element, placeholder } = activeReparent;
+            element.classList.remove('in-modal-fullscreen');
+            if (placeholder && placeholder.parentNode) {
+              placeholder.parentNode.insertBefore(element, placeholder);
+              placeholder.remove();
+            }
+            activeReparent = null;
+          }
+          targetContainer.innerHTML = '';
+          modal.classList.remove('active');
+          document.body.style.overflow = '';
+        };
+
+        closeBtn?.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) closeModal();
+        });
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') closeModal();
+        });
+
+        const attachListeners = () => {
+          // Static diagram targets (Mermaid & Figures)
+          const staticTargets = document.querySelectorAll('.mermaid-diagram-wrap, .figure-card img, .figure-card, figure img');
+          staticTargets.forEach((target) => {
+            if (target.dataset.zoomBound) return;
+            target.dataset.zoomBound = 'true';
+            target.classList.add('zoomable-target');
+            target.setAttribute('title', 'Click to zoom view');
+            target.addEventListener('click', (e) => {
+              e.stopPropagation();
+              openModal(target, false);
+            });
+          });
+
+          // Interactive demo targets (Scanner, Reaction Test, Estimator, Sushi, Settings Advisor)
+          const interactiveTargets = document.querySelectorAll('.scanner-container, .reaction-test, .sushi-demo');
+          interactiveTargets.forEach((card) => {
+            if (card.dataset.badgeBound) return;
+            card.dataset.badgeBound = 'true';
+            card.classList.add('demo-card-relative');
+
+            const badge = document.createElement('button');
+            badge.className = 'demo-expand-badge';
+            badge.type = 'button';
+            badge.innerHTML = '🔍 Fullscreen Demo';
+            badge.setAttribute('title', 'Play demo in fullscreen modal');
+            
+            badge.addEventListener('click', (e) => {
+              e.stopPropagation();
+              openModal(card, true);
+            });
+
+            card.appendChild(badge);
+          });
+        };
+
+        attachListeners();
+        setTimeout(attachListeners, 500);
+        setTimeout(attachListeners, 1500);
+      };
+
+      if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', initZoomModal);
+      } else {
+        initZoomModal();
       }
     </script>
   </body>

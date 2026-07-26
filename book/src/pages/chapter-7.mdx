@@ -9,56 +9,79 @@ nextLabel: "Chapter 8: Row-Column Scanning"
 
 # Chapter 7: Why Group?
 
-Linear scanning of large sets is painfully slow. Grouping reduces scan cost dramatically.
+Linear scanning of large selection sets is painfully inefficient. As selection sets grow beyond 10 items, linear scanning becomes unusable for communication or computer access. 
 
-## Grouping and Hierarchy
+**Grouping** organizes items into hierarchical layers, dramatically reducing the average number of scan steps required per selection.
 
-Large selection sets are usually organized into **layers**:
+## The Mathematics of Scan Cost
 
-- **Items** (individual cells)
-- **Groups** (rows, columns, or clusters of items)
-- **Super-groups** (pages or tabs)
+In a linear scan across `N` items, the scan cost `S` (number of scan steps to reach a target) is proportional to grid size:
 
-This hierarchy reduces scan time and cognitive load. Most systems use a two-level hierarchy, but some allow deeper nesting.
+- **Best-case cost:** 1 press (first item).
+- **Worst-case cost:** `N` presses (last item).
+- **Average cost (`S_linear`):** `S_linear = (N + 1) ÷ 2`
 
-## Scan Cost
-
-For **N** items in linear scan:
-
-- Average cost to select any item = **N/2**
-- Cost to select last item = **N**
-
-<div class="highlight-box">
-  Grouping items into rows or groups can cut scan cost by 50% or more.
-</div>
-
-## Example: 36 items (6×6)
-
-- Linear average cost: 18 presses
-- Row-column average cost: 9 presses
-
-<div class="highlight-box">
-  That’s about 50% faster. Grouping cuts the scan cost in half for medium grids.
-</div>
-
-## Quick Comparison
-
-| Method | Max Presses | Average Presses |
+| Grid Size (`N`) | Linear Max Cost | Linear Average Cost (`S`) |
 | --- | --- | --- |
-| Linear (36 items) | 36 | 18 |
-| Row‑Column (6×6) | 12 | 9 |
+| 4 items | 4 presses | 2.5 presses |
+| 16 items | 16 presses | 8.5 presses |
+| 36 items | 36 presses | 18.5 presses |
+| 64 items | 64 presses | 32.5 presses |
+| 100 items | 100 presses | 50.5 presses |
 
-## Hierarchy Visualization
-
-```text
-Entire Selection Set (36 items)
-        |
-  Row1 Row2 Row3 Row4 Row5 Row6
-   |    |    |    |    |    |
-  6    6    6    6    6    6
-items items items items items items
-```
+To select a single character in a 64-item grid using linear auto-scan at 1000 ms per step, the user must wait an average of **32.5 seconds per selection**—yielding a maximum Text Entry Rate of under **0.3 Words Per Minute**!
 
 <div class="info-box">
-  Groups can be presented as pages, tabs, rows, or columns. The goal is to reduce the distance to frequently used items.
+  💡 <strong>In Plain English (The Elevator vs. Single Line Analogy):</strong><br />
+  Linear scanning is like walking down a single long hallway with 36 doors—you must pass door #1, door #2, door #3 all the way to door #36. On average, you'll walk past 18 doors before finding your item.<br /><br />
+  Grouping is like taking an elevator. First, you pick the floor (Rows 1 to 6), then you step down that short hallway (Columns 1 to 6). Instead of passing up to 36 doors, you take at most 12 steps. For your client, that cuts waiting time by over 60%!
+</div>
+
+## How Grouping Reduces Complexity
+
+Grouping breaks a single 1D linear array into a **hierarchical multi-stage search tree**:
+
+```mermaid
+flowchart TD
+    Root["Selection Set: 36 Items"] --> R1["Row 1 (6 items)"]
+    Root --> R2["Row 2 (6 items)"]
+    Root --> R3["Row 3 (6 items)"]
+    Root --> R4["Row 4 (6 items)"]
+    Root --> R5["Row 5 (6 items)"]
+    Root --> R6["Row 6 (6 items)"]
+```
+
+By dividing an `N`-item grid into a square `R × C` matrix (where `R = sqrt(N)` and `C = sqrt(N)`), the selection process becomes a 2-stage decision:
+1. **Stage 1:** Scan `R` row groups $\rightarrow$ select row.
+2. **Stage 2:** Scan `C` items within chosen row $\rightarrow$ select item.
+
+The average scan cost for Row-Column scanning (`S_row_col`) drops to:
+
+`S_row_col = (R + 1) ÷ 2 + (C + 1) ÷ 2 = sqrt(N) + 1`
+
+## Efficiency Comparison: 36 Items (6×6 Matrix)
+
+- **Linear Scan Average Cost:** 18.5 steps.
+- **Row-Column Average Cost:** 7.0 steps (6 rows + 6 columns average).
+- **Scan Step Savings:** **> 60% reduction in waiting time!**
+
+```text
+Linear Scan Cost:    [■■■■■■■■■■■■■■■■■■.5] (18.5 steps)
+Row-Column Cost:     [■■■■■■■] (7 steps)  <-- 62% Faster!
+```
+
+<div class="highlight-box">
+  🩺 <strong>Clinical Impact:</strong> Grouping transforms search complexity from linear <code>O(N)</code> to square-root <code>O(sqrt(N))</code> or logarithmic <code>O(log N)</code>. This is the single most effective software intervention for increasing Text Entry Rate in AAC (Lesher et al., 1998).
+</div>
+
+## Cognitive & Visual Search Benefits
+
+Beyond raw timing speed, grouping provides major cognitive advantages:
+
+1. **Reduced Visual Search Field:** The user only needs to track one active row banner during Stage 1, rather than following a rapidly hopping single-cell target across the screen (Thistle & Wilkinson, 2015).
+2. **Chunking & Spatial Memory:** Grouping supports spatial memory, allowing users to memorize target locations (e.g., "Top-Right quadrant" or "Row 2, Column 3").
+3. **Ergonomic Layout Weighting:** High-frequency items (like vowels, Space, or common AAC phrases) can be placed in Row 1, Column 1, reducing average selection time even further.
+
+<div class="info-box">
+  Next Chapter: In <strong>Chapter 8</strong>, we examine the practical mechanics, timing flows, and visual techniques (Block vs. Point) for implementing Row-Column scanning.
 </div>

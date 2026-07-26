@@ -1,37 +1,40 @@
 ---
 layout: ../layouts/BookLayout.astro
-title: "Chapter 21: User Profiles"
+title: "Chapter 21: User Profiles & Clinical Tuning"
 prevHref: "/book/chapter-20"
-prevLabel: "Chapter 20: Feedback & Highlighting"
+prevLabel: "Chapter 20: Multimodal Feedback"
 nextHref: "/book/chapter-22"
 nextLabel: "Chapter 22: Implementing Scanners"
 ---
 
-# Chapter 21: User Profiles
+# Chapter 21: User Profiles & Clinical Tuning
 
-Different users need different configurations. Treat profiles as stable baselines that can be tuned, not as fixed diagnoses.
+No single scanning configuration works for all users, or even for the same user throughout a single day. 
 
-## What a Profile Should Capture
+A **User Profile** captures an individual's motor, visual, and cognitive capabilities, translating them into specific software timing parameters, layouts, and input filters.
 
-- **Input capability**: mean switch press time, variability, and acceptance delay needs.
-- **Visual preferences**: highlight size, contrast, animation speed, and symbol size.
-- **Cognitive load**: grid size, scan pattern complexity, and prediction usage.
-- **Fatigue**: how settings should shift over time or after prolonged use.
-- **Environment**: lighting, noise, and seated vs. reclined positioning.
+## Core Parameters Captured in a Profile
 
-## Example Profiles
+1. **Motor & Input Capabilities:**
+   - Mean switch reaction time (`RT`) and standard deviation (`SD`).
+   - Required acceptance delay (ms) and debounce threshold.
+   - Switch count (1-switch auto-scan vs 2-switch step-scan).
+2. **Visual Preferences:**
+   - Highlight contrast, border thickness, font size, and color themes.
+   - Preference for Block vs Point highlighting technique.
+3. **Cognitive & Language Settings:**
+   - Grid size (`N`), scan pattern (Linear, Row-Column, Elimination).
+   - Word prediction list candidate count (3–6 items) and layout frequency.
+4. **Fatigue Profiles (Diurnal Adjustments):**
+   - For progressive conditions (e.g., ALS/MND or Muscular Dystrophy), muscle strength and reaction time change between morning and afternoon.
+   - Profiles should store **Morning (Fresh)** and **Afternoon (Fatigued)** presets with automatic or 1-tap timing adjustments.
 
-- **Athetosis**: longer acceptance delay, slightly slower scan, higher tolerance for missed first-row selections.
-- **Degenerative conditions**: “fresh” vs. “fatigued” presets with different scan delays and prediction lists.
-- **Low vision**: high contrast, thicker borders, larger highlight area, fewer items per row.
-- **High cognitive load**: smaller grids, fewer modes, predictable scan order.
+## Example Clinical Presets
 
-## Practical Tips for Teams
-
-- Always keep a “safe” fallback profile that is slow and forgiving.
-- Version profiles and log when changes are applied.
-- Use short tests to validate profile changes before daily use.
+- **Spasticity / Tremor Profile:** Long acceptance delay (400–600 ms), debounce enabled (100 ms), slower scan rate (+25% buffer), block highlight technique.
+- **Low Vision / CVI Profile:** Thick border highlights (8px), auditory speech prompting enabled, high-contrast yellow/black theme, 1st-item extended pause.
+- **High Efficiency / Advanced Profile:** Fast scan delay (500–800 ms), thin point highlighting, frequency-based ETAOIN SHRDLU grid, 3-candidate word prediction.
 
 <div class="warning-box">
-  Always validate settings with real use. Lab performance rarely matches daily life.
+  <strong>Clinical Golden Rule:</strong> Always provide a "Safe Default Profile" (slow scan rate, wide acceptance delay) that the user can immediately revert to if settings become misconfigured.
 </div>

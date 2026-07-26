@@ -21,13 +21,19 @@ A structured decision tree improves text entry rate (TER). In seminal clinical r
 
 A foundational rule of this clinical model is the **25% scanning error threshold**: if errors exceed 25% of selections, you **must** focus on reducing errors before optimizing speed or layout.
 
+<div class="info-box">
+  💡 <strong>In Plain English (Why Fix Errors First?):</strong><br />
+  If a client makes mistakes more than 1 out of 4 times (>25%), pushing them to scan faster actually makes them <em>slower</em>! Every time they miss a target, they must press Backspace, wait for the scan to cycle around again, and re-select. That error repair penalty destroys their typing speed.<br /><br />
+  By first slowing down the scan rate or adding a 1st-item pause, their error rate drops below 25%. Once errors are under control, their net communication speed automatically doubles!
+</div>
+
 <div class="figure-card">
   <img src={`${import.meta.env.BASE_URL}figures/koester-simpson-2014-flowchart.svg`} alt="Koester and Simpson 2014 settings optimization flowchart" style="width: 100%; height: auto; display: block;" />
   <div class="figure-caption">Decision tree for identifying revised scanning settings (Koester & Simpson, 2014).</div>
 </div>
 
-<div class="info-box">
-  <strong>Clinical Rule:</strong> Fix switch activation consistency → Measure scanning error rate → If &gt;25%, adjust timing parameters (scan delay, 1st-item delay, acceptance delay); If &le;25%, focus on dead time reduction, word prediction tuning, and layout frequency.
+<div class="highlight-box">
+  🩺 <strong>Clinical Rule:</strong> Fix switch activation consistency → Measure scanning error rate → If &gt;25%, adjust timing parameters (scan delay, 1st-item delay, acceptance delay); If &le;25%, focus on dead time reduction, word prediction tuning, and layout frequency.
 </div>
 
 ## What You Need to Measure
@@ -80,47 +86,98 @@ Once errors are controlled (Error Rate ≤ 25%), aim for fewer scan steps and le
 
 ## Settings Advisor (Koester & Simpson Clinical Algorithm)
 
-<div class="reaction-test" id="settingsAdvisor">
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-    <label>
-      <strong>Performance OK?</strong><br />
-      <select id="advisorPerformance" style="width: 100%; padding: 8px; margin-top: 6px;">
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
-      </select>
-    </label>
-    <label>
-      <strong>TER/Errors can improve?</strong><br />
-      <select id="advisorImprove" style="width: 100%; padding: 8px; margin-top: 6px;">
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
-      </select>
-    </label>
-    <label>
-      <strong>Scanning Errors (%)</strong><br />
-      <input id="advisorErrors" type="number" min="0" max="200" value="30" style="width: 100%; padding: 8px; margin-top: 6px;" />
-    </label>
-    <label>
-      <strong>Current Scan Delay (ms)</strong><br />
-      <input id="advisorCurrentDelay" type="number" min="100" max="5000" value="1000" style="width: 100%; padding: 8px; margin-top: 6px;" />
-    </label>
-    <label>
-      <strong>Mean Reaction Time (ms)</strong><br />
-      <input id="advisorMeanRt" type="number" min="0" max="3000" value="650" style="width: 100%; padding: 8px; margin-top: 6px;" />
-    </label>
+<div class="wizard-container" id="advisorWizard">
+  <div class="wizard-tabs">
+    <button class="wizard-tab-btn active" id="advisorTabStep1" type="button">
+      <span>1️⃣ Step 1: Telemetry & Error Rate</span>
+    </button>
+    <button class="wizard-tab-btn" id="advisorTabStep2" type="button">
+      <span>2️⃣ Step 2: Observed Failure Modes</span>
+    </button>
+    <button class="wizard-tab-btn" id="advisorTabStep3" type="button">
+      <span>3️⃣ Step 3: Clinical Prescriptions</span>
+    </button>
   </div>
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 12px;">
-    <label><input type="checkbox" id="advisorFirstLate" checked /> First press too late</label>
-    <label><input type="checkbox" id="advisorNextLate" /> Next press too late</label>
-    <label><input type="checkbox" id="advisorUnintentional" /> Unintentional presses</label>
-    <label><input type="checkbox" id="advisorMissingRow" /> Missing first-row selections</label>
-    <label><input type="checkbox" id="advisorDeadTime" /> Too much dead time</label>
-    <label><input type="checkbox" id="advisorWordPred" /> Inefficient word prediction</label>
-    <label><input type="checkbox" id="advisorLayout" /> Inefficient layout/pattern</label>
+
+  <div class="wizard-step-pane active" id="advisorPaneStep1">
+    <div class="info-box" style="margin-top: 0; background-color: #eff6ff; border-left-color: #3b82f6; color: #1e3a8a;">
+      <strong>Step 1: Enter Telemetry Parameters:</strong> Input client error rate, current scan delay, and reaction time below to evaluate against the Koester & Simpson 25% Error Threshold model.
+    </div>
+
+    <div class="reaction-test" id="settingsAdvisor" style="box-shadow: none; border: none; padding: 0;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; background: #f8fafc; padding: 20px; border-radius: 14px; border: 1px solid #cbd5e1;">
+        <label>
+          <strong style="font-size: 1rem;">Switch Performance OK?</strong><br />
+          <select id="advisorPerformance" style="width: 100%; padding: 10px; margin-top: 6px; font-size: 1rem; border-radius: 8px; border: 1px solid #cbd5e1;">
+            <option value="yes">Yes (Consistent physical trigger)</option>
+            <option value="no">No (Inconsistent physical trigger)</option>
+          </select>
+        </label>
+        <label>
+          <strong style="font-size: 1rem;">TER / Errors can improve?</strong><br />
+          <select id="advisorImprove" style="width: 100%; padding: 10px; margin-top: 6px; font-size: 1rem; border-radius: 8px; border: 1px solid #cbd5e1;">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </label>
+        <label>
+          <strong style="font-size: 1rem;">Scanning Errors (%)</strong><br />
+          <input id="advisorErrors" type="number" min="0" max="200" value="30" style="width: 100%; padding: 10px; margin-top: 6px; font-size: 1rem; border-radius: 8px; border: 1px solid #cbd5e1;" />
+        </label>
+        <label>
+          <strong style="font-size: 1rem;">Current Scan Delay (ms)</strong><br />
+          <input id="advisorCurrentDelay" type="number" min="100" max="5000" value="1000" style="width: 100%; padding: 10px; margin-top: 6px; font-size: 1rem; border-radius: 8px; border: 1px solid #cbd5e1;" />
+        </label>
+        <label>
+          <strong style="font-size: 1rem;">Mean Reaction Time (ms)</strong><br />
+          <input id="advisorMeanRt" type="number" min="0" max="3000" value="650" style="width: 100%; padding: 10px; margin-top: 6px; font-size: 1rem; border-radius: 8px; border: 1px solid #cbd5e1;" />
+        </label>
+      </div>
+
+      <div style="margin-top: 20px; text-align: right;">
+        <button class="primary" id="btnAdvisorToStep2" type="button" style="padding: 12px 24px; font-size: 1.05rem;">
+          Next: Failure Modes ➔
+        </button>
+      </div>
+    </div>
   </div>
-  <div class="button-row" style="margin-top: 12px;">
-    <button id="advisorRun">Get Clinical Recommendations</button>
+
+  <div class="wizard-step-pane" id="advisorPaneStep2">
+    <div class="info-box" style="margin-top: 0; background-color: #eff6ff; border-left-color: #3b82f6; color: #1e3a8a;">
+      <strong>Step 2: Select Observed Failure Modes:</strong> Check all behavior patterns observed during scanning sessions to pinpoint root causes.
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; background: #f8fafc; padding: 22px; border-radius: 14px; border: 1px solid #cbd5e1; font-size: 1.02rem;">
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;"><input type="checkbox" id="advisorFirstLate" checked style="width: 18px; height: 18px;" /> <strong>First press too late</strong> (Scan rate too fast)</label>
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;"><input type="checkbox" id="advisorNextLate" style="width: 18px; height: 18px;" /> <strong>Next press too late</strong> (Row entry delay)</label>
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;"><input type="checkbox" id="advisorUnintentional" style="width: 18px; height: 18px;" /> <strong>Unintentional presses</strong> (Tremor/bounce)</label>
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;"><input type="checkbox" id="advisorMissingRow" style="width: 18px; height: 18px;" /> <strong>Missing first-row selections</strong></label>
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;"><input type="checkbox" id="advisorDeadTime" style="width: 18px; height: 18px;" /> <strong>Too much dead time</strong> (Scan rate too slow)</label>
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;"><input type="checkbox" id="advisorWordPred" style="width: 18px; height: 18px;" /> <strong>Inefficient word prediction</strong></label>
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;"><input type="checkbox" id="advisorLayout" style="width: 18px; height: 18px;" /> <strong>Inefficient layout / pattern</strong></label>
+    </div>
+
+    <div class="button-row" style="margin-top: 20px; justify-content: space-between;">
+      <button class="secondary" id="btnAdvisorBackToStep1" type="button" style="padding: 10px 20px;">
+        ← Back to Step 1
+      </button>
+      <button class="primary" id="advisorRun" type="button" style="padding: 12px 24px; font-size: 1.05rem;">
+        Generate Clinical Recommendations ➔
+      </button>
+    </div>
   </div>
-  <p><strong>Diagnosis:</strong> <span id="advisorSummary">—</span></p>
-  <div id="advisorResults"></div>
+
+  <div class="wizard-step-pane" id="advisorPaneStep3">
+    <div style="background: #eef5fb; padding: 22px; border-radius: 14px; border: 1.5px solid var(--accent);">
+      <h3 style="margin-top: 0; color: var(--accent);">Clinical Diagnosis</h3>
+      <p style="font-size: 1.1rem; font-weight: 700;"><span id="advisorSummary">Click "Generate Clinical Recommendations" on Step 2 to generate diagnostic results.</span></p>
+      <div id="advisorResults" style="margin-top: 16px;"></div>
+    </div>
+
+    <div style="margin-top: 20px; text-align: left;">
+      <button class="secondary" id="btnAdvisorBackToStep2" type="button" style="padding: 10px 20px;">
+        ← Back to Step 2: Failure Modes
+      </button>
+    </div>
+  </div>
 </div>

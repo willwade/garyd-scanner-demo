@@ -1,33 +1,36 @@
 ---
 layout: ../layouts/BookLayout.astro
-title: "Chapter 23: Accessibility Testing"
+title: "Chapter 23: Accessibility Testing & Quality Assurance"
 prevHref: "/book/chapter-22"
 prevLabel: "Chapter 22: Implementing Scanners"
 nextHref: "/book/chapter-24"
-nextLabel: "Chapter 24: Resources & Next Steps"
+nextLabel: "Chapter 24: UX Design Patterns"
 ---
 
-# Chapter 23: Accessibility Testing
+# Chapter 23: Accessibility Testing & Quality Assurance
 
-Accessibility testing for scanning is mostly about timing, visibility, and error recovery. Aim for repeatable checks.
+Testing switch scanning interfaces requires dedicated protocols beyond standard keyboard navigation or screen reader accessibility.
 
-## Core tests
+Developers and QA teams must test for timing consistency, visual contrast, error recovery, and motor fatigue resilience.
 
-- **Single-switch simulation:** Use only Space to test all paths.
-- **Timing sweeps:** Test slow/medium/fast rates.
-- **Error drills:** Practice undo, cancel, and recovery.
-- **Fatigue runs:** 20–30 minutes sustained use.
+## Core Testing Protocols
 
-## Measurement Checklist
+### 1. Single-Switch Keyboard Emulation Test
+- **Protocol:** Lock input to a single key (e.g., Spacebar only). Attempt to complete end-to-end tasks (e.g., spell a 5-word sentence, navigate to a web page, and execute a form submit).
+- **Pass Criteria:** Every feature and modal state can be reached and exited without requiring mouse movement or multi-key combinations.
 
-- Record TER, scanning errors, and reaction time before and after changes.
-- Verify that any highlight is visible in low light and bright light.
-- Confirm the user can recover within two scan cycles.
-- Validate at least one “safe mode” configuration.
+### 2. Timing Sweep & Stress Testing
+- **Protocol:** Test application behavior across extreme scan rates: Fast (400 ms), Default (1000 ms), and Slow (3000 ms).
+- **Pass Criteria:** UI animations complete cleanly within the scan delay window without dropping frames or desynchronizing visual highlights.
 
-## Common failure modes
+### 3. Error Recovery Drills
+- **Protocol:** Intentionally activate wrong rows and misselect incorrect letters during data entry.
+- **Pass Criteria:** User can recover from any mistake within **2 scan cycles** using dedicated Undo, Backspace, or Emergency Cancel inputs.
 
-- No undo/back path
-- Highlights too subtle
-- Scan loops never end
-- User can’t recover from a mistake in under two cycles
+### 4. Continuous Fatigue Run
+- **Protocol:** Perform sustained single-switch text entry for 20–30 minutes.
+- **Pass Criteria:** System logs telemetry on timing errors, verifying that the interface remains stable and that acceptance delay thresholds prevent double-press errors as physical fatigue accumulates.
+
+<div class="info-box">
+  <strong>QA Rule:</strong> Never ship a scanning system that can lock a user into a sub-menu or modal window without an accessible single-switch escape route.
+</div>

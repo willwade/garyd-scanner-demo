@@ -1,24 +1,48 @@
 ---
 layout: ../layouts/BookLayout.astro
-title: "Chapter 24: Design Patterns"
+title: "Chapter 24: UX Design Patterns & Best Practices"
 prevHref: "/book/chapter-23"
 prevLabel: "Chapter 23: Accessibility Testing"
 nextHref: "/book/glossary"
-nextLabel: "Glossary"
+nextLabel: "Glossary & References"
 ---
 
-# Chapter 24: Design Patterns
+# Chapter 24: UX Design Patterns & Best Practices
 
-Design patterns help keep scanning consistent while still allowing speed and flexibility.
+Designing software for switch scanning requires a shift from spatial visual layout to **temporal interaction design**. 
 
-## Patterns That Work Well
+This chapter synthesizes essential UX design patterns for building fast, intuitive, and low-fatigue scanning applications.
 
-- **Progressive disclosure**: show a small set of core items first, then expand.
-- **Most recently used (MRU)**: bubble frequent selections to faster positions.
-- **Predictive order**: place likely next items earlier in the scan path.
-- **Context-aware grids**: switch layouts based on task context (spelling vs. commands).
-- **Safe defaults**: a “slow and clear” profile that users can always return to.
+## Recommended Design Patterns
 
-## When to Avoid Patterns
+### 1. Progressive Disclosure
+Show a small set of primary core targets first (e.g., core vocabulary words, Yes/No, top actions). Provide explicit link items to expand into secondary categories only when needed.
 
-Avoid patterns that reorder too aggressively during a selection. Sudden movement breaks timing and increases errors.
+### 2. Frequency-Weighted Ordering (ETAOIN SHRDLU)
+Place high-frequency letters, common phrases, and critical actions in early scan positions (Row 1, Column 1). Ordering by frequency cuts average scan distance per selection by up to 45%.
+
+### 3. Context-Aware Dynamic Grids
+Automatically adapt selection grids based on active task context. When text entry is active, present letters and word prediction; when media playback is active, present Play, Pause, and Volume controls.
+
+### 4. Predictive Candidate Placement
+Position word prediction candidate boxes directly above or adjacent to the letter keyboard so the scan line moves fluidly from letter input into candidate selection.
+
+### 5. Deterministic Navigation & Safe Defaults
+Keep scan ordering completely predictable. Avoid dynamic spatial reorganization during an active scan sequence, as unexpected target shifts break motor timing and cause misselections.
+
+<div class="highlight-box">
+  <strong>Golden Rule of Scanning UX:</strong> Consistency builds muscle memory and speed. Never change target locations during a scan cycle without explicit user navigation.
+</div>
+
+## Summary of the Book
+
+Over the 24 chapters of this interactive manual, we have established the foundational principles of switch scanning:
+
+1. **Foundations (Ch. 1–4):** Understanding switches as binary transducers, overcoming low input bandwidth, establishing cause & effect, and designing selection sets.
+2. **Scanning Mechanics (Ch. 5–10):** Mastering auto-scan, step-scan, row-column matrixing, quadrant elimination, and pattern efficiency benchmarks.
+3. **Timing & Clinical Tuning (Ch. 11–16):** Applying the .65 Rule, managing reaction time variance ($SD$), signal filtering (acceptance delay & debounce), and visual highlighting techniques.
+4. **Safety, Hardware & Implementation (Ch. 17–24):** Designing error recovery safety nets, multimodal feedback, physical mounting, Koester & Simpson clinical decision models, and QA testing protocols.
+
+<div class="info-box">
+  Proceed to the <strong><a href={`${import.meta.env.BASE_URL}glossary`}>Glossary & References</a></strong> for complete clinical definitions, mathematical formulas, and peer-reviewed literature citations.
+</div>

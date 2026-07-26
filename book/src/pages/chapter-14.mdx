@@ -2,76 +2,67 @@
 layout: ../layouts/BookLayout.astro
 title: "Chapter 14: Visualization Options"
 prevHref: "/book/chapter-13"
-prevLabel: "Chapter 13: Scan Timing"
+prevLabel: "Chapter 13: Timing & Optimization (.65 Rule)"
 nextHref: "/book/chapter-15"
-nextLabel: "Chapter 15: Block vs Point Technique"
+nextLabel: "Chapter 15: Signal Filtering & Acceptance Delay"
 ---
 
 # Chapter 14: Visualization Options
 
-Highlighting style affects speed and error rate.
+The visual presentation of the scanning highlight plays a critical role in user accuracy and visual fatigue.
 
-The goal is to make the active item unambiguous without creating distraction. Some users benefit from bold, high-contrast cues, while others find excessive animation disruptive.
+The primary goal of visual highlighting is to make the active target **unambiguous** from an operational distance (1–2 meters) without introducing visual clutter or distracting screen motion (Thistle & Wilkinson, 2015).
 
-## Visual options
+## Visual Highlighting Parameters
 
-- Borders / outlines
-- Color changes
-- Scale / zoom
-- Animation
-- Opacity dimming
+- **Outline Border Width:** Thick high-contrast borders vs thin minimalist lines.
+- **Background Color Shift:** Inverting cell colors or applying high-contrast focus hues (e.g., bright yellow/cyan on dark slate).
+- **Scale Elevation (Zoom Factor):** Elevating the active target slightly (1.1× to 1.2× scale) to create 3D depth separation.
+- **Opacity Dimming:** Dimming non-active background items to 40–50% opacity to draw visual focus exclusively to the active scan step.
+- **Scan Line Sweeps:** A moving progress line sweeping across the active cell to indicate remaining dwell/scan time.
 
-## Recommendations by need
+## Design Guidelines by User Need
 
-- **Low vision:** Thick borders, high contrast, mild animation
-- **Cognitive load:** Simple highlighting, avoid animation
-- **Advanced users:** Minimal highlighting, thin borders
+- **Low Vision / Cortical Visual Impairment (CVI):** Use thick high-contrast borders (6–8px), bright solid fill highlights, and high-contrast symbol backgrounds. Avoid subtle pastel color shifts.
+- **High Cognitive Load / Seizure Sensitivity:** Use static border highlights without scale animations or pulsing motion. Keep screen brightness uniform.
+- **Advanced / High-Speed Users:** Minimal visual highlighting (thin 2px borders), no zoom animations, allowing fast visual tracking across dense grids.
 
-## Demo: Border Width
+## Demo: Border Width Comparison
 
 <div class="demo-instructions">
-  🎮 Compare thin vs thick borders for visibility.
+  🎮 Compare thin (2px) vs thick (8px) visual borders for active cell visibility.
 </div>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
   <div>
-    <h4>Thin (2px)</h4>
+    <h4>Thin Border (2px)</h4>
     <div class="scanner-container small">
       <switch-scanner theme="sketch" scan-pattern="linear" scan-rate="1500" grid-size="9" highlight-border-width="2"></switch-scanner>
     </div>
   </div>
   <div>
-    <h4>Thick (8px)</h4>
+    <h4>Thick Border (8px)</h4>
     <div class="scanner-container small">
       <switch-scanner theme="sketch" scan-pattern="linear" scan-rate="1500" grid-size="9" highlight-border-width="8"></switch-scanner>
     </div>
   </div>
 </div>
 
-## Demo: Scale
+## Demo: Scale Zoom & Moving Scan Line
 
 <div class="demo-instructions">
-  🎮 Notice how a larger scale draws attention.
-</div>
-
-## Demo: Moving Scan Line
-
-<div class="demo-instructions">
-  🎮 A moving line sweeps through the focused cell at the scan rate.
-</div>
-<div class="scanner-container small">
-  <switch-scanner theme="sketch" scan-pattern="row-column" scan-technique="block" scan-rate="1200" grid-size="16" highlight-scan-line="true"></switch-scanner>
+  🎮 Compare static scale (left) vs 1.2x scale elevation with active scan line sweep (right).
 </div>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
   <div>
-    <h4>No Zoom</h4>
+    <h4>Static Scale (1.0x)</h4>
     <div class="scanner-container small">
       <switch-scanner theme="sketch" scan-pattern="linear" scan-rate="1500" grid-size="9" highlight-scale="1.0"></switch-scanner>
     </div>
   </div>
   <div>
-    <h4>Zoom (1.2)</h4>
+    <h4>Zoom (1.2x) + Scan Line</h4>
     <div class="scanner-container small">
-      <switch-scanner theme="sketch" scan-pattern="linear" scan-rate="1500" grid-size="9" highlight-scale="1.2"></switch-scanner>
+      <switch-scanner theme="sketch" scan-pattern="row-column" scan-technique="block" scan-rate="1200" grid-size="16" highlight-scale="1.2" highlight-scan-line="true"></switch-scanner>
     </div>
   </div>
 </div>

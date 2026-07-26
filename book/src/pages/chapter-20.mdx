@@ -1,49 +1,44 @@
 ---
 layout: ../layouts/BookLayout.astro
-title: "Chapter 20: Feedback & Highlighting"
+title: "Chapter 20: Multimodal Feedback & Auditory Scanning"
 prevHref: "/book/chapter-19"
 prevLabel: "Chapter 19: Error Recovery"
 nextHref: "/book/chapter-21"
 nextLabel: "Chapter 21: User Profiles"
 ---
 
-# Chapter 20: Feedback & Highlighting
+# Chapter 20: Multimodal Feedback & Auditory Scanning
 
-Effective feedback reduces errors and builds trust. Make the active item obvious, and make selection feel intentional.
+Multi-sensory feedback reduces cognitive effort and reassures the user that their switch activations have been registered.
 
-## Design Goals
+Effective feedback must operate across three distinct sensory modalities: **Visual**, **Auditory**, and **Haptic/Tactile**.
 
-- **Clarity**: the active item should be unambiguous from 1–2 meters away.
-- **Consistency**: the same signal should mean the same thing everywhere.
-- **Low cognitive load**: feedback should not compete with reading or comprehension.
+```mermaid
+flowchart LR
+    A["Scan Event"] --> B["Visual Highlight (Border / Zoom)"]
+    A --> C["Auditory Cue (Step Beep / Speech)"]
+    A --> D["Haptic Click (Switch Vibration)"]
+```
 
-## Visual feedback
+## Feedback Channels
 
-- Clear border or color highlight
-- Optional scale or pulse on the active item
-- Dim non-highlighted items to reduce scan noise
+### 1. Visual Highlighting
+- **Active Focus:** High-contrast border, background hue shift, or scale elevation.
+- **Background Dimming:** Non-highlighted cells dim slightly to isolate visual attention.
+- **Contrast Ratios:** Ensure highlights pass WCAG AAA contrast guidelines against both light and dark themes. Avoid color-only indicators (e.g., red vs green).
 
-Avoid ambiguous color pairs (red/green) and ensure highlights pass contrast checks on light and dark backgrounds.
+### 2. Auditory Feedback & Auditory Scanning
+For switch users who are blind, have low vision, or experience severe visual fatigue, **Auditory Scanning** is the primary access modality:
 
-## Auditory & tactile feedback
+- **Auditory Step Beep:** A short, unobtrusive click or pitch step played on each scan step.
+- **Speech Prompting:** Text-to-speech engine speaks the item or group label as it highlights (e.g., "Food... Drinks... Questions...").
+- **Private Earphone Cueing:** Auditory prompts play through a private earphone, while selected output text plays through public speakers.
+- **Selection Confirmation Tone:** A distinct, higher-pitched chime confirming that a selection has been committed.
 
-- Short beep per highlight
-- Distinct selection sound
-- Voice output of item names (auditory prompting)
-- Tactile click or vibration (if available)
-
-Keep highlight sounds short and uniform. Selection sounds can be slightly longer to confirm action without slowing timing.
-
-## Acceptance Feedback
-
-If you use acceptance time or debounce, provide clear feedback (e.g., a brief glow or tone) so the user knows their press was registered.
-
-## Timing and Motion
-
-- Animations should finish well within the scan delay.
-- Keep transitions subtle to avoid “tracking” the animation instead of the item.
-- Allow a “no motion” setting for users who are distracted by animation.
+### 3. Haptic & Tactile Feedback
+- **Switch Click Feel:** Physical switches with crisp tactile feedback (e.g., micro-switch click) provide instant somatic confirmation.
+- **Vibration Pulses:** Haptic vibration motors built into mounting arms or switches reinforce press registration for users with visual and hearing impairments.
 
 <div class="info-box">
-  Pair a visible highlight with a short, consistent sound to reduce cognitive load.
+  <strong>Best Practice:</strong> Always pair a visual highlight with a short, distinct auditory selection chime. The selection sound should sound noticeably different from the step scan beep to confirm intentional activation.
 </div>

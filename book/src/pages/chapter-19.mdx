@@ -4,28 +4,39 @@ title: "Chapter 19: Error Recovery"
 prevHref: "/book/chapter-18"
 prevLabel: "Chapter 18: Directed Scanning"
 nextHref: "/book/chapter-20"
-nextLabel: "Chapter 20: Feedback & Highlighting"
+nextLabel: "Chapter 20: Multimodal Feedback"
 ---
 
 # Chapter 19: Error Recovery
 
-Errors are expensive for switch users. Provide recovery tools that are always available.
+Errors in single-switch scanning carry an immense time penalty. In linear or row-column scanning, correcting a single mistaken selection requires locating and selecting a "Backspace" or "Undo" item, costing an additional **15–45 seconds** of scan steps (Venkatagiri, 1999).
 
-## Recovery methods
-
-- **Empty items:** Selectable items that reset the scan without output
-- **Cancel scan:** Dedicated cancel action (button, long-hold, or special item)
-- **Undo/redo:** Reverse last character or operation
-- **Back navigation:** Return to previous group/page
+Without accessible, low-cost error recovery mechanisms, users experience severe frustration and frequently abandon scanning systems entirely.
 
 <div class="warning-box">
-  Without recovery, a single mistake can cost 30+ seconds. This is the most common reason users abandon scanning systems.
+  <strong>The Error Penalty:</strong> A single uncorrected error invalidates preceding work. If error recovery requires navigating back through 3 menu layers, a single mistake destroys net communication speed.
 </div>
 
-## Empty Item Reset Demo
+## Four Essential Error Recovery Mechanisms
+
+### 1. Empty Item Resets
+Selectable dummy cells placed strategically in scan groups that immediately abort the active scan cycle without producing output or sending text. Allows the user to "safely miss" or intentionally reset a wrong row selection.
+
+### 2. Long-Hold Emergency Cancel
+Encodes a long-press gesture (e.g., holding the switch continuously for 1000 ms) to immediately cancel the active scan cycle and return to the main home page from anywhere in the interface.
+
+### 3. Dedicated Backspace & Undo Targets
+Placing Backspace, Undo, and Clear buttons in high-priority scan positions (e.g., Row 1 or Column 1) ensures immediate access when a mistaken character is committed.
+
+### 4. Automatic Level Escape (Timeout Reset)
+If a user selects a row or pop-up menu but makes no further switch press for 2 complete scan cycles, the software automatically escapes back to the top-level home page.
+
+## Demos: Interactive Recovery Features
+
+### 1. Empty Item Reset Demo
 
 <div class="demo-instructions">
-  🎮 Try it: select “Reset” to restart the scan without output.
+  🎮 Select <strong>⟳ Reset</strong> to restart the scan immediately without committing text.
 </div>
 <div class="scanner-container small">
   <switch-scanner
@@ -42,10 +53,10 @@ Errors are expensive for switch users. Provide recovery tools that are always av
   </switch-scanner>
 </div>
 
-## Long-Hold Cancel Demo
+### 2. Long-Hold Cancel Demo
 
 <div class="demo-instructions">
-  🎮 Hold the switch for 1 second to cancel and reset the scan.
+  🎮 Press and <strong>HOLD</strong> the switch for 1 second to activate emergency cancel.
 </div>
 <div class="scanner-container small">
   <switch-scanner
@@ -59,10 +70,10 @@ Errors are expensive for switch users. Provide recovery tools that are always av
   </switch-scanner>
 </div>
 
-## Undo & Backspace Demo
+### 3. Dedicated Backspace & Undo Controls
 
 <div class="demo-instructions">
-  🎮 Enter a few letters, then use Backspace or Undo/Redo.
+  🎮 Enter letters, then test Backspace, Undo, and Clear targets.
 </div>
 <div class="scanner-container small">
   <switch-scanner

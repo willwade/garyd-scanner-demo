@@ -13,28 +13,45 @@ The **scan rate** (or scan delay) is the foundational timing parameter in single
 
 A seminal empirical heuristic developed by Richard Simpson and Heidi Koester (1999, 2013) is the **.65 Rule**:
 
-`Optimal Scan Rate (ms) ≈ Mean Reaction Time ÷ 0.65 ≈ 1.54 × RT`
+<div class="figure-card" style="text-align: center; font-size: 1.25rem; font-weight: bold; color: var(--accent);">
+  Optimal Scan Rate (ms) ≈ Mean Reaction Time ÷ 0.65 ≈ 1.54 × RT
+</div>
+
+<div class="info-box">
+  💡 <strong>In Plain English (The Traffic Light Analogy for the .65 Rule):</strong><br />
+  Suppose your client takes 650 milliseconds to react when a light flashes. If you set the scanner speed to 650 ms, it's like a traffic light turning red the exact millisecond a car reaches the stop line—if the driver blinks, they run the light!<br /><br />
+  Dividing 650 ms by 0.65 gives 1000 ms (1 full second). That 350 ms extra window is their <strong>safety margin</strong>. It gives them enough time to spot the target, decide, and press comfortably without feeling rushed or missing the item as it passes by.
+</div>
 
 ### Why 0.65? The Mathematics of Safety Margin
 
 In single-switch auto-scanning, the user must visually perceive the highlight moving onto the desired item, decide to activate, and physically depress the switch before the highlight advances to the next item.
 
-If the scan rate equals the user's mean reaction time (`T_scan = RT`), the user has a **0% safety margin**—half of all switch presses will land after the highlight has already moved away! 
+If the scan rate equals the user's mean reaction time (<code>T_scan = RT</code>), the user has a **0% safety margin**—half of all switch presses will land after the highlight has already moved away! 
 
-Dividing by `0.65` provides a ~54% safety buffer, placing the scan rate near the 95th percentile of the user's reaction time distribution. This keeps timing errors below the critical **25% error threshold** (Koester & Simpson, 2014).
+Dividing by 0.65 provides a ~54% safety buffer, placing the scan rate near the 95th percentile of the user's reaction time distribution. This keeps timing errors below the critical **25% error threshold** (Koester & Simpson, 2014).
 
 ### Accounting for Motor Variance (SD)
 
-When a user's reaction times fluctuate significantly due to motor impairment or tremor, calculating scan rate purely from the mean `RT` is insufficient.
+When a user's reaction times fluctuate significantly due to motor impairment or tremor, calculating scan rate purely from the mean RT is insufficient.
 
 The **Coefficient of Variation (CV)** measures motor consistency:
 
-`CV = Standard Deviation (SD) ÷ Mean Reaction Time (RT)`
+<div class="figure-card" style="text-align: center; font-weight: bold;">
+  CV = Standard Deviation (SD) ÷ Mean Reaction Time (RT)
+</div>
 
-- **Low Variance (CV ≤ 0.3):** Standard .65 rule applies: `T_scan = RT ÷ 0.65`.
-- **High Variance (CV > 0.3):** Add a `1.65 × SD` statistical buffer to account for motor variability:
+- **Low Variance (CV ≤ 0.3):** Standard .65 rule applies: <code>T_scan = RT ÷ 0.65</code>.
+- **High Variance (CV > 0.3):** Add a <code>1.65 × SD</code> statistical buffer to account for motor variability:
 
-`T_scan = (RT + 1.65 × SD) ÷ 0.65`
+<div class="figure-card" style="text-align: center; font-size: 1.1rem; font-weight: bold; color: var(--accent);">
+  T_scan = (RT + 1.65 × SD) ÷ 0.65
+</div>
+
+<div class="highlight-box">
+  🩺 <strong>Clinical Rule (Handling Inconsistent Reaction Times):</strong><br />
+  Some clients press consistently at 600 ms. Others press at 400 ms when relaxed, but 1200 ms when fatigued or having a muscle spasm. If your client's timing varies wildly (high Standard Deviation), don't just rely on their average speed—add extra safety buffer or enable an <strong>Acceptance Delay</strong> so accidental taps aren't miscounted.
+</div>
 
 ## Acceptance Time & Selection Confirmation
 
@@ -61,54 +78,119 @@ Mechanical switches can "bounce" electrically upon contact, creating rapid false
 | Progressive Fatigue (ALS/MND) | AM: 1000 ms / PM: 1500 ms | 300–500 ms | Adapts scan parameters as muscle fatigue increases |
 
 <div class="info-box">
-  <strong>Practical Takeaway:</strong> Use the .65 rule test below to establish an empirical baseline scan rate, then monitor error rates in daily use to fine-tune parameters.
+  <strong>Practical Takeaway:</strong> Use the step-by-step assessment tool below to establish an empirical baseline scan rate and estimate text entry speed.
 </div>
 
-## Reaction Time & .65 Rule Test
+## Clinical Timing & Efficiency Calculator
 
-<div class="reaction-test" id="reactionTest">
-  <div class="reaction-display" id="reactionDisplay">🙂 Ready?</div>
-  <div class="button-row">
-    <button id="reactionStart">Start Test (5 Trials)</button>
-    <button class="secondary" id="reactionReset">Reset</button>
+<div class="wizard-container" id="timingWizard">
+  <div class="wizard-tabs">
+    <button class="wizard-tab-btn active" id="tabStep1" type="button">
+      <span>1️⃣ Step 1: Baseline Reaction Test (.65 Rule)</span>
+    </button>
+    <button class="wizard-tab-btn" id="tabStep2" type="button">
+      <span>2️⃣ Step 2: Scan Time & WPM Estimator</span>
+    </button>
   </div>
-  <p><strong>Trial:</strong> <span id="reactionTrial">0</span> / 5</p>
-  <p><strong>Last Reaction Time:</strong> <span id="reactionLast">—</span></p>
-  <p><strong>Mean Reaction Time (RT):</strong> <span id="reactionAvg">—</span></p>
-  <p><strong>Standard Deviation (SD):</strong> <span id="reactionSd">—</span></p>
-  <p><strong>Recommended Scan Rate (.65 Rule):</strong> <span id="reactionRate">—</span></p>
-</div>
 
-## Scan Time & WPM Estimator
+  <div class="wizard-step-pane active" id="paneStep1">
+    <div class="info-box" style="margin-top: 0; background-color: #eff6ff; border-left-color: #3b82f6; color: #1e3a8a;">
+      <strong>Step 1 Instructions:</strong> Tap <code>SPACE</code> or click the display card 5 times when the face turns <strong>GREEN 😄</strong> to calculate your mean reaction time and baseline .65 Rule scan rate.
+    </div>
 
-<div class="reaction-test" id="scanEstimator">
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-    <label>
-      <strong>Scan Rate (ms)</strong><br />
-      <input id="estimateScanRate" type="number" min="200" max="5000" value="1000" style="width: 100%; padding: 8px; margin-top: 6px;" />
-    </label>
-    <label>
-      <strong>Grid Size (items)</strong><br />
-      <input id="estimateGridSize" type="number" min="4" max="200" value="36" style="width: 100%; padding: 8px; margin-top: 6px;" />
-    </label>
-    <label>
-      <strong>Scan Pattern</strong><br />
-      <select id="estimatePattern" style="width: 100%; padding: 8px; margin-top: 6px;">
-        <option value="linear">Linear</option>
-        <option value="row-column">Row-Column</option>
-        <option value="elimination">Elimination</option>
-      </select>
-    </label>
-    <label>
-      <strong>Elimination Switches</strong><br />
-      <input id="estimateSwitches" type="number" min="2" max="8" value="4" style="width: 100%; padding: 8px; margin-top: 6px;" />
-    </label>
+    <div class="reaction-test" id="reactionTest" style="box-shadow: none; border: none; padding: 0;">
+      <div class="reaction-display-card state-idle" id="reactionDisplay">
+        <div class="reaction-emoji" id="reactionEmoji">😴</div>
+        <div class="reaction-label" id="reactionLabel">Click or Press SPACE to Start</div>
+        <div class="reaction-subtext" id="reactionSubtext">Wait for the target face to turn green, then press as fast as you can.</div>
+      </div>
+
+      <div class="trial-progress-dots" id="trialDots">
+        <div class="trial-dot"></div>
+        <div class="trial-dot"></div>
+        <div class="trial-dot"></div>
+        <div class="trial-dot"></div>
+        <div class="trial-dot"></div>
+      </div>
+
+      <div class="button-row" style="justify-content: center; margin-bottom: 16px;">
+        <button id="reactionStart" type="button">Start Test (5 Trials)</button>
+        <button class="secondary" id="reactionReset" type="button">Reset Test</button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; font-size: 1rem; text-align: left; background: #f8fafc; padding: 18px; border-radius: 12px; border: 1px solid #cbd5e1;">
+        <div><strong>Trial Progress:</strong> <span id="reactionTrial">0</span> / 5</div>
+        <div><strong>Last Reaction:</strong> <span id="reactionLast">—</span></div>
+        <div><strong>Mean RT:</strong> <span id="reactionAvg">—</span></div>
+        <div><strong>Variance (SD):</strong> <span id="reactionSd">—</span></div>
+        <div style="grid-column: 1 / -1; font-size: 1.15rem;">
+          <strong>Calculated Scan Rate (.65 Rule):</strong> 
+          <span id="reactionRate" style="font-weight: bold; color: var(--accent); font-size: 1.25rem;">—</span>
+        </div>
+      </div>
+
+      <div style="margin-top: 20px; text-align: right;">
+        <button class="primary" id="btnProceedToStep2" type="button" style="padding: 12px 24px; font-size: 1.05rem;">
+          Proceed to Step 2: WPM Estimator ➔
+        </button>
+      </div>
+    </div>
   </div>
-  <div class="button-row" style="margin-top: 12px;">
-    <button id="estimateUseReaction">Use Calculated Scan Rate</button>
-    <button class="secondary" id="estimateReset">Reset</button>
+
+  <div class="wizard-step-pane" id="paneStep2">
+    <div class="info-box" style="margin-top: 0; background-color: #eff6ff; border-left-color: #3b82f6; color: #1e3a8a;">
+      <strong>Step 2 Instructions:</strong> Adjust grid size and scanning pattern below to estimate text entry rate (WPM). The scan rate is pre-filled from your Step 1 test!
+    </div>
+
+    <div class="reaction-test" id="scanEstimator" style="box-shadow: none; border: none; padding: 0;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; background: #f8fafc; padding: 20px; border-radius: 14px; border: 1px solid #cbd5e1;">
+        <label>
+          <strong style="font-size: 1rem;">Scan Rate (ms)</strong><br />
+          <input id="estimateScanRate" type="number" min="200" max="5000" value="1000" style="width: 100%; padding: 10px; margin-top: 6px; font-size: 1rem; border-radius: 8px; border: 1px solid #cbd5e1;" />
+        </label>
+        <label>
+          <strong style="font-size: 1rem;">Grid Size (items)</strong><br />
+          <input id="estimateGridSize" type="number" min="4" max="200" value="36" style="width: 100%; padding: 10px; margin-top: 6px; font-size: 1rem; border-radius: 8px; border: 1px solid #cbd5e1;" />
+        </label>
+        <label>
+          <strong style="font-size: 1rem;">Scan Pattern</strong><br />
+          <select id="estimatePattern" style="width: 100%; padding: 10px; margin-top: 6px; font-size: 1rem; border-radius: 8px; border: 1px solid #cbd5e1;">
+            <option value="linear">Linear Scanning</option>
+            <option value="row-column">Row-Column Scanning</option>
+            <option value="elimination">Block / Group Elimination</option>
+          </select>
+        </label>
+        <label>
+          <strong style="font-size: 1rem;">Elimination Switches</strong><br />
+          <input id="estimateSwitches" type="number" min="2" max="8" value="4" style="width: 100%; padding: 10px; margin-top: 6px; font-size: 1rem; border-radius: 8px; border: 1px solid #cbd5e1;" />
+        </label>
+      </div>
+
+      <div class="button-row" style="margin-top: 16px; justify-content: flex-start; gap: 12px;">
+        <button id="estimateUseReaction" type="button" style="padding: 10px 18px;">Sync Calculated Scan Rate from Step 1</button>
+        <button class="secondary" id="estimateReset" type="button" style="padding: 10px 18px;">Reset Defaults</button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 20px; background: #eef5fb; padding: 20px; border-radius: 14px; border: 1.5px solid var(--accent);">
+        <div>
+          <span style="color: #4b5563; font-size: 0.9rem; text-transform: uppercase; font-weight: 700;">Avg Presses / Char</span>
+          <div id="estimatePresses" style="font-size: 1.6rem; font-weight: bold; color: var(--ink); margin-top: 4px;">—</div>
+        </div>
+        <div>
+          <span style="color: #4b5563; font-size: 0.9rem; text-transform: uppercase; font-weight: 700;">Selection Time / Char</span>
+          <div id="estimateTime" style="font-size: 1.6rem; font-weight: bold; color: var(--ink); margin-top: 4px;">—</div>
+        </div>
+        <div>
+          <span style="color: #4b5563; font-size: 0.9rem; text-transform: uppercase; font-weight: 700;">Text Entry Rate (TER)</span>
+          <div id="estimateWpm" style="font-size: 1.8rem; font-weight: bold; color: var(--accent); margin-top: 4px;">—</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 20px; text-align: left;">
+        <button class="secondary" id="btnBackToStep1" type="button" style="padding: 10px 20px;">
+          ← Back to Step 1: Reaction Test
+        </button>
+      </div>
+    </div>
   </div>
-  <p><strong>Estimated Avg Presses / Char:</strong> <span id="estimatePresses">—</span></p>
-  <p><strong>Estimated Selection Time / Char:</strong> <span id="estimateTime">—</span></p>
-  <p><strong>Estimated Text Entry Rate (TER):</strong> <span id="estimateWpm" style="font-weight: bold; color: var(--accent);">—</span></p>
 </div>

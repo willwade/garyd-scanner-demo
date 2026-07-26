@@ -2,21 +2,49 @@ export function initSettingsAdvisor(root = document) {
   const advisorRun = root.getElementById('advisorRun');
   const advisorSummary = root.getElementById('advisorSummary');
   const advisorResults = root.getElementById('advisorResults');
+  
+  // Wizard tab elements
+  const advisorTabStep1 = root.getElementById('advisorTabStep1');
+  const advisorTabStep2 = root.getElementById('advisorTabStep2');
+  const advisorTabStep3 = root.getElementById('advisorTabStep3');
+  const advisorPaneStep1 = root.getElementById('advisorPaneStep1');
+  const advisorPaneStep2 = root.getElementById('advisorPaneStep2');
+  const advisorPaneStep3 = root.getElementById('advisorPaneStep3');
+  const btnAdvisorToStep2 = root.getElementById('btnAdvisorToStep2');
+  const btnAdvisorBackToStep1 = root.getElementById('btnAdvisorBackToStep1');
+  const btnAdvisorBackToStep2 = root.getElementById('btnAdvisorBackToStep2');
+
   if (!advisorRun) return;
 
+  const switchStep = (step) => {
+    [advisorTabStep1, advisorTabStep2, advisorTabStep3].forEach((tab, idx) => {
+      tab?.classList.toggle('active', idx + 1 === step);
+    });
+    [advisorPaneStep1, advisorPaneStep2, advisorPaneStep3].forEach((pane, idx) => {
+      pane?.classList.toggle('active', idx + 1 === step);
+    });
+  };
+
+  advisorTabStep1?.addEventListener('click', () => switchStep(1));
+  advisorTabStep2?.addEventListener('click', () => switchStep(2));
+  advisorTabStep3?.addEventListener('click', () => switchStep(3));
+  btnAdvisorToStep2?.addEventListener('click', () => switchStep(2));
+  btnAdvisorBackToStep1?.addEventListener('click', () => switchStep(1));
+  btnAdvisorBackToStep2?.addEventListener('click', () => switchStep(2));
+
   const readInput = () => ({
-    performanceOk: root.getElementById('advisorPerformance').value === 'yes',
-    terCanImprove: root.getElementById('advisorImprove').value === 'yes',
-    scanningErrorsPct: parseFloat(root.getElementById('advisorErrors').value || '0'),
+    performanceOk: root.getElementById('advisorPerformance')?.value === 'yes',
+    terCanImprove: root.getElementById('advisorImprove')?.value === 'yes',
+    scanningErrorsPct: parseFloat(root.getElementById('advisorErrors')?.value || '0'),
     currentScanDelayMs: parseFloat(root.getElementById('advisorCurrentDelay')?.value || '1000'),
     meanReactionTimeMs: parseFloat(root.getElementById('advisorMeanRt')?.value || '0'),
-    firstPressLate: root.getElementById('advisorFirstLate').checked,
-    nextPressLate: root.getElementById('advisorNextLate').checked,
-    unintentionalPresses: root.getElementById('advisorUnintentional').checked,
-    missingFirstRow: root.getElementById('advisorMissingRow').checked,
-    deadTime: root.getElementById('advisorDeadTime').checked,
-    inefficientWordPrediction: root.getElementById('advisorWordPred').checked,
-    inefficientLayout: root.getElementById('advisorLayout').checked
+    firstPressLate: root.getElementById('advisorFirstLate')?.checked || false,
+    nextPressLate: root.getElementById('advisorNextLate')?.checked || false,
+    unintentionalPresses: root.getElementById('advisorUnintentional')?.checked || false,
+    missingFirstRow: root.getElementById('advisorMissingRow')?.checked || false,
+    deadTime: root.getElementById('advisorDeadTime')?.checked || false,
+    inefficientWordPrediction: root.getElementById('advisorWordPred')?.checked || false,
+    inefficientLayout: root.getElementById('advisorLayout')?.checked || false
   });
 
   const adviseSettings = (input) => {
@@ -98,23 +126,24 @@ export function initSettingsAdvisor(root = document) {
           category: 'General Timing Adjustment',
           actions: [
             `Increase scan delay from ${currentDelay} ms to ~${newDelay} ms`,
-            'Review 1st-item delay and acceptance delay parameters'
+            'Add 1st-Item Pause to stabilize row selections'
           ],
-          note: 'High error rate (>25%) significantly penalizes Text Entry Rate. Reduce errors before optimizing speed.'
+          note: 'Error rate exceeds 25%. Prioritize error reduction before attempting to increase scanning speed.'
         });
       }
 
-      return { recommendations, summary: `Scanning error rate is high (${input.scanningErrorsPct}% > 25% threshold). Focus exclusively on error reduction before attempting efficiency changes.` };
+      return { recommendations, summary: `Scanning error rate (${input.scanningErrorsPct}%) exceeds the 25% threshold. Prioritize error reduction before optimizing speed.` };
     }
 
     if (input.deadTime) {
+      const fasterDelay = Math.max(300, Math.round(currentDelay * 0.85));
       recommendations.push({
         category: 'Dead Time Reduction',
         actions: [
-          'Reduce scan-initiation pause and 1st-item delay to minimal safe values (100–250 ms)',
-          'Optimize scan matrix ordering to eliminate empty scan steps'
+          `Decrease scan delay from ${currentDelay} ms to ~${fasterDelay} ms`,
+          'Reduce post-selection pause duration'
         ],
-        note: 'Minimizing idle waiting between selections directly increases Text Entry Rate (TER).'
+        note: 'Error rate is low (<=25%). Gradually increasing scan speed will safely increase Text Entry Rate.'
       });
     }
 
@@ -122,31 +151,30 @@ export function initSettingsAdvisor(root = document) {
       recommendations.push({
         category: 'Word Prediction Optimization',
         actions: [
-          'Limit word prediction candidate list to 3–6 items',
-          'Verify that selecting word prediction requires fewer scan steps than spelling directly',
-          'Place word prediction candidates at top scan priority'
+          'Adjust word prediction list size (3–6 candidates)',
+          'Position prediction candidates at top of initial scan row',
+          'Enable inline word completion'
         ],
-        note: 'Overly long prediction lists add visual search overhead and extra scan steps, offsetting keystroke savings.'
+        note: 'Optimal prediction list length balances keystroke savings against visual search overhead.'
       });
     }
 
     if (input.inefficientLayout) {
       recommendations.push({
-        category: 'Layout & Pattern Optimization',
+        category: 'Layout & Pattern Selection',
         actions: [
-          'Switch from alphabetical to frequency-based letter order (ETAOIN SHRDLU)',
-          'Upgrade scan pattern (e.g., from Linear to Row-Column or Elimination for large grids)'
+          'Switch from alphabetical to ETAOIN SHRDLU frequency-ordered grid',
+          'Upgrade from Linear to Row-Column or Group Elimination scanning'
         ],
-        note: 'Frequency layout reduces average scan distance per character by up to 45%.'
+        note: 'Frequency-based layouts reduce average scan steps per character by 30–50%.'
       });
     }
 
     if (recommendations.length === 0) {
-      const fasterDelay = Math.max(400, Math.round(currentDelay * 0.9));
       recommendations.push({
-        category: 'Scan Speed Tuning',
+        category: 'Efficiency Maintenance',
         actions: [
-          `Optionally test a 10% faster scan delay (~${fasterDelay} ms) while monitoring error rate`,
+          'Maintain current scanning settings',
           'Re-evaluate layout and prediction list efficiency'
         ],
         note: 'Error rate is within safe bounds (<=25%). Fine-tune timing and layout for maximum Text Entry Rate.'
@@ -159,23 +187,28 @@ export function initSettingsAdvisor(root = document) {
   const render = () => {
     const input = readInput();
     const result = adviseSettings(input);
-    advisorSummary.textContent = result.summary || '—';
-    if (!result.recommendations || result.recommendations.length === 0) {
-      advisorResults.innerHTML = '<p>No recommendations.</p>';
-      return;
+    if (advisorSummary) advisorSummary.textContent = result.summary || '—';
+    if (advisorResults) {
+      if (!result.recommendations || result.recommendations.length === 0) {
+        advisorResults.innerHTML = '<p>No recommendations.</p>';
+      } else {
+        advisorResults.innerHTML = result.recommendations.map((rec) => {
+          const actions = rec.actions.map((a) => `<li>${a}</li>`).join('');
+          const note = rec.note ? `<p style="margin: 6px 0 0; color: var(--ink-soft);"><em>${rec.note}</em></p>` : '';
+          return `
+            <div class="glossary-term" style="margin-bottom: 12px; padding: 16px; background: #ffffff; border: 1.5px solid var(--accent); border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+              <strong style="color: var(--accent); font-size: 1.05rem;">${rec.category}</strong>
+              <ul style="margin: 8px 0 0; padding-left: 20px;">${actions}</ul>
+              ${note}
+            </div>
+          `;
+        }).join('');
+      }
     }
-    advisorResults.innerHTML = result.recommendations.map((rec) => {
-      const actions = rec.actions.map((a) => `<li>${a}</li>`).join('');
-      const note = rec.note ? `<p style="margin: 6px 0 0; color: var(--ink-soft);"><em>${rec.note}</em></p>` : '';
-      return `
-        <div class="glossary-term" style="margin-bottom: 12px; padding: 12px; background: #ffffff; border: 1px solid var(--line); border-radius: 8px;">
-          <strong>${rec.category}</strong>
-          <ul style="margin: 8px 0 0; padding-left: 18px;">${actions}</ul>
-          ${note}
-        </div>
-      `;
-    }).join('');
+
+    // Switch to Step 3 tab to present results cleanly!
+    switchStep(3);
   };
 
-  advisorRun.addEventListener('click', render);
+  advisorRun?.addEventListener('click', render);
 }

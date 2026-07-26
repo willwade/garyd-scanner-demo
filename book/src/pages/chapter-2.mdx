@@ -9,25 +9,37 @@ nextLabel: "Chapter 3: Cause & Effect"
 
 # Chapter 2: The Bandwidth Problem
 
-**Input Bandwidth** refers to the amount of information a user can transmit per unit of time.
+**Input Bandwidth** (measured in bits per second or words per minute) refers to the rate of information a user can transmit to a computer system. 
 
-| Input Type | Bandwidth | Speed |
-| --- | --- | --- |
-| Touch Typist | High (10+ fingers) | ~100 words/minute |
-| Hunt & Peck | Medium (1-2 fingers) | ~20 words/minute |
-| Switch User | Low (1 binary input) | ~5-15 words/minute |
+In human-computer interaction (HCI), input modalities exist along a wide bandwidth spectrum:
 
-Switch access lives at the **lowest end of the bandwidth spectrum**. Scanning compensates by trading **time** for **access**.
+| Input Modality | Physical Degree of Freedom | Typical Speed | Information Rate |
+| --- | --- | --- | --- |
+| Touch Typist | 10 fingers, 104 keys | ~80–120 WPM | ~25–35 bits/sec |
+| Hunt & Peck Typist | 1–2 fingers, 104 keys | ~15–30 WPM | ~5–10 bits/sec |
+| Mouse / Trackpad | 2D Continuous (X/Y + clicks) | ~30–50 WPM | ~12–20 bits/sec |
+| Single-Switch User | 1 Binary Channel (ON/OFF) | ~2–15 WPM | ~0.5–2.5 bits/sec |
 
-## The Sushi Bar Analogy
-
-Imagine a sushi bar where dishes rotate past you on a conveyor belt. You cannot reach everything at once—you must wait for the dish you want to come to you, then grab it quickly.
+Single-switch access operates at the **lowest end of the bandwidth spectrum**. Because a switch user cannot directly point to or select from 100+ keys simultaneously, scanning software compensates by **trading time for access**.
 
 <div class="info-box">
-  <strong>Switch users trade TIME for ACCESS.</strong> They don't have instant access to any item like a mouse user. They must wait for the scan to reach the item they want, then activate their switch at precisely the right moment.
+  💡 <strong>In Plain English (What "Bandwidth" Means for Your Client):</strong><br />
+  Think of input bandwidth like a water pipe. A 10-finger typist has a massive firehose—they can send dozens of letters every second. A single-switch user has a tiny straw. They can only say "YES" (1) or "NO" (0) with one press. Scanning is the clever software trick that lets them build full sentences through that tiny straw, by presenting options one by one over time.
 </div>
 
-## Interactive Sushi Counter
+## The Conveyor Belt Analogy
+
+Imagine sitting at a sushi restaurant where dishes continuously rotate past you on a conveyor belt. You cannot reach across the restaurant to grab any plate instantly. Instead, you must:
+
+1. **Wait** patiently for your desired dish to rotate into your physical reach zone.
+2. **Timing:** Activate your movement at precisely the moment the dish arrives.
+3. **Miss Penalty:** If you hesitate or activate late, the dish moves away, and you must wait for the next full rotation loop.
+
+<div class="highlight-box">
+  🩺 <strong>Clinical Rule: Switch users trade TIME for ACCESS (Shannon, 1948).</strong> Scanning gives single-switch users access to large, complex selection sets—just not instantaneously. Optimizing scan rates and layout structures directly increases transmission bandwidth.
+</div>
+
+## Interactive Sushi Counter Demo
 
 <div class="sushi-demo">
   <div class="sushi-restaurant">
@@ -68,6 +80,6 @@ Imagine a sushi bar where dishes rotate past you on a conveyor belt. You cannot 
   </div>
 </div>
 
-## Takeaway
+## Key Takeaway
 
-Scanning is slow but powerful. It gives full access to large selection sets with a single switch—just not instantly.
+Scanning is slow but remarkably powerful. By converting spatial choices into a temporal sequence, a single binary switch can control an entire operating system. The goal of scanning design is to maximize bandwidth while minimizing visual search and motor fatigue (Fitts, 1951).

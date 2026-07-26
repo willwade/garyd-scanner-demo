@@ -1,50 +1,73 @@
 ---
 layout: ../layouts/BookLayout.astro
-title: "Chapter 15: Block vs Point Technique"
+title: "Chapter 15: Signal Filtering & Acceptance Delay"
 prevHref: "/book/chapter-14"
 prevLabel: "Chapter 14: Visualization Options"
 nextHref: "/book/chapter-16"
-nextLabel: "Chapter 16: Scan Patterns (Linear vs Row/Column)"
+nextLabel: "Chapter 16: Continuous Scanning"
 ---
 
-# Chapter 15: Block vs Point Technique
+# Chapter 15: Signal Filtering & Acceptance Delay
 
-When using row-column scanning, how should groups be highlighted?
+Physical switch activations from human users are rarely pristine square waves. Muscle spasms, involuntary tremors, contact bounce, and motor fatigue introduce noise into binary switch signals.
 
-Block technique trades speed for clarity; point technique reduces visual clutter but requires more visual precision. Try both with real users.
+Software-based **signal filtering** cleans raw physical switch inputs, ensuring that only intentional movements trigger scanning selections.
 
-## Block technique
-
-- Entire row lights up
-- Easy to see
-- Best for beginners and low vision
-
-## Point technique
-
-- Only row indicator highlights
-- Less visual clutter
-- Best for dense grids and experienced users
+```mermaid
+flowchart LR
+    A["Raw Switch Input"] --> B["Debounce Filter (50-100ms)"]
+    B --> C["Acceptance Hold (150-500ms)"]
+    C --> D["Confirmed Selection"]
+```
 
 <div class="info-box">
-  Best practice: start with block technique for beginners, then experiment with point technique.
+  💡 <strong>In Plain English (Debounce vs. Acceptance Delay):</strong><br />
+  • <strong>Debounce Filter:</strong> Imagine a loose doorbell that buzzes twice if you tap it once. Debounce simply tells the computer: <em>"Ignore rapid double-clicks happening within 1/10th of a second."</em><br /><br />
+  • <strong>Acceptance Delay:</strong> Imagine a heavy door that requires you to lean against it for a half-second before it unlatches. If a client accidentally brushes their switch during an involuntary spasm, letting go immediately cancels the press—saving them from an unwanted mistake.
 </div>
 
-## Demo
+## Key Filtering Parameters
+
+### 1. Mechanical Debounce Filter
+When a mechanical switch button is depressed, the internal metallic contacts spring and "bounce" against each other for a few milliseconds, sending rapid micro-pulses (0-1-0-1) before settling into a closed ON state.
+
+- **Debounce Threshold:** The software ignores any input state changes occurring within 50–100 ms of the initial closure.
+- **Clinical Purpose:** Prevents a single physical button press from registering as multiple unintended selections.
+
+### 2. Acceptance Delay (Hold Duration)
+**Acceptance Delay** requires the user to maintain continuous physical pressure on the switch for a set hold duration before the system confirms the selection.
+
+- **Short (150–250 ms):** Standard threshold for users with mild motor control variation.
+- **Long (300–800 ms):** Tremor filtering for users with severe athetosis, chorea, or spasticity.
+- **Cancellation:** If the user releases the switch before the acceptance delay timer expires, the press is discarded without output.
+
+### 3. Post-Acceptance (Refractory Window)
+After a selection is accepted, the system enforces a short **post-acceptance pause** (typically 200–500 ms) during which further switch presses are ignored.
+
+- **Clinical Purpose:** Prevents accidental double-activation when a user struggles to release the switch quickly after making a selection.
+
+<div class="highlight-box">
+  🩺 <strong>Clinical Rule:</strong> If a user exhibits frequent accidental double-selections or unintentional activations, increase <strong>Acceptance Delay</strong> first. If activations miss target items because holding is exhausting, reduce acceptance delay and add a <strong>Debounce Filter</strong> (Koester & Simpson, 2017).
+</div>
+
+## Timing Guidelines by Clinical Need
+
+| Failure Mode | Underlying Motor Mechanism | Recommended Signal Filter |
+| --- | --- | --- |
+| Rapid double selections | Mechanical bounce or quick reflex tap | Debounce Filter: 50–100 ms |
+| Accidental hits during movement | Involuntary muscle spasm / tremor | Acceptance Delay: 300–600 ms |
+| Late press on second item | Delayed physical release | Post-Acceptance Window: 300–500 ms |
+| Accidental trigger during rest | Accidental contact with switch | Acceptance Delay: 500–800 ms |
+
+## Demo: Acceptance Delay in Action
 
 <div class="demo-instructions">
-  🎮 Compare block vs point for row selection.
+  🎮 Press and <strong>HOLD</strong> the switch to trigger selection. Notice how quick taps are filtered out.
 </div>
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
-  <div>
-    <h4>Block</h4>
-    <div class="scanner-container">
-      <switch-scanner theme="sketch" scan-pattern="row-column" scan-technique="block" scan-rate="1500" grid-size="16"></switch-scanner>
-    </div>
-  </div>
-  <div>
-    <h4>Point</h4>
-    <div class="scanner-container">
-      <switch-scanner theme="sketch" scan-pattern="row-column" scan-technique="point" scan-rate="1500" grid-size="16"></switch-scanner>
-    </div>
-  </div>
+<div class="scanner-container">
+  <switch-scanner theme="sketch" scan-pattern="linear" scan-rate="1500" grid-size="9" acceptance-delay="400"></switch-scanner>
+</div>
+
+<div class="info-box">
+  Next Chapter: In <strong>Chapter 16</strong>, we explore continuous movement modes such as gliding cursors, crosshairs, and compass scanning.
 </div>
