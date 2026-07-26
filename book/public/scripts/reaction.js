@@ -6,6 +6,7 @@ export function initReactionTest(root = document) {
   const reactionLast = root.getElementById('reactionLast');
   const reactionAvg = root.getElementById('reactionAvg');
   const reactionRate = root.getElementById('reactionRate');
+  const reactionSd = root.getElementById('reactionSd');
 
   if (!reactionDisplay) return;
 
@@ -22,13 +23,32 @@ export function initReactionTest(root = document) {
     reactionTrial.textContent = String(state.trial);
     const last = state.times[state.times.length - 1];
     reactionLast.textContent = last ? `${last.toFixed(0)} ms` : '—';
+
     if (state.times.length) {
       const avg = state.times.reduce((a, b) => a + b, 0) / state.times.length;
       reactionAvg.textContent = `${avg.toFixed(0)} ms`;
-      const recommended = avg / 0.65;
-      reactionRate.textContent = `${recommended.toFixed(0)} ms per item`;
+
+      // Calculate Standard Deviation (SD) & Coefficient of Variation (CV)
+      let sd = 0;
+      if (state.times.length > 1) {
+        const variance = state.times.reduce((acc, t) => acc + Math.pow(t - avg, 2), 0) / (state.times.length - 1);
+        sd = Math.sqrt(variance);
+      }
+      if (reactionSd) {
+        reactionSd.textContent = `${sd.toFixed(0)} ms`;
+      }
+
+      // Simpson & Koester .65 Rule: Scan Rate = Mean RT / 0.65
+      // If CV > 0.3 (high variability), add safety buffer of 1.65 * SD
+      const cv = avg > 0 ? sd / avg : 0;
+      const bufferedRt = cv > 0.3 ? avg + 1.65 * sd : avg;
+      const recommended = bufferedRt / 0.65;
+
+      const bufferNote = cv > 0.3 ? ' (includes variance buffer)' : '';
+      reactionRate.textContent = `${recommended.toFixed(0)} ms${bufferNote}`;
     } else {
       reactionAvg.textContent = '—';
+      if (reactionSd) reactionSd.textContent = '—';
       reactionRate.textContent = '—';
     }
   };
@@ -59,7 +79,7 @@ export function initReactionTest(root = document) {
     const delay = 1000 + Math.random() * 2000;
     state.timer = setTimeout(() => {
       state.timer = null;
-      reactionDisplay.textContent = '🙂 Ding!';
+      reactionDisplay.textContent = '🙂 Press Switch!';
       playBeep();
       state.startTime = performance.now();
       state.waiting = true;
@@ -67,7 +87,7 @@ export function initReactionTest(root = document) {
   };
 
   const startTest = () => {
-    if (state.trial >= 3 || state.timer || state.waiting) return;
+    if (state.trial >= 5 || state.timer || state.waiting) return;
     state.trial += 1;
     update();
     scheduleCue();
@@ -89,7 +109,7 @@ export function initReactionTest(root = document) {
     const elapsed = performance.now() - state.startTime;
     state.times.push(elapsed);
     update();
-    if (state.trial < 3) {
+    if (state.trial < 5) {
       scheduleCue();
     } else {
       reactionDisplay.textContent = '✅ Done!';

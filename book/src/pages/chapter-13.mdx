@@ -9,58 +9,80 @@ nextLabel: "Chapter 14: Visualization Options"
 
 # Chapter 13: Timing & Optimization (.65 Rule)
 
-The **scan rate** is the most important timing parameter. A research-based starting point is the **.65 rule**:
+The **scan rate** (or scan delay) is the foundational timing parameter in single-switch scanning. Setting the scan rate too fast leads to timing errors and missed items, while setting it too slow creates frustrating "dead time" and lowers text entry rate.
 
-`Scan Rate ≈ Mean Reaction Time ÷ 0.65`
+A seminal empirical heuristic developed by Richard Simpson and Heidi Koester (1999, 2013) is the **.65 Rule**:
 
-If press times are highly variable, increase scan rate or add acceptance time.
+`Optimal Scan Rate (ms) ≈ Mean Reaction Time ÷ 0.65 ≈ 1.54 × RT`
+
+### Why 0.65? The Mathematics of Safety Margin
+
+In single-switch auto-scanning, the user must visually perceive the highlight moving onto the desired item, decide to activate, and physically depress the switch before the highlight advances to the next item.
+
+If the scan rate equals the user's mean reaction time (`T_scan = RT`), the user has a **0% safety margin**—half of all switch presses will land after the highlight has already moved away! 
+
+Dividing by `0.65` provides a ~54% safety buffer, placing the scan rate near the 95th percentile of the user's reaction time distribution. This keeps timing errors below the critical **25% error threshold** (Koester & Simpson, 2014).
+
+### Accounting for Motor Variance (SD)
+
+When a user's reaction times fluctuate significantly due to motor impairment or tremor, calculating scan rate purely from the mean `RT` is insufficient.
+
+The **Coefficient of Variation (CV)** measures motor consistency:
+
+`CV = Standard Deviation (SD) ÷ Mean Reaction Time (RT)`
+
+- **Low Variance (CV ≤ 0.3):** Standard .65 rule applies: `T_scan = RT ÷ 0.65`.
+- **High Variance (CV > 0.3):** Add a `1.65 × SD` statistical buffer to account for motor variability:
+
+`T_scan = (RT + 1.65 × SD) ÷ 0.65`
 
 ## Acceptance Time & Selection Confirmation
 
-Acceptance time adds a delay before confirming a press, reducing accidental triggers.
+Acceptance time adds a hold-duration threshold before confirming a switch press, preventing accidental tremors or false triggers from committing an unintended selection.
 
-- **Short (150–300ms):** advanced users
-- **Medium (300–600ms):** default
-- **Long (600–1000ms):** tremor control
+- **Short (150–300 ms):** Advanced users with refined motor control.
+- **Medium (300–600 ms):** Default standard setting.
+- **Long (600–1000 ms):** Tremor control for severe spasticity or athetosis.
 
 ## Debounce & Post-Acceptance
 
-Mechanical switches can “bounce,” creating rapid false presses. Debounce ignores those quick spikes, while a short **post‑acceptance** window prevents accidental double selections.
+Mechanical switches can "bounce" electrically upon contact, creating rapid false double presses. A **debounce filter** ignores electrical spikes for 50–100 ms after an initial trigger, while a short **post-acceptance pause** prevents accidental double selections during continuous scanning.
 
-## Timing Guidelines by User Profile
+## Timing Guidelines by Clinical User Profile
 
-| User Profile | Recommended Rate | Reason |
-| --- | --- | --- |
-| Beginner | 1500–2000ms | Learning curve, building confidence |
-| Intermediate | 1000–1500ms | Balance of speed and accuracy |
-| Advanced | 500–1000ms | Maximum efficiency |
-| Motor impairment (tremors) | 1500ms + 500ms acceptance | Filter tremors |
-| Visual impairment | 1000–1500ms + audio | Time for feedback |
-| Cognitive impairment | 1500–2000ms | More thinking time |
-| Fatigue (MND/ALS) | Morning 1000ms / Afternoon 1500ms | Energy changes |
+| User Profile | Recommended Scan Rate | Acceptance Delay | Clinical Rationale |
+| --- | --- | --- | --- |
+| Beginner / Novice | 1500–2000 ms | 300 ms | Reduces cognitive pressure during initial learning |
+| Intermediate | 1000–1500 ms | 300 ms | Optimal balance of speed and motor confidence |
+| Advanced | 500–1000 ms | 150–200 ms | Maximizes Text Entry Rate (TER) for skilled users |
+| Tremor / Athetosis | 1500–2000 ms | 500–800 ms | Filters unintentional contact and motor spikes |
+| Low Vision / AAC | 1000–1500 ms | 300 ms + Audio | Provides time to process auditory scanning prompts |
+| Cognitive Impairment | 1500–2500 ms | 300 ms | Extends visual search and decision window |
+| Progressive Fatigue (ALS/MND) | AM: 1000 ms / PM: 1500 ms | 300–500 ms | Adapts scan parameters as muscle fatigue increases |
 
 <div class="info-box">
-  Practical takeaway: Use the .65 rule to get into the right neighborhood, then adjust based on accuracy, fatigue, and user preference.
+  <strong>Practical Takeaway:</strong> Use the .65 rule test below to establish an empirical baseline scan rate, then monitor error rates in daily use to fine-tune parameters.
 </div>
 
-## Reaction Time Quick Test
+## Reaction Time & .65 Rule Test
 
 <div class="reaction-test" id="reactionTest">
   <div class="reaction-display" id="reactionDisplay">🙂 Ready?</div>
   <div class="button-row">
-    <button id="reactionStart">Start Test</button>
+    <button id="reactionStart">Start Test (5 Trials)</button>
     <button class="secondary" id="reactionReset">Reset</button>
   </div>
-  <p><strong>Trial:</strong> <span id="reactionTrial">0</span> / 3</p>
+  <p><strong>Trial:</strong> <span id="reactionTrial">0</span> / 5</p>
   <p><strong>Last Reaction Time:</strong> <span id="reactionLast">—</span></p>
-  <p><strong>Average Reaction Time:</strong> <span id="reactionAvg">—</span></p>
-  <p><strong>Recommended Scan Rate (.65 rule):</strong> <span id="reactionRate">—</span></p>
+  <p><strong>Mean Reaction Time (RT):</strong> <span id="reactionAvg">—</span></p>
+  <p><strong>Standard Deviation (SD):</strong> <span id="reactionSd">—</span></p>
+  <p><strong>Recommended Scan Rate (.65 Rule):</strong> <span id="reactionRate">—</span></p>
 </div>
 
-## Scan Time Estimator
+## Scan Time & WPM Estimator
 
 <div class="reaction-test" id="scanEstimator">
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
     <label>
       <strong>Scan Rate (ms)</strong><br />
       <input id="estimateScanRate" type="number" min="200" max="5000" value="1000" style="width: 100%; padding: 8px; margin-top: 6px;" />
@@ -70,7 +92,7 @@ Mechanical switches can “bounce,” creating rapid false presses. Debounce ign
       <input id="estimateGridSize" type="number" min="4" max="200" value="36" style="width: 100%; padding: 8px; margin-top: 6px;" />
     </label>
     <label>
-      <strong>Pattern</strong><br />
+      <strong>Scan Pattern</strong><br />
       <select id="estimatePattern" style="width: 100%; padding: 8px; margin-top: 6px;">
         <option value="linear">Linear</option>
         <option value="row-column">Row-Column</option>
@@ -83,9 +105,10 @@ Mechanical switches can “bounce,” creating rapid false presses. Debounce ign
     </label>
   </div>
   <div class="button-row" style="margin-top: 12px;">
-    <button id="estimateUseReaction">Use Reaction Avg</button>
+    <button id="estimateUseReaction">Use Calculated Scan Rate</button>
     <button class="secondary" id="estimateReset">Reset</button>
   </div>
-  <p><strong>Estimated Avg Presses:</strong> <span id="estimatePresses">—</span></p>
-  <p><strong>Estimated Time per Selection:</strong> <span id="estimateTime">—</span></p>
+  <p><strong>Estimated Avg Presses / Char:</strong> <span id="estimatePresses">—</span></p>
+  <p><strong>Estimated Selection Time / Char:</strong> <span id="estimateTime">—</span></p>
+  <p><strong>Estimated Text Entry Rate (TER):</strong> <span id="estimateWpm" style="font-weight: bold; color: var(--accent);">—</span></p>
 </div>
