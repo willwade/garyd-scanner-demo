@@ -88,8 +88,6 @@ export class Workbench {
   private readonly cells: HTMLElement[] = [];
   private readonly events: Array<{ at: number; text: string; kind: string }> = [];
   private readonly config = mutableConfig(DEFAULT_CONFIG);
-  /** gesture events mirrored into the workbench event log */
-  private readonly gestureLog: GestureEvent[] = [];
 
   private scanner: Scanner | null = null;
   private unsubscribeSnapshot: (() => void) | null = null;
@@ -374,10 +372,10 @@ export class Workbench {
   private attachInput() {
     this.detachInput();
     this.input = new GestureEngine({ tapWindowMs: 250, holdThresholdMs: 450 });
-    this.input.on('hold', (e) => this.recordGesture(e));
-    this.input.on('tap', (e) => this.recordGesture(e));
-    this.input.on('stuck', (e) => this.recordGesture(e));
-    this.input.on('quarantine', (e) => this.recordGesture(e));
+    this.input.on('hold', (e: GestureEvent) => this.recordGesture(e));
+    this.input.on('tap', (e: GestureEvent) => this.recordGesture(e));
+    this.input.on('stuck', (e: GestureEvent) => this.recordGesture(e));
+    this.input.on('quarantine', (e: GestureEvent) => this.recordGesture(e));
 
     this.disconnectBridge = connectToScanner(this.input, this.scanner!, {
       primary: { tap: 'select', hold: 'cancel' },
@@ -449,7 +447,7 @@ export class Workbench {
       case 'item.skipped':       return `Skipped empty item ${ITEMS[event.index] ?? `#${event.index}`}`;
       case 'cycle.completed':    return `Cycle ${event.loopCount} complete`;
       case 'overscan.transition':return `Overscan ${event.from} → ${event.to}`;
-      default: return event.type;
+      default: return (event as ScannerEvent).type;
     }
   }
 

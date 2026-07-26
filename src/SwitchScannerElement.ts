@@ -26,7 +26,7 @@ import type { AACTree, AACPage, AACButton } from 'aac-board-viewer';
 
 function getAssetBase(): string {
   const globalBase = (window as unknown as { SWITCH_SCANNER_ASSET_BASE?: string }).SWITCH_SCANNER_ASSET_BASE;
-  const base = globalBase && globalBase.length > 0 ? globalBase : '/';
+  const base = globalBase && globalBase.length > 0 ? globalBase : './';
   return base.endsWith('/') ? base : `${base}/`;
 }
 
