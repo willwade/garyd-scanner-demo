@@ -303,3 +303,85 @@ describe('dispose', () => {
     expect(() => engine.dispose()).not.toThrow();
   });
 });
+
+describe('acceptance (minimum-hold confirmation)', () => {
+  it('rejects acceptanceMs >= holdThresholdMs at construction', () => {
+    expect(() => new GestureEngine({ acceptanceMs: 200, holdThresholdMs: 200 })).toThrow();
+    expect(() => new GestureEngine({ acceptanceMs: 300, holdThresholdMs: 200 })).toThrow();
+  });
+
+  it('delays the press event until acceptance is reached', () => {
+    const { engine, clock } = createManualGestureEngine({
+      acceptanceMs: 100,
+      tapWindowMs: 50,
+      holdThresholdMs: 200,
+    });
+    const rec = recorder(engine, 'press', 'tap', 'hold');
+
+    engine.press('a');
+    expect(rec.types).toEqual([]); // not accepted yet
+
+    clock.advanceBy(60);
+    expect(rec.types).toEqual([]); // still under acceptance
+
+    clock.advanceBy(40); // total 100 → accepted
+    expect(rec.types).toEqual(['press']);
+  });
+
+  it('discards a press released before acceptance (no press, no tap)', () => {
+    const { engine, clock } = createManualGestureEngine({
+      acceptanceMs: 100,
+      tapWindowMs: 50,
+      holdThresholdMs: 200,
+    });
+    const rec = recorder(engine, 'press', 'release', 'tap', 'hold-release');
+
+    engine.press('a');
+    clock.advanceBy(40);
+    engine.release('a');
+
+    expect(rec.types).toEqual([]);
+  });
+
+  it('a confirmed press that releases within the tap window still taps', () => {
+    const { engine, clock } = createManualGestureEngine({
+      acceptanceMs: 50,
+      tapWindowMs: 150,
+      holdThresholdMs: 300,
+    });
+    const rec = recorder(engine, 'press', 'tap');
+
+    engine.press('a');
+    clock.advanceBy(50); // accepted → press
+    clock.advanceBy(40); // total hold 90 ≤ tapWindow 150
+    engine.release('a');
+
+    expect(rec.types).toEqual(['press', 'tap']);
+  });
+
+  it('hold still fires at pressedAt + holdThresholdMs despite acceptance', () => {
+    const { engine, clock } = createManualGestureEngine({
+      acceptanceMs: 80,
+      tapWindowMs: 40,
+      holdThresholdMs: 200,
+    });
+    const rec = recorder(engine, 'press', 'hold');
+
+    engine.press('a');
+    clock.advanceBy(80); // accepted at 80
+    expect(rec.types).toEqual(['press']);
+
+    clock.advanceBy(119); // total 199 → not yet
+    expect(rec.types).toEqual(['press']);
+
+    clock.advanceBy(1); // total 200 → hold fires at pressedAt+holdThreshold
+    expect(rec.types).toEqual(['press', 'hold']);
+  });
+
+  it('default acceptanceMs=0 preserves immediate-press behaviour', () => {
+    const { engine } = createManualGestureEngine({ tapWindowMs: 100, holdThresholdMs: 200 });
+    const rec = recorder(engine, 'press');
+    engine.press('a');
+    expect(rec.types).toEqual(['press']); // synchronous, no delay
+  });
+});

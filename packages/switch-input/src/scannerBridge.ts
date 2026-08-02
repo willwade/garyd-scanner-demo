@@ -1,19 +1,36 @@
 import type { SwitchAction } from 'scan-engine';
 import type { Unsubscribe } from './port';
-import type { GestureEngine, GestureEvent, GestureEventType } from './gestureEngine';
+import type { GestureEngine, GestureEventType } from './gestureEngine';
 
 /**
- * Per-switch binding. A switch can map to a single action that fires on any
- * tap, or to different actions for tap and hold.
+ * Per-switch binding.
+ *
+ * - A plain `SwitchAction` is shorthand for a **trailing-edge tap** (fires on
+ *   release within the tap window).
+ * - An object may set any of:
+ *   - `press` — fires immediately on press (**leading edge**). Use this for
+ *     "activate on press" behaviour.
+ *   - `tap` — fires on a trailing-edge release.
+ *   - `hold` — fires when the switch is held past the hold threshold.
+ *
+ * When both `tap` and `hold` are set (the long-hold-cancel pattern, e.g.
+ * tap = select, hold = cancel), a release that happens *after* the tap window
+ * but *before* the hold threshold still counts as `tap` — only a release that
+ * arrives after `hold` already fired is suppressed. This matches AAC
+ * long-hold-cancel: "release any time before the cancel threshold = select".
  *
  * ```ts
  * const bindings: SwitchBindings = {
- *   'primary': { tap: 'select', hold: 'cancel' },
- *   'secondary': 'step',
+ *   primary: { tap: 'select', hold: 'cancel' },
+ *   secondary: { press: 'step' },
  * };
  * ```
  */
-export type SwitchBindings = Readonly<Record<string, SwitchAction | { tap?: SwitchAction; hold?: SwitchAction }>>;
+export type SwitchBinding =
+  | SwitchAction
+  | { press?: SwitchAction; tap?: SwitchAction; hold?: SwitchAction };
+
+export type SwitchBindings = Readonly<Record<string, SwitchBinding>>;
 
 export interface ScannerLike {
   handleAction(action: SwitchAction): void;
@@ -21,13 +38,8 @@ export interface ScannerLike {
 
 /**
  * Connect a {@link GestureEngine} to a scanner (or anything with a
- * `handleAction(SwitchAction)` method). For each switch in `bindings`:
- *
- * - On `tap`, fire `bindings[switchId].tap` (or `bindings[switchId]` if it
- *   is a plain action).
- * - On `hold`, fire `bindings[switchId].hold` (if defined).
- * - On `repeat`, fire the same action as `hold` (if any) — useful for
- *   "press-and-hold to step repeatedly".
+ * `handleAction(SwitchAction)` method). See {@link SwitchBinding} for the
+ * per-gesture mapping.
  *
  * Returns an unsubscribe that removes every listener the bridge added.
  */
@@ -37,28 +49,61 @@ export function connectToScanner(
   bindings: SwitchBindings,
 ): Unsubscribe {
   const unsubs: Unsubscribe[] = [];
+  // Per-switch flag: has a `hold` fired since the last press? Drives the
+  // long-hold-cancel rule (see SwitchBinding docs).
+  const holdFired = new Set<string>();
 
-  const lookup = (switchId: string, gesture: 'tap' | 'hold'): SwitchAction | undefined => {
+  const resolve = (
+    switchId: string,
+  ): { press?: SwitchAction; tap?: SwitchAction; hold?: SwitchAction } => {
     const binding = bindings[switchId];
-    if (!binding) return undefined;
-    if (typeof binding === 'string') {
-      return gesture === 'tap' ? binding : undefined;
-    }
-    return gesture === 'tap' ? binding.tap : binding.hold;
+    if (!binding) return {};
+    if (typeof binding === 'string') return { tap: binding };
+    return binding;
   };
 
-  const handle = (gesture: 'tap' | 'hold') => (event: GestureEvent) => {
-    const action = lookup(event.switchId, gesture);
+  const fire = (action: SwitchAction | undefined) => {
     if (action) scanner.handleAction(action);
   };
 
-  unsubs.push(engine.on('tap' as GestureEventType, handle('tap')));
-  unsubs.push(engine.on('hold' as GestureEventType, handle('hold')));
+  unsubs.push(
+    engine.on('press' as GestureEventType, (event) => {
+      holdFired.delete(event.switchId);
+      fire(resolve(event.switchId).press);
+    }),
+  );
+
+  unsubs.push(
+    engine.on('tap' as GestureEventType, (event) => {
+      fire(resolve(event.switchId).tap);
+    }),
+  );
+
+  unsubs.push(
+    engine.on('hold' as GestureEventType, (event) => {
+      const b = resolve(event.switchId);
+      if (b.hold) holdFired.add(event.switchId);
+      fire(b.hold);
+    }),
+  );
+
+  unsubs.push(
+    engine.on('hold-release' as GestureEventType, (event) => {
+      const b = resolve(event.switchId);
+      // Long-hold-cancel pattern: a release before the hold fired still
+      // counts as the tap action. If the hold already fired, the hold action
+      // wins and we suppress the tap.
+      if (b.tap && b.hold && !holdFired.has(event.switchId)) {
+        fire(b.tap);
+      }
+      holdFired.delete(event.switchId);
+    }),
+  );
+
   unsubs.push(
     engine.on('repeat' as GestureEventType, (event) => {
       // Repeats are continuations of a hold.
-      const action = lookup(event.switchId, 'hold');
-      if (action) scanner.handleAction(action);
+      fire(resolve(event.switchId).hold);
     }),
   );
 

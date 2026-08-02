@@ -43,6 +43,18 @@ export interface GestureEngineOptions {
    */
   tremorFilterMs?: number;
   /**
+   * Minimum time a switch must be **held** before its press is "accepted".
+   * Presses released before this are discarded entirely (no `press`, no
+   * `tap`) — an accidental-bump filter that, unlike `tremorFilterMs`, also
+   * gates leading-edge (`press`) activation: the `press` event is delayed
+   * until the acceptance threshold is reached. Default: 0 (disabled).
+   *
+   * Must be less than `holdThresholdMs`. Hold/tap durations are still
+   * measured from the physical press, so the hold timer fires at the usual
+   * `holdThresholdMs` regardless of acceptance.
+   */
+  acceptanceMs?: number;
+  /**
    * After a release, ignore further presses of the same switch for this
    * long. Default: 0 ms (no suppression).
    */
@@ -62,6 +74,8 @@ interface ActivePress {
   switchId: string;
   sourceId: string;
   pressedAt: number;
+  confirmed: boolean;
+  acceptanceCancel: () => void;
   holdTimer: () => void;
   holdCancel: () => void;
   repeatCount: number;
@@ -75,6 +89,7 @@ const DEFAULTS = {
   holdThresholdMs: 400,
   repeatIntervalMs: 0,
   tremorFilterMs: 0,
+  acceptanceMs: 0,
   repeatSuppressMs: 0,
   stuckTimeoutMs: 60_000,
 };
@@ -109,6 +124,7 @@ export class GestureEngine implements SwitchInputPort, Disposable {
   private readonly holdThresholdMs: number;
   private readonly repeatIntervalMs: number;
   private readonly tremorFilterMs: number;
+  private readonly acceptanceMs: number;
   private readonly repeatSuppressMs: number;
   private readonly stuckTimeoutMs: number;
 
@@ -126,11 +142,17 @@ export class GestureEngine implements SwitchInputPort, Disposable {
         `GestureEngine: holdThresholdMs (${o.holdThresholdMs}) must be greater than tapWindowMs (${o.tapWindowMs})`,
       );
     }
+    if (o.acceptanceMs > 0 && o.acceptanceMs >= o.holdThresholdMs) {
+      throw new Error(
+        `GestureEngine: acceptanceMs (${o.acceptanceMs}) must be less than holdThresholdMs (${o.holdThresholdMs})`,
+      );
+    }
     this.scheduler = o.scheduler ?? systemScheduler();
     this.tapWindowMs = o.tapWindowMs;
     this.holdThresholdMs = o.holdThresholdMs;
     this.repeatIntervalMs = o.repeatIntervalMs;
     this.tremorFilterMs = o.tremorFilterMs;
+    this.acceptanceMs = o.acceptanceMs;
     this.repeatSuppressMs = o.repeatSuppressMs;
     this.stuckTimeoutMs = o.stuckTimeoutMs;
   }
@@ -155,21 +177,8 @@ export class GestureEngine implements SwitchInputPort, Disposable {
 
     const pressedAt = this.scheduler.now();
 
-    // Hold timer: fires holdThresholdMs later if still pressed.
-    let holdCancel: () => void = () => {};
-    const startHold = () => {
-      const current = this.active.get(switchId);
-      if (!current) return;
-      this.emit({ type: 'hold', switchId, at: this.scheduler.now(), afterMs: this.holdThresholdMs });
-      if (this.repeatIntervalMs > 0) {
-        // The first repeat fires one repeatIntervalMs *after* the hold; the
-        // hold event itself stands in for "repeat 0".
-        this.scheduleRepeat(current);
-      }
-    };
-    holdCancel = this.scheduler.schedule(startHold, this.holdThresholdMs);
-
     // Stuck timer: if still pressed after stuckTimeoutMs, force-release.
+    // Runs from the physical press (acceptance does not delay it).
     let stuckCancel: () => void = () => {};
     if (this.stuckTimeoutMs > 0) {
       stuckCancel = this.scheduler.schedule(() => {
@@ -184,15 +193,55 @@ export class GestureEngine implements SwitchInputPort, Disposable {
       switchId,
       sourceId,
       pressedAt,
-      holdTimer: startHold,
-      holdCancel,
+      confirmed: false,
+      acceptanceCancel: () => {},
+      holdTimer: () => {},
+      holdCancel: () => {},
       repeatCount: 0,
       repeated: false,
       stuckCancel,
       quarantined: false,
     });
 
-    this.emit({ type: 'press', switchId, at: pressedAt });
+    // Acceptance: delay confirmation (and the press event) until the switch
+    // has been held for acceptanceMs. A release before that discards the
+    // press entirely (see releaseInternal).
+    if (this.acceptanceMs > 0) {
+      const current = this.active.get(switchId)!;
+      current.acceptanceCancel = this.scheduler.schedule(
+        () => this.confirmAcceptance(switchId),
+        this.acceptanceMs,
+      );
+    } else {
+      this.confirmAcceptance(switchId);
+    }
+  }
+
+  /**
+   * Mark a press accepted and emit the `press` event, then arm the hold
+   * timer for the remaining time so `hold` still fires at
+   * `pressedAt + holdThresholdMs`. Idempotent / safe to call after release.
+   */
+  private confirmAcceptance(switchId: string): void {
+    const current = this.active.get(switchId);
+    if (!current || current.confirmed) return;
+    current.confirmed = true;
+
+    const startHold = () => {
+      const c = this.active.get(switchId);
+      if (!c) return;
+      this.emit({ type: 'hold', switchId, at: this.scheduler.now(), afterMs: this.holdThresholdMs });
+      if (this.repeatIntervalMs > 0) {
+        this.scheduleRepeat(c);
+      }
+    };
+    // Remaining time so hold fires at pressedAt + holdThresholdMs regardless
+    // of how long acceptance took.
+    const remaining = this.holdThresholdMs - this.acceptanceMs;
+    current.holdTimer = startHold;
+    current.holdCancel = this.scheduler.schedule(startHold, remaining);
+
+    this.emit({ type: 'press', switchId, at: current.pressedAt });
   }
 
   release(switchId: string, sourceId: string = 'default'): void {
@@ -271,6 +320,7 @@ export class GestureEngine implements SwitchInputPort, Disposable {
 
   dispose(): void {
     for (const press of this.active.values()) {
+      press.acceptanceCancel();
       press.holdCancel();
       press.stuckCancel();
     }
@@ -287,9 +337,14 @@ export class GestureEngine implements SwitchInputPort, Disposable {
   private releaseInternal(switchId: string, _sourceId: string, force: boolean): void {
     const current = this.active.get(switchId);
     if (!current) return;
+    current.acceptanceCancel();
     current.holdCancel();
     current.stuckCancel();
     this.active.delete(switchId);
+
+    // Press released before it was accepted (held less than acceptanceMs):
+    // discard entirely — no press was emitted, so no release/tap either.
+    if (!current.confirmed) return;
 
     const now = this.scheduler.now();
     const durationMs = now - current.pressedAt;

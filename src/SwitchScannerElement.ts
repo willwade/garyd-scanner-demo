@@ -1,6 +1,6 @@
 import { ConfigManager, AppConfig } from './ConfigManager';
 import { AudioManager } from './AudioManager';
-import { SwitchInput } from './SwitchInput';
+import { GestureEngine, KeyboardAdapter, connectToScanner, type SwitchBindings, type Unsubscribe } from 'switch-input';
 import { GridRenderer, GridItem } from './GridRenderer';
 import { SettingsUI } from './SettingsUI';
 import { AlphabetManager } from './AlphabetManager';
@@ -18,7 +18,8 @@ import {
   CauseEffectScanner,
   ColorCodeScanner,
   type ScanSurface,
-  type ScanCallbacks
+  type ScanCallbacks,
+  type SwitchAction
 } from 'scan-engine';
 import { ContinuousOverlay, resolveIndexAtPoint } from 'scan-engine-dom';
 import { loadAACFile, getBrowserExtensions } from 'aac-board-viewer';
@@ -41,7 +42,10 @@ const SWITCH_IMAGES = {
 export class SwitchScannerElement extends HTMLElement {
   private configManager!: ConfigManager;
   private audioManager!: AudioManager;
-  private switchInput!: SwitchInput;
+  private gestureEngine!: GestureEngine;
+  private keyboardAdapter!: KeyboardAdapter;
+  private inputUnsub!: Unsubscribe;
+  private menuUnsub!: Unsubscribe;
   private alphabetManager!: AlphabetManager;
   private gridRenderer!: GridRenderer;
   private settingsUI!: SettingsUI;
@@ -83,8 +87,6 @@ export class SwitchScannerElement extends HTMLElement {
     await this.alphabetManager.init(); // Wait for alphabets
 
     // Components
-    this.switchInput = new SwitchInput(this.configManager, this);
-
     const gridContainer = this.shadowRoot!.querySelector('.grid-container') as HTMLElement;
     this.gridRenderer = new GridRenderer(gridContainer);
     this.scanSurface = {
@@ -170,6 +172,8 @@ export class SwitchScannerElement extends HTMLElement {
         this.updateGrid(initialConfig, false);
     }
 
+    this.setupInput(initialConfig);
+
     this.bindEvents();
 
     // Add tabindex to allow focus
@@ -182,6 +186,10 @@ export class SwitchScannerElement extends HTMLElement {
     if (theme) {
         this.updateTheme(theme);
     }
+  }
+
+  disconnectedCallback() {
+    this.teardownInput();
   }
 
   static get observedAttributes() {
@@ -1371,10 +1379,15 @@ export class SwitchScannerElement extends HTMLElement {
       `;
     }
 
-    btn.addEventListener('click', (_e) => {
-      console.log('[SwitchScannerElement] Button clicked:', action);
-      this.switchInput.triggerAction(action as any);
-    });
+    // Drive the gesture engine from pointer events (mouse + touch + pen).
+    // The engine + switch bindings (see setupInput) decide tap/hold/cancel;
+    // image depressed/normal visuals are handled per-branch above.
+    const press = () => this.gestureEngine.press(action);
+    const release = () => this.gestureEngine.release(action);
+    btn.addEventListener('pointerdown', (e) => { e.preventDefault(); press(); });
+    btn.addEventListener('pointerup', release);
+    btn.addEventListener('pointerleave', release);
+    btn.addEventListener('pointercancel', release);
     btn.addEventListener('mousedown', (e) => e.preventDefault());
 
     return btn;
@@ -1411,6 +1424,81 @@ export class SwitchScannerElement extends HTMLElement {
     return labels[action] || action;
   }
 
+  /**
+   * Build the input layer: GestureEngine + KeyboardAdapter + switch→action
+   * bindings. Leading-edge (`press`) activation by default; long-hold cancel
+   * switches the primary switch to trailing-edge tap (select) + hold (cancel).
+   * Re-run whenever cancelMethod / longHoldTime change.
+   */
+  private setupInput(config: AppConfig) {
+    this.teardownInput();
+
+    const longHold = config.cancelMethod === 'long-hold' && config.longHoldTime > 0;
+    const acceptanceMs = Math.max(0, config.acceptanceTime);
+    // Acceptance must be strictly below the hold threshold (engine invariant).
+    let holdThresholdMs = longHold ? Math.max(2, config.longHoldTime) : 400;
+    if (acceptanceMs > 0 && acceptanceMs >= holdThresholdMs) {
+      holdThresholdMs = acceptanceMs + 1;
+    }
+    const tapWindowMs = longHold
+      ? Math.max(1, Math.min(250, config.longHoldTime - 1))
+      : Math.min(250, holdThresholdMs - 1);
+    this.gestureEngine = new GestureEngine({ tapWindowMs, holdThresholdMs, acceptanceMs });
+
+    // Keyboard (physical key codes) → logical switch id. Bound to this
+    // element (not window) so multiple scanners on one page don't all react
+    // to the same key — only the focused scanner does.
+    this.keyboardAdapter = new KeyboardAdapter(this, this.gestureEngine, {
+      Space: 'select',
+      Enter: 'select',
+      Digit1: 'switch-1',
+      Digit2: 'switch-2',
+      Digit3: 'switch-3',
+      Digit4: 'switch-4',
+      Digit5: 'switch-5',
+      Digit6: 'switch-6',
+      Digit7: 'switch-7',
+      Digit8: 'switch-8',
+      KeyR: 'reset',
+      KeyC: 'cancel',
+      KeyS: 'menu',
+    }, { preventDefaultOnBound: true });
+
+    // Logical switch id → scanner action/gesture.
+    const bindings: SwitchBindings = {
+      select: longHold ? { tap: 'select', hold: 'cancel' } : { press: 'select' },
+      step: { press: 'step' },
+      reset: { press: 'reset' },
+      cancel: { press: 'cancel' },
+      'switch-1': { press: 'switch-1' },
+      'switch-2': { press: 'switch-2' },
+      'switch-3': { press: 'switch-3' },
+      'switch-4': { press: 'switch-4' },
+      'switch-5': { press: 'switch-5' },
+      'switch-6': { press: 'switch-6' },
+      'switch-7': { press: 'switch-7' },
+      'switch-8': { press: 'switch-8' },
+    };
+
+    // Proxy so a recreated scanner (setScanner) is always the current target.
+    const scannerProxy = {
+      handleAction: (a: SwitchAction) => this.currentScanner?.handleAction(a),
+    };
+    this.inputUnsub = connectToScanner(this.gestureEngine, scannerProxy, bindings);
+
+    // 'menu' is element-level (toggle settings), not a scanner action.
+    this.menuUnsub = this.gestureEngine.on('press', (e) => {
+      if (e.switchId === 'menu') this.settingsUI.toggle();
+    });
+  }
+
+  private teardownInput() {
+    this.inputUnsub?.();
+    this.menuUnsub?.();
+    this.keyboardAdapter?.detach();
+    this.gestureEngine?.dispose();
+  }
+
   private bindEvents() {
     // Config Changes
     let lastConfig = this.configManager.get();
@@ -1434,6 +1522,9 @@ export class SwitchScannerElement extends HTMLElement {
         }
 
         const viewChanged = cfg.viewMode !== lastConfig.viewMode || cfg.heatmapMax !== lastConfig.heatmapMax;
+        const inputChanged = cfg.cancelMethod !== lastConfig.cancelMethod ||
+                             cfg.longHoldTime !== lastConfig.longHoldTime ||
+                             cfg.acceptanceTime !== lastConfig.acceptanceTime;
 
         if (contentChanged) {
             // Need to update content.
@@ -1445,35 +1536,17 @@ export class SwitchScannerElement extends HTMLElement {
         } else if (viewChanged) {
             await this.updateGrid(cfg, false);
         }
-        lastConfig = cfg;
-    });
 
-    // Switch Input
-    this.switchInput.addEventListener('switch', (e: Event) => {
-        const detail = (e as CustomEvent).detail;
-        if (detail.action === 'menu') {
-            this.settingsUI.toggle();
-            return;
+        if (inputChanged) {
+            // cancelMethod / longHoldTime affect engine timing + bindings.
+            this.setupInput(cfg);
         }
-        if (this.currentScanner) {
-            this.currentScanner.handleAction(detail.action);
-        }
+        lastConfig = cfg;
     });
 
     // Settings Button
     this.shadowRoot!.querySelector('.settings-btn')?.addEventListener('click', () => {
         this.settingsUI.toggle();
-    });
-
-    // On-screen Controls
-    this.shadowRoot!.querySelectorAll('.controls button').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const action = (e.target as HTMLElement).getAttribute('data-action');
-            if (action) {
-                this.switchInput.triggerAction(action as any);
-            }
-        });
-        btn.addEventListener('mousedown', (e) => e.preventDefault());
     });
 
     // Update controls visibility based on config

@@ -88,4 +88,60 @@ describe('connectToScanner', () => {
     engine.release('unbound');
     expect(scanner.actions).toEqual([]);
   });
+
+  describe('leading-edge press bindings', () => {
+    it('fires the press action immediately on press', () => {
+      const engine = new GestureEngine({ tapWindowMs: 100, holdThresholdMs: 1000 });
+      const scanner = fakeScanner();
+      connectToScanner(engine, scanner, {
+        primary: { press: 'select' },
+      });
+
+      engine.press('primary');
+      expect(scanner.actions).toEqual(['select']);
+
+      engine.release('primary');
+      expect(scanner.actions).toEqual(['select']); // no double fire
+    });
+
+    it('press and hold can map to different actions', () => {
+      const { engine, clock } = createManualGestureEngine({ tapWindowMs: 50, holdThresholdMs: 100 });
+      const scanner = fakeScanner();
+      connectToScanner(engine, scanner, {
+        primary: { press: 'step', hold: 'select' },
+      });
+
+      engine.press('primary'); // leading edge → step
+      clock.advanceBy(100);    // hold → select
+      expect(scanner.actions).toEqual(['step', 'select']);
+    });
+  });
+
+  describe('long-hold-cancel (tap + hold)', () => {
+    it('a release after the tap window but before hold still selects', () => {
+      const { engine, clock } = createManualGestureEngine({ tapWindowMs: 50, holdThresholdMs: 100 });
+      const scanner = fakeScanner();
+      connectToScanner(engine, scanner, {
+        primary: { tap: 'select', hold: 'cancel' },
+      });
+
+      engine.press('primary');
+      clock.advanceBy(75); // between tap window and hold threshold
+      engine.release('primary');
+      expect(scanner.actions).toEqual(['select']);
+    });
+
+    it('a release after hold fires does not re-select', () => {
+      const { engine, clock } = createManualGestureEngine({ tapWindowMs: 50, holdThresholdMs: 100 });
+      const scanner = fakeScanner();
+      connectToScanner(engine, scanner, {
+        primary: { tap: 'select', hold: 'cancel' },
+      });
+
+      engine.press('primary');
+      clock.advanceBy(100); // hold → cancel
+      engine.release('primary'); // hold-release suppressed
+      expect(scanner.actions).toEqual(['cancel']);
+    });
+  });
 });
