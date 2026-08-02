@@ -1,6 +1,6 @@
 {
   "name": "switch-input",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Framework-agnostic switch input layer for scan-engine: gesture recognition (tap/hold), tremor filtering, repeat suppression, and stuck-switch quarantine.",
   "repository": {
     "type": "git",

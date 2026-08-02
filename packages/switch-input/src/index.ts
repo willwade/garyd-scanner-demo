@@ -27,6 +27,16 @@ export {
 
 export {
   connectToScanner,
+  type SwitchBinding,
   type SwitchBindings,
   type ScannerLike,
 } from './scannerBridge';
+
+export {
+  UsahpAdapter,
+  attachUsahp,
+  USAHP_DEFAULT_URL,
+  type UsahpAdapterOptions,
+  type UsahpStatus,
+  type UsahpSocket,
+} from './usahpAdapter';
