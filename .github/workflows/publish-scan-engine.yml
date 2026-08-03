@@ -75,3 +75,15 @@ jobs:
       - name: Publish react-scan-engine
         run: npm publish --access public
         working-directory: packages/react-scan-engine
+
+      - name: Build switch-input
+        run: npm run build
+        working-directory: packages/switch-input
+
+      - name: Prepare switch-input version
+        run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version
+        working-directory: packages/switch-input
+
+      - name: Publish switch-input
+        run: npm publish --access public
+        working-directory: packages/switch-input
