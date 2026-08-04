@@ -44,6 +44,17 @@ jobs:
         run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version
         working-directory: packages/switch-scanner-engine
 
+      - name: Build switch-input
+        run: npm run build
+        working-directory: packages/switch-input
+
+      - name: Prepare switch-input version
+        run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version
+        working-directory: packages/switch-input
+
+      - name: Verify package compatibility
+        run: npm run test:package-compatibility
+
       - name: Publish scan-engine
         run: npm publish --access public
         working-directory: packages/switch-scanner-engine
@@ -75,14 +86,6 @@ jobs:
       - name: Publish react-scan-engine
         run: npm publish --access public
         working-directory: packages/react-scan-engine
-
-      - name: Build switch-input
-        run: npm run build
-        working-directory: packages/switch-input
-
-      - name: Prepare switch-input version
-        run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version
-        working-directory: packages/switch-input
 
       - name: Publish switch-input
         run: npm publish --access public
