@@ -10,6 +10,7 @@ const PACKAGES = {
   engine: join(ROOT, 'packages', 'switch-scanner-engine'),
   dom: join(ROOT, 'packages', 'scan-engine-dom'),
   react: join(ROOT, 'packages', 'react-scan-engine'),
+  input: join(ROOT, 'packages', 'switch-input'),
 };
 
 function run(cmd, args, cwd = ROOT) {
@@ -44,28 +45,35 @@ function prepare(versionArg) {
   run('npm', ['version', versionArg, '--no-git-tag-version'], PACKAGES.engine);
   run('npm', ['version', versionArg, '--no-git-tag-version'], PACKAGES.dom);
   run('npm', ['version', versionArg, '--no-git-tag-version'], PACKAGES.react);
+  run('npm', ['version', versionArg, '--no-git-tag-version'], PACKAGES.input);
 
   const enginePkgPath = packageJsonPath(PACKAGES.engine);
   const domPkgPath = packageJsonPath(PACKAGES.dom);
   const reactPkgPath = packageJsonPath(PACKAGES.react);
+  const inputPkgPath = packageJsonPath(PACKAGES.input);
 
   const enginePkg = readJson(enginePkgPath);
   const domPkg = readJson(domPkgPath);
   const reactPkg = readJson(reactPkgPath);
+  const inputPkg = readJson(inputPkgPath);
 
   const newVersion = enginePkg.version;
   domPkg.dependencies = domPkg.dependencies || {};
   domPkg.dependencies['scan-engine'] = `^${newVersion}`;
   reactPkg.dependencies = reactPkg.dependencies || {};
   reactPkg.dependencies['scan-engine'] = `^${newVersion}`;
+  inputPkg.peerDependencies = inputPkg.peerDependencies || {};
+  inputPkg.peerDependencies['scan-engine'] = `^${newVersion}`;
 
   writeJson(domPkgPath, domPkg);
   writeJson(reactPkgPath, reactPkg);
+  writeJson(inputPkgPath, inputPkg);
 
   run('npm', ['install']);
   run('npm', ['run', 'build:engine']);
   run('npm', ['run', 'build:engine-dom']);
   run('npm', ['run', 'build:react']);
+  run('npm', ['run', 'build:input']);
 
   console.log(`Prepared release version ${newVersion}.`);
   console.log('Next steps: commit, tag, and run `npm run release:publish`.');
@@ -75,6 +83,7 @@ function publish() {
   run('npm', ['publish', '--access', 'public'], PACKAGES.engine);
   run('npm', ['publish', '--access', 'public'], PACKAGES.dom);
   run('npm', ['publish', '--access', 'public'], PACKAGES.react);
+  run('npm', ['publish', '--access', 'public'], PACKAGES.input);
 }
 
 function full(versionArg) {
